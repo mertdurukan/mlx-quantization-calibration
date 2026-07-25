@@ -155,6 +155,18 @@ SPEC §3 dönüş tipini belirtmiyor. Test dosyası bu sözleşmeyi `(lo, point,
 sabitliyor — Görev 3 bunu değiştiremez (testi zayıflatmadan geçirme kuralı). Karar sonuçlar
 görülmeden, yalnızca yaygın kullanım deseni baz alınarak verildi.
 
+### Kabul kriteri ↔ "YAZMA" çelişkisi çözüldü: imza iskeleti (kullanıcıyla birlikte, 2026-07-25)
+Yukarıdaki çelişki kullanıcıya sunuldu ("öneriniz ne?" soruldu). Önerilen ve uygulanan çözüm:
+`src/metrics.py`'ye SPEC §3'ün **tam imzalarıyla** bir iskelet yazıldı, her fonksiyon gövdesi
+yalnızca `raise NotImplementedError` — sıfır hesap, sıfır mantık. Gerekçe: modülün hiç
+var olmaması `ModuleNotFoundError` ile tek bir collection hatası üretir ve hangi testin hangi
+çağrı imzasıyla (argüman sırası/adı) uyuşmadığı görünmez; imza hatası ancak Görev 3'te fark
+edilirdi. İmza iskeleti hem "implementasyon yazma" yasağını korur (mantık yok) hem de her
+testin **kendi FAIL nedeniyle** çalışmasını sağlar. Doğrulandı: `pytest tests/test_metrics.py -q`
+→ 13/13 `NotImplementedError`. Bu desen **PROTOKOL Kural 3'e kalıcı ek olarak yazıldı** —
+Görev 4/5/6'daki benzer "test önce, implementasyon yok" adımlarında da uygulanacak.
+**Kararın ne zaman verildiği:** sonuçlar (13 testin FAIL çıktısı) görülmeden önce.
+
 ---
 
 ## Kardeş ML çalışmasından devralınan dersler

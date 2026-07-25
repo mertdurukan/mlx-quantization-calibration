@@ -29,7 +29,9 @@ make test 2>&1 | tail -3 && python -c "import src.config as c; print(c.N_ITEMS, 
 
 ### [ ] Görev 2 — Metrik testleri (TESTLER ÖNCE, implementasyon YOK)
 **Ön koşul:** Görev 1
-**Yap:** `tests/test_metrics.py` — bilinen-cevap testleri. `src/metrics.py`'yi **YAZMA.**
+**Yap:** `tests/test_metrics.py` — bilinen-cevap testleri. `src/metrics.py`'ye **implementasyon
+YAZMA** — yalnızca PROTOKOL Kural 3 ekindeki imza iskeleti (her gövde `raise
+NotImplementedError`, sıfır mantık) serbest, gövde doldurma Görev 3'te.
 
 Testler:
 - `cal_slope`: mükemmel kalibre sentetik veride 1.0 ± 0.05
@@ -229,7 +231,7 @@ GitHub vitrini (description, topics), release + Zenodo DOI, sonra arXiv / doğru
 - [ ] **[2026-07-24]** Llama-3.2-1B ve 3B'nin doğruluğu hiç ölçülmedi (sadece erişilebilirliği doğrulandı). Uygunluk kapısı bunu FAZ 1'de zaten yakalayacak, ama havuzun 4'ten aza düşme riski var. · Engellediği görev: yok · Ciddiyet: orta
 - [ ] **[2026-07-24]** MMLU'da seçenek sayısı her zaman 4 mü, doğrulanmadı. `n_options` sabit varsayılmamalı. · Engellediği görev: 4 · Ciddiyet: orta
 - [ ] **[2026-07-25]** `tests/test_determinism.py` pytest `assert` içermiyor — top-level script, import edildiğinde (yani her `make test`'te) gerçek bir 1.5B model conversion'ı çalıştırıyor ve sadece print ediyor. `pytest` onu topluyor ama hiçbir test fonksiyonu bulamıyor (0 test), yine de içeriği collection sırasında **çalışıyor** — her `make test` artık ağ/HF-cache'e bağımlı ve yavaş, ve gerçek bir pass/fail sinyali yok. PREREG §4.6.6 sözleşmesi "geçti" olarak commit edilmişti ama pytest formatında değil. · Engellediği görev: yok (Görev 1 kabul kriterini engellemiyor) · Ciddiyet: orta
-- [ ] **[2026-07-25]** Görev 2 kabul kriteri metni ("hepsi `NotImplementedError` ile FAIL etmeli") ile aynı görevin "Yap" talimatı ("`src/metrics.py`'yi **YAZMA**") çelişiyor: `src/metrics.py` hiç yoksa `tests/test_metrics.py`'nin importu `ModuleNotFoundError` ile **collection hatası** verir, tek tek testler `NotImplementedError` ile FAIL etmez — çalıştırılıp doğrulandı (bkz. GECMIS.md). SPEC §7 madde 2 de metrics.py'nin bu aşamada var olmadığını teyit ediyor, yani YAZMA talimatı doğru, kabul kriteri metni yanlış/eksik yazılmış görünüyor. Görev 2'yi "YAZMA" talimatına göre yaptım (stub yazmadım); kullanıcı onayı bekleniyor — gerekirse kabul kriteri metni düzeltilmeli. · Engellediği görev: yok (Görev 2 kanıtı zaten gösterildi) · Ciddiyet: düşük
+- [x] **[2026-07-25]** Görev 2 kabul kriteri metni ("hepsi `NotImplementedError` ile FAIL etmeli") ile aynı görevin "Yap" talimatı ("`src/metrics.py`'yi **YAZMA**") çelişiyordu: modül hiç yoksa import `ModuleNotFoundError` ile collection hatası verir, tek tek `NotImplementedError` FAIL'i değil. **Çözüldü:** kullanıcıyla birlikte karar verildi — `src/metrics.py`'ye SPEC §3'ün **imza iskeleti** yazıldı (her gövde yalnızca `raise NotImplementedError`, sıfır mantık). PROTOKOL Kural 3'e bu desen kalıcı ek olarak yazıldı. `pytest tests/test_metrics.py -q` artık 13/13 `NotImplementedError` ile FAIL veriyor — doğrulandı. · Engellediği görev: yok · Ciddiyet: düşük
 - [ ] **[2026-07-25]** `requirements.txt` içinde `statsmodels` ve `scipy` **yok**, ama SPEC §3 `cal_intercept`'in "`statsmodels` GLM, `offset=` ile" uygulanmasını zorunlu kılıyor. Şu an kurulu değiller (`ModuleNotFoundError`). Görev 2'nin referans hesaplarını (bkz. `tests/test_metrics.py`) numpy-only Newton-Raphson ile bağımsız doğruladım, bu yüzden Görev 2'yi engellemiyor — ama Görev 3 (`src/metrics.py` implementasyonu) bu bağımlılık eklenmeden başlayamaz (SPEC §0 madde 8: sabitlenmemiş bağımlılık eklenemez, `requirements.txt` + `requirements.lock.txt` aynı commit'te güncellenmeli). · Engellediği görev: 3 · Ciddiyet: orta
 
 ---

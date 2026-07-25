@@ -19,22 +19,23 @@
 
 ## Şu an
 
-**FAZ 3, Görev 1 tamamlandı. Görev 2 yazıldı, kullanıcı onayı BEKLENİYOR — Görev 3'e geçilmedi.**
-`tests/test_metrics.py` yazıldı (13 test), `src/metrics.py` **yazılmadı** (talimat gereği).
-Kabul kriteri çalıştırıldı: `ModuleNotFoundError` ile collection hatası (aşağıda gerekçesi var
-— YAPILACAKLAR'daki kabul kriteri metni muhtemelen yanlış yazılmış, AÇIK BULGULAR'a eklendi).
+**FAZ 3, Görev 1 tamamlandı. Görev 2 yazıldı ve kabul kriteri tam olarak geçiyor —
+kullanıcı onayı BEKLENİYOR, Görev 3'e geçilmedi.** `tests/test_metrics.py` (13 test) yazıldı;
+`src/metrics.py`'ye yalnızca **imza iskeleti** yazıldı (her gövde `raise NotImplementedError`,
+sıfır mantık — PROTOKOL Kural 3 ekindeki desen). `pytest tests/test_metrics.py -q` → 13/13
+`NotImplementedError` ile FAIL, kabul kriteri metniyle birebir eşleşiyor.
 
-Repoda şu an olanlar: `src/config.py` (+ `__init__.py`), `prompts/mc_letter.txt` (donmuş,
-SHA-256 `config.PROMPT_SHA256` ile korunuyor), `tests/test_prompt_frozen.py`,
+Repoda şu an olanlar: `src/config.py` (+ `__init__.py`), `src/metrics.py` (yeni, yalnızca imza
+iskeleti — implementasyon YOK), `prompts/mc_letter.txt` (donmuş, SHA-256
+`config.PROMPT_SHA256` ile korunuyor), `tests/test_prompt_frozen.py`,
 `tests/test_determinism.py` (taşındı, PREREG §4.6.6), `tests/test_metrics.py` (yeni, 13 test,
-hepsi `src.metrics` importunda collection hatasıyla düşüyor — implementasyon yok),
-`requirements.txt` + `requirements.lock.txt`, `Makefile`, `.gitignore`,
-`results/{cells,meta,tables,figures}` iskeleti, `scratch/` (14 keşif script'i taşındı, hâlâ
-commit'te — bkz. GECMIS.md).
+hepsi `NotImplementedError` ile FAIL), `requirements.txt` + `requirements.lock.txt`,
+`Makefile`, `.gitignore`, `results/{cells,meta,tables,figures}` iskeleti, `scratch/`
+(14 keşif script'i taşındı, hâlâ commit'te — bkz. GECMIS.md).
 
 **DUR noktasındayız (PROTOKOL Kural 3):** `tests/test_metrics.py`'yi kullanıcıya göster, onay
-al. Onaylanırsa sıradaki iş Görev 3 (`src/metrics.py` implementasyonu) — ama önce
-`requirements.txt`'e `statsmodels`+`scipy` eklenmeli (AÇIK BULGULAR, Görev 3'ü engelliyor).
+al. Onaylanırsa sıradaki iş Görev 3 (`src/metrics.py` gövdelerinin implementasyonu) — ama önce
+`requirements.txt`'e `statsmodels`+`scipy` eklenmeli (AÇIK BULGULAR, Görev 3'ü hâlâ engelliyor).
 
 ## Son oturumda ne oldu (2026-07-25, devam)
 
@@ -48,10 +49,15 @@ al. Onaylanırsa sıradaki iş Görev 3 (`src/metrics.py` implementasyonu) — a
 3. Kabul kriteri çalıştırıldı: `ModuleNotFoundError: No module named 'src.metrics'`
    (collection hatası, tek tek `NotImplementedError` FAIL'i değil)
 4. **İki açık bulgu kaydedildi:** (a) Görev 2'nin kabul kriteri metni ile "YAZMA" talimatı
-   çelişiyor — YAZMA'ya uyuldu, kullanıcı onayı/düzeltmesi bekleniyor; (b) `requirements.txt`'te
-   `statsmodels`/`scipy` yok, Görev 3'ü engelliyor
+   çelişiyordu — **çözüldü** (aşağıya bakınız); (b) `requirements.txt`'te `statsmodels`/`scipy`
+   yok, Görev 3'ü hâlâ engelliyor (açık kaldı)
 5. `bootstrap_ci` dönüş tipi `(lo, point, hi)` tuple olarak test dosyasında sabitlendi (SPEC
    bunu belirtmiyordu) — GECMIS.md'ye karar olarak yazıldı
+6. **Kullanıcıyla birlikte çözüm kararlaştırıldı:** (a) bulgusu, gövdesiz bir imza iskeleti
+   (`src/metrics.py`, her fonksiyon `raise NotImplementedError`, sıfır mantık) ile çözüldü —
+   bu desen PROTOKOL Kural 3'e kalıcı ek olarak yazıldı ("toplu test-önce görevlerde imza
+   iskeleti"), YAPILACAKLAR Görev 2'nin "Yap" talimatı buna göre güncellendi. Kabul kriteri
+   şimdi tam istenen çıktıyı veriyor: 13/13 `NotImplementedError` ile FAIL.
 
 ## Önceki oturum (2026-07-25, sabah)
 

@@ -56,6 +56,17 @@ Asla: "test yaz ve geçir" (ajan testi implementasyona uydurur; ölçtüğü şe
   implementasyonda geçerdi
 - `bootstrap_ci` kwargs iletmiyordu → `net_benefit` ile çağrılınca çökerdi
 
+**Ek (2026-07-25, Görev 2'de eklendi) — toplu test-önce görevlerde imza iskeleti:**
+Testler tek seferde (bir modülün tüm fonksiyonları için) yazıldığında, modülün **hiç
+var olmaması** yanlış sinyal verir: `pytest` tek tek `NotImplementedError` FAIL'i değil,
+tek bir `ModuleNotFoundError` **collection hatası** üretir — hangi testin hangi çağrı
+imzasıyla (argüman sırası/adı) uyuşmadığı görünmez, bu da imzadaki bir hatanın ancak
+implementasyon aşamasında fark edilmesi demektir. **Çözüm:** modülün gövdesiz bir imza
+iskeletini yaz — her fonksiyon SPEC'teki tam imzayla, gövdesi yalnızca
+`raise NotImplementedError`. Sıfır mantık/hesap içerir, "implementasyon" sayılmaz, ama
+her testin **kendi FAIL nedeniyle** çalışmasını sağlar. Klasik tek-test-seferde TDD'nin
+"red" adımı zaten bir import hatasıdır; toplu modda bu iskelet o adımın karşılığıdır.
+
 ---
 
 ## KURAL 4 — Mutasyon Zorunluluğu ⚠️
