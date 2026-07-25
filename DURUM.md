@@ -25,15 +25,25 @@ convert path çakışması) bulundu ve çözüldü, sağlık kontrolü kullanıc
 kuantizasyon gerçekten uygulanıyor. Süre bütçesi (~7.75 saat tahmini, en hızlı modelle) kullanıcıya
 bildirildi, kullanıcı tam koşuya (Görev 9) onay verdi: "Onaylıyorum, tam koşuyu başlat."
 
-**Görev 9 sürüyor.** `caffeinate -i make reproduce` başlatıldı (arka plan görevi `bsc7u30gf`),
-`test` (33 passed) → `src.runner` (`run_all`, tam 140 hücrelik ızgara) aşamasında. **Kesinti/devam
-testi yapıldı ve geçti** (SPEC'in kendi kabul kriteri): ilk koşu ~5 dk sonra `TaskStop` ile
-kesildi (henüz hiçbir yeni hücre yazılmamıştı, ilk bf16 hücresi ortasındaydı — indirme/ölçüm
-aşaması), yeniden başlatıldıktan sonra pilot'un 3 hücresinin parquet `mtime`'ları **değişmedi**
-(20:12/20:19/20:23, aynı) — tamamlanmış hücreler gerçekten atlanıyor, yeniden hesaplanmıyor.
-Tam koşu artık kesintisiz sürüyor, tamamlanınca bildirilecek. **Not:** `make reproduce`'un son
-adımı `src.analyze`'ı çağırıyor ama o modül henüz yok (Görev 10) — grid bittikten sonra beklenen
-bir `ModuleNotFoundError` ile bitecek, veri kaybı yok (bkz. AÇIK BULGULAR, düşük ciddiyet).
+**Görev 9 — ilk koşu bitti, ikinci (düzeltme) koşusu sürüyor.** `caffeinate -i make reproduce`
+tamamlandı: kesinti/devam testi geçti (bkz. GECMIS.md), grid **88/88 hücre `status="ok"`, hiç
+`failed` yok** (son adım `src.analyze` beklendiği gibi `ModuleNotFoundError` ile bitti — Görev 10
+henüz yazılmadı, veri kaybı yok). 88 = 140 değil, çünkü bu koşuda `llama3.2-1b`/`llama3.2-3b`
+**bozuk ölçüm yüzünden** `eligible=false` çıkmıştı, o yüzden yalnızca bf16'ları (2'şer hücre)
+çalıştı, tam 14 koşullu merdiven değil.
+
+Bu sırada canlı izlerken kritik bir hata bulundu ve çözüldü (test-önce + mutasyon kanıtıyla,
+kullanıcı onaylı): `measure.py`'nin seçenek-harfi token'ını `encode(...)[0]` yerine `encode(...)[-1]`
+ile okuması gerekiyordu — Llama-3.2 tokenizer'ı her `encode()`'a otomatik BOS ekliyor, `[0]` hep
+aynı BOS token'ını okuyordu, model hep "A" seçiyormuş gibi görünüyordu. Detay: YAPILACAKLAR AÇIK
+BULGULAR + GECMIS.md.
+
+Düzeltme uygulandıktan sonra (ilk koşu tamamen bittiği, ikinci bir model-yükleyen süreç artık
+güvenli olduğu için) 4 eski/bozuk llama bf16 dosyası + `eligibility.json` silindi, `python -m
+src.runner` **arka planda tekrar başlatıldı** (görev `bspu1av8r`): Qwen'in 84 hücresi zaten
+cache'te olduğu için atlanacak, yalnızca 4 llama bf16 hücresi düzeltilmiş kodla yeniden ölçülecek,
+`eligibility.json` doğru sayılarla yeniden yazılacak, ve llama gerçekten eşiği geçerse Faz 3
+onun da tam merdivenini işleyecek (geçmezse yalnızca 4 hücrede kalacak). Tamamlanınca bildirilecek.
 `src/runner.py::run_all` tamamen implemente edildi (üç fazlı sıra, parquet cache, teardown,
 never-raise), artı Görev 7 sırasında keşfedilen bir açık bulgu (`make pilot`'ın hiç tanımlanmamış
 bir CLI/model beklemesi) çözülürken eklenen `run_pilot()` + `__main__`/`argparse` girişi.
