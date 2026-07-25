@@ -19,25 +19,45 @@
 
 ## Şu an
 
-**FAZ 3, Görev 1 tamamlandı. Görev 2 yazıldı ve kabul kriteri tam olarak geçiyor —
-kullanıcı onayı BEKLENİYOR, Görev 3'e geçilmedi.** `tests/test_metrics.py` (13 test) yazıldı;
-`src/metrics.py`'ye yalnızca **imza iskeleti** yazıldı (her gövde `raise NotImplementedError`,
-sıfır mantık — PROTOKOL Kural 3 ekindeki desen). `pytest tests/test_metrics.py -q` → 13/13
-`NotImplementedError` ile FAIL, kabul kriteri metniyle birebir eşleşiyor.
+**FAZ 3, Görev 1-2-3 tamamlandı. Sırada Görev 4 (`src/benchmarks.py` + örnekleme
+determinizmi).** `src/metrics.py` tam olarak implemente edildi (`ece`, `cal_slope`,
+`cal_intercept`, `brier`, `overconfidence_rate`, `mean_conf_by_correctness`,
+`bootstrap_ci`) — `statsmodels` GLM (`offset=` ile) ve numpy kullanıyor. `pytest tests/ -q`
+→ **14 passed** (13 metrik testi + 1 prompt-freeze testi; `test_determinism.py` pytest
+formatında olmadığı için 0 test topluyor — ayrı, engellemeyen açık bulgu).
 
-Repoda şu an olanlar: `src/config.py` (+ `__init__.py`), `src/metrics.py` (yeni, yalnızca imza
-iskeleti — implementasyon YOK), `prompts/mc_letter.txt` (donmuş, SHA-256
-`config.PROMPT_SHA256` ile korunuyor), `tests/test_prompt_frozen.py`,
-`tests/test_determinism.py` (taşındı, PREREG §4.6.6), `tests/test_metrics.py` (yeni, 13 test,
-hepsi `NotImplementedError` ile FAIL), `requirements.txt` + `requirements.lock.txt`,
-`Makefile`, `.gitignore`, `results/{cells,meta,tables,figures}` iskeleti, `scratch/`
-(14 keşif script'i taşındı, hâlâ commit'te — bkz. GECMIS.md).
+Repoda şu an olanlar: `src/config.py`, `src/metrics.py` (tam implementasyon, Görev 3),
+`prompts/mc_letter.txt` (donmuş, SHA-256 `config.PROMPT_SHA256` ile korunuyor),
+`tests/test_prompt_frozen.py`, `tests/test_determinism.py` (PREREG §4.6.6),
+`tests/test_metrics.py` (13 test, hepsi geçiyor — bir unpacking hatası kullanıcı onayıyla
+düzeltildi, bkz. aşağı), `requirements.txt` + `requirements.lock.txt` (artık `statsmodels`,
+`scipy` dahil), `Makefile`, `.gitignore`, `results/{cells,meta,tables,figures}` iskeleti,
+`scratch/` (14 keşif script'i, hâlâ commit'te).
 
-**DUR noktasındayız (PROTOKOL Kural 3):** `tests/test_metrics.py`'yi kullanıcıya göster, onay
-al. Onaylanırsa sıradaki iş Görev 3 (`src/metrics.py` gövdelerinin implementasyonu) — ama önce
-`requirements.txt`'e `statsmodels`+`scipy` eklenmeli (AÇIK BULGULAR, Görev 3'ü hâlâ engelliyor).
+**DUR noktası yok şu an** — Görev 3 kullanıcı onayı gerektirmiyordu (test onayı Görev 2'de
+alınmıştı). Sıradaki iş Görev 4.
 
-## Son oturumda ne oldu (2026-07-25, devam)
+## Son oturumda ne oldu (2026-07-25, Görev 2 onayı + Görev 3)
+
+1. Görev 2 testleri (13 test, kabul kriteri çıktısı: 13/13 `NotImplementedError` ile FAIL)
+   kullanıcıya sunuldu ve **onaylandı**.
+2. `requirements.txt`'e `statsmodels==0.14.6` + `scipy==1.18.0` eklendi (AÇIK BULGU çözüldü),
+   `requirements.lock.txt` yeniden üretildi (`pip freeze`, 56→59 paket, `patsy` transitive).
+   GLM `offset=` fit'i **gerçekten çağrılarak** doğrulandı (PROTOKOL Kural 6, sadece import
+   değil) — scipy 1.18'de kardeş çalışmadaki `_lazywhere` sorunu yok.
+3. `src/metrics.py` implemente edildi: `ece` (equal-mass, `np.array_split`), `cal_slope`
+   (`sm.GLM` + `add_constant`), `cal_intercept` (`sm.GLM` + `offset=`, sabit slope 1),
+   `brier`, `overconfidence_rate`, `mean_conf_by_correctness`, `bootstrap_ci` (point =
+   tam-örneklem, kwargs iletimi).
+4. Kabul kriteri ilk koşuda **1 test FAIL** verdi — ama implementasyon hatası değil, testin
+   kendi referans hesabında bir tuple-unpacking hatası (`expected_slope, _ = ...` yanlış
+   sıradaydı). `metrics.cal_slope`'un doğruluğu referans `b1` ile ondalık düzeyinde eşleşerek
+   kanıtlandı, sonra kullanıcıya sunuldu ve **onaylanan** tek satırlık düzeltme uygulandı.
+   Detay: GECMIS.md "Görev 3".
+5. `python -m pytest tests/ -q` → **14 passed.** `git diff HEAD -- tests/` artık boş değil
+   (bilinçli, onaylı bir test-hata-düzeltmesi yüzünden) — GECMIS.md'de gerekçelendirildi.
+
+## Önceki oturum (2026-07-25, devam)
 
 1. `tests/test_metrics.py` yazıldı — YAPILACAKLAR Görev 2'deki 13 testin hepsi: `cal_slope`
    (mükemmel + aşırı-uçlu), `cal_intercept` (mükemmel + sistematik aşırı-güven), `ece`
@@ -115,5 +135,6 @@ Disk: `convert → evaluate → delete`, HF cache ≈ 20 GB.
 |---|---|---|
 | 2026-07-24 | Fizibilite kapısı, eksen keşfi, ön-kayıt, determinizm | `ffa07c7` … `c5ea71c` |
 | 2026-07-25 | Görev 1 — ortam iskeleti, config, prompt dondurma | `2a4d0c5` |
-| 2026-07-25 | Görev 2 — metrik testleri yazıldı, implementasyon YOK, kullanıcı onayı bekleniyor | (bu oturum) |
+| 2026-07-25 | Görev 2 — metrik testleri yazıldı, implementasyon YOK, kullanıcı onayı bekleniyor | (önceki oturum) |
+| 2026-07-25 | Görev 2 onaylandı; Görev 3 — `src/metrics.py` implementasyonu, statsmodels/scipy eklendi, test unpacking hatası düzeltildi, 14/14 yeşil | (bu oturum) |
 | | | |

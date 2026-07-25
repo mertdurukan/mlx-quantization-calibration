@@ -93,7 +93,7 @@ def test_cal_slope_perfect_calibration_is_near_one():
     n = 20_000
     conf = rng.uniform(0.05, 0.95, n)
     y = rng.binomial(1, conf).astype(float)
-    expected_slope, _ = _fit_reference_cal_slope_intercept(y, conf)
+    _, expected_slope = _fit_reference_cal_slope_intercept(y, conf)
     assert abs(expected_slope - 1.0) < 0.05  # sanity-check own reference fit
 
     slope = metrics.cal_slope(y, conf)

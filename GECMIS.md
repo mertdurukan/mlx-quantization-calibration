@@ -169,6 +169,42 @@ Görev 4/5/6'daki benzer "test önce, implementasyon yok" adımlarında da uygul
 
 ---
 
+## Görev 3 — `src/metrics.py` implementasyonu (2026-07-25)
+
+### Bağımlılık eklendi: `statsmodels==0.14.6` + `scipy==1.18.0`
+Açık bulgu (Görev 2'de kaydedilmişti) çözüldü: `requirements.txt` + `requirements.lock.txt`
+aynı commit'te güncellendi (SPEC §0 madde 8). Kural 6 gereği yalnızca `import` ile
+yetinilmedi — `sm.GLM(..., offset=..., family=Binomial()).fit()` gerçekten çağrılıp bir
+katsayı üretti, doğrulandı (bkz. PROTOKOL Kural 6'daki scipy 1.14 `_lazywhere` hatası
+örneği; bu ortamda scipy 1.18 ile sorun yok).
+
+### `tests/test_metrics.py` içinde gerçek bir hata bulundu ve düzeltildi (kullanıcı onayıyla)
+`test_cal_slope_perfect_calibration_is_near_one`, referans Newton-Raphson fonksiyonunun
+`(b0, b1) = (intercept, slope)` döndürdüğü tuple'ı `expected_slope, _ = ...` şeklinde yanlış
+sırayla açıyordu — `expected_slope` değişkenine aslında intercept (≈0.0012) atanıyordu, slope
+(≈1.0124) değil. Sonuç: testin **kendi sanity-check satırı** (`assert abs(expected_slope - 1.0)
+< 0.05`) implementasyondan bağımsız olarak patlıyordu.
+
+**Nasıl ayırt edildi (implementasyon hatası mı, test hatası mı):** `metrics.cal_slope(y, conf)`
+doğrudan çalıştırıldı → `1.0124437146123444`, referans fonksiyonun kendi `b1`'i ile
+(`1.012443714612344`) ondalık düzeyinde birebir eşleşti. Yani `src/metrics.py` doğruydu;
+hata yalnızca testin tuple unpacking sırasındaydı.
+
+**Karar süreci:** Kendi başıma düzeltmedim — PROTOKOL Kural 3/5 gereği ("test yanlışsa DUR ve
+söyle") kullanıcıya kanıtla (iki sayının eşleşmesi) birlikte sunuldu, kullanıcı tek satırlık
+unpacking düzeltmesini onayladı. Uygulanan değişiklik: `expected_slope, _ = ...` →
+`_, expected_slope = ...` (satır 96). Hiçbir tolerans/eşik gevşetilmedi, hiçbir assertion
+silinmedi — yalnızca bir değişken atama hatası düzeltildi. **Kararın ne zaman verildiği:**
+sonuç (14/14 yeşil) görülmeden önce, yalnızca iki sayının eşleştiği kanıtlanarak.
+
+**Doğrulama:** `python -m pytest tests/ -q` → 14 passed (13 metrik testi + 1 prompt-freeze
+testi; `test_determinism.py` pytest formatında olmadığı için 0 test topluyor, ayrı açık bulgu).
+`git diff HEAD -- tests/` artık **boş değil** — Görev 3'ün orijinal kabul kriteri metni ("git
+diff BOŞ") bu tek satırlık test-hata-düzeltmesini öngörmüyordu; asıl niyet ("hiçbir test
+implementasyona uydurmak için gevşetilmedi") korundu.
+
+---
+
 ## Kardeş ML çalışmasından devralınan dersler
 
 `~/github-projects/imbalance-calibration` — tamamlandı, yayında. Orada yakalanan yedi hata,

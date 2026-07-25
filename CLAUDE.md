@@ -16,6 +16,11 @@ Kullanıcı **"devam et"** derse, tam olarak şu sırayı uygula. Sormadan başl
 ### Adım 2 — Görevi doğrula
 - Görevin ön koşulları sağlanmış mı? (`YAPILACAKLAR.md`'de her görevin "Ön koşul" satırı var)
 - Sağlanmamışsa: o görevi atla, ön koşulu bir görev olarak `AÇIK BULGULAR`'a yaz, kullanıcıya söyle.
+- **`AÇIK BULGULAR`'ı bu görev numarasına göre tara.** "Engellediği görev: <bu görevin no'su>"
+  etiketli, işaretlenmemiş (`[ ]`) bir satır varsa, o görev "ön koşulu sağlanmamış" sayılır —
+  yukarıdaki adım gibi davran: önce bulguyu çöz (veya çözülemiyorsa görevi atla ve kullanıcıya
+  söyle), sonra devam et. Bu tarama olmadan, görev numarasına etiketlenmiş bulgular fark
+  edilmeden atlanabilir (bkz. Görev 1 oturumunda keşfedilen boşluk).
 
 ### Adım 3 — Görevi yap
 - `SPEC.md`'deki sözleşmeye uy. `PREREG.md`'ye **dokunma** (donmuş).
