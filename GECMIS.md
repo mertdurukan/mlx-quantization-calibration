@@ -98,6 +98,29 @@ yüklüyor ve Metal kernel'ları ilk kullanımda derliyor.
 
 ---
 
+## Görev 1 — implementasyon sırasında verilen kararlar (2026-07-25)
+
+### `config.PROMPT_SHA256` eklendi, SPEC §2'nin listelemediği bir sabit
+`tests/test_prompt_frozen.py` (YAPILACAKLAR Görev 1) `config.PROMPT_SHA256` ile karşılaştırma
+yapıyor, ama SPEC §2'deki `config.py` bloğu bu sabiti içermiyordu — görev tanımı ile spec
+arasında bir boşluk. Karar: sabiti ekle (bilim parametresi değil, dondurulmuş şablonun hash'i;
+PREREG'e dokunmuyor), SPEC §9 Changelog'a işlendi. `PREREG.md` **düzenlenmedi.**
+
+### `scratch/` .gitignore'da ama keşif script'leri yine de commit'te
+SPEC §1: keşif script'leri "repoda kalır, provenance" ve "yalnızca commit'liyse scratch/'e
+taşınır." YAPILACAKLAR Görev 1: `.gitignore`'a `scratch/` ekle. İkisi çelişiyor gibi görünüyor
+ama değil: `git mv` zaten **izlenen** dosyaları taşıdığında gitignore kuralı onları
+izlenmekten çıkarmıyor (gitignore yalnızca *yeni/untracked* dosyalara uygulanır). 14 keşif
+script'i `scratch/`'e taşındı ve **hâlâ commit'te** — `git status` ile doğrulandı. `scratch/`
+gelecekteki atılabilir dosyalar için gitignore'lu kalıyor.
+
+### `tests/test_determinism.py` pytest formatında değil (AÇIK BULGU olarak kaydedildi)
+Görev 1 kapsamında **değiştirilmedi** (SPEC "already passing" diyor, taşıma dışında dokunma
+talimatı yok) ama YAPILACAKLAR § AÇIK BULGULAR'a eklendi: assert yok, her `make test` bir
+model conversion'ı tetikliyor, pytest 0 test topluyor. Bir sonraki oturumda ele alınmalı.
+
+---
+
 ## Kardeş ML çalışmasından devralınan dersler
 
 `~/github-projects/imbalance-calibration` — tamamlandı, yayında. Orada yakalanan yedi hata,

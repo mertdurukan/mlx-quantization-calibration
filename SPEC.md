@@ -357,3 +357,7 @@ After `make pilot`:
 ## 9. Changelog
 
 - 2026-07-24 — initial contract, written after the feasibility gate and the frozen PREREG.
+- 2026-07-25 — §2 `config.py` gains `PROMPT_SHA256: Final[str]`, not in the original block.
+  Needed by `tests/test_prompt_frozen.py` (YAPILACAKLAR Görev 1), which the original §2 listing
+  didn't account for. Pure implementation constant (hash of the frozen template), not a science
+  parameter — does not touch PREREG. See GECMIS.md.

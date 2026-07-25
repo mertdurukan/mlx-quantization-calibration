@@ -7,7 +7,7 @@
 
 ## FAZ 3 — Implementasyon
 
-### [ ] Görev 1 — Ortam iskeleti + prompt şablonunu dondur
+### [x] Görev 1 — Ortam iskeleti + prompt şablonunu dondur — TAMAMLANDI 2026-07-25
 **Ön koşul:** yok
 **Yap:**
 - `src/`, `tests/`, `prompts/`, `results/{cells,meta,tables,figures}`, `scratch/` oluştur
@@ -228,6 +228,7 @@ GitHub vitrini (description, topics), release + Zenodo DOI, sonra arXiv / doğru
 - [ ] **[2026-07-24]** `mixed_*` recipe'lerin nasıl çağrıldığı (`quant_predicate` string mi, builder fonksiyonu mu) doğrulanmadı. Görev 5'te kanıtlanmalı. · Engellediği görev: 5 · Ciddiyet: orta
 - [ ] **[2026-07-24]** Llama-3.2-1B ve 3B'nin doğruluğu hiç ölçülmedi (sadece erişilebilirliği doğrulandı). Uygunluk kapısı bunu FAZ 1'de zaten yakalayacak, ama havuzun 4'ten aza düşme riski var. · Engellediği görev: yok · Ciddiyet: orta
 - [ ] **[2026-07-24]** MMLU'da seçenek sayısı her zaman 4 mü, doğrulanmadı. `n_options` sabit varsayılmamalı. · Engellediği görev: 4 · Ciddiyet: orta
+- [ ] **[2026-07-25]** `tests/test_determinism.py` pytest `assert` içermiyor — top-level script, import edildiğinde (yani her `make test`'te) gerçek bir 1.5B model conversion'ı çalıştırıyor ve sadece print ediyor. `pytest` onu topluyor ama hiçbir test fonksiyonu bulamıyor (0 test), yine de içeriği collection sırasında **çalışıyor** — her `make test` artık ağ/HF-cache'e bağımlı ve yavaş, ve gerçek bir pass/fail sinyali yok. PREREG §4.6.6 sözleşmesi "geçti" olarak commit edilmişti ama pytest formatında değil. · Engellediği görev: yok (Görev 1 kabul kriterini engellemiyor) · Ciddiyet: orta
 
 ---
 
@@ -237,3 +238,4 @@ GitHub vitrini (description, topics), release + Zenodo DOI, sonra arXiv / doğru
 - [x] **2026-07-24** FAZ 1 — Eksen/veri/hız keşfi, hepsi çalıştırılarak doğrulandı
 - [x] **2026-07-24** FAZ 2 — Ön-kayıt donduruldu ve push'landı (`c5ea71c`)
 - [x] **2026-07-24** Determinizm sözleşmesi (PREREG §4.6.6) — mutasyonla kanıtlandı
+- [x] **2026-07-25** Görev 1 — ortam iskeleti, `src/config.py`, `prompts/mc_letter.txt` donduruldu, `make test` yeşil, `1000 14` doğrulandı
