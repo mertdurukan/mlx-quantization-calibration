@@ -51,3 +51,14 @@ BOOTSTRAP_N: Final[int] = 2_000
 CI_LOW: Final[float] = 2.5
 CI_HIGH: Final[float] = 97.5
 OVERCONF_THRESHOLD: Final[float] = 0.90   # "high-confidence error" cutoff
+
+# --- pilot (SPEC §8: "one model x three conditions x arc_challenge") ---
+# Not in SPEC §2's original block; added in Görev 7 when `make pilot` (already
+# committed in the Makefile, Görev 1) was found to name no CLI and no model.
+# qwen2.5-1.5b: fastest of the four main models, 73% accuracy in feasibility
+# (well above ELIGIBILITY_MIN_ACCURACY) -- an engineering choice, not a science
+# one; pilot output is diagnostic only (PREREG §0) and never feeds the tables.
+# See GECMIS.md "Görev 7".
+PILOT_MODEL: Final[str] = "qwen2.5-1.5b"
+PILOT_CONDITIONS: Final[list[str]] = ["affine_b4_g64", "affine_b2_g64"]
+PILOT_BENCHMARK: Final[str] = "arc_challenge"

@@ -19,31 +19,62 @@
 
 ## Şu an
 
-**FAZ 3, Görev 1-2-3-4-5-6 tamamlandı. Sırada Görev 7 (`src/runner.py::run_all`).**
-`tests/test_no_leakage.py` (8 test, 3 sözleşme) + `src/runner.py`'nin kısmi implementasyonu
-(`cell_id`, `compute_eligibility`, `assert_phase3_allowed`) yazıldı; `run_all` hâlâ
-`NotImplementedError` — Görev 7'nin işi. `pytest tests/ -v` → **33 passed.**
+**FAZ 3, Görev 1-2-3-4-5-6-7 tamamlandı. Sırada Görev 8 (`make pilot` + ELLE doğrulama).**
+`src/runner.py::run_all` tamamen implemente edildi (üç fazlı sıra, parquet cache, teardown,
+never-raise), artı Görev 7 sırasında keşfedilen bir açık bulgu (`make pilot`'ın hiç tanımlanmamış
+bir CLI/model beklemesi) çözülürken eklenen `run_pilot()` + `__main__`/`argparse` girişi.
+`pytest tests/ -v` → **33 passed** (regresyon yok).
 
-Repoda şu an olanlar: `src/config.py`, `src/metrics.py` (Görev 3), `src/benchmarks.py` (Görev 4),
-`src/quantize.py` + `src/measure.py` (Görev 5, tam implementasyon, dört mod da — bf16, affine,
-mxfp4, recipe — gerçek dönüşümle fonksiyonel doğrulandı), `src/runner.py` (Görev 6, kısmi —
-`cell_id`/`compute_eligibility`/`assert_phase3_allowed` gerçek, `run_all` iskelet),
-`prompts/mc_letter.txt` (donmuş, SHA-256 `config.PROMPT_SHA256` ile korunuyor),
-`tests/test_prompt_frozen.py`, `tests/test_determinism.py` (PREREG §4.6.6, gerçek `assert`'li
-2 test), `tests/test_metrics.py` (13 test), `tests/test_benchmarks.py` (9 test),
-`tests/test_no_leakage.py` (8 test, Görev 6), `requirements.txt` + `requirements.lock.txt`
-(`statsmodels`, `scipy` dahil), `Makefile`, `.gitignore`, `results/{cells,meta,tables,figures}`
-iskeleti, `scratch/` (14 keşif script'i, hâlâ commit'te). `CLAUDE.md` Adım 2'deki görev-numarası
-taraması bu oturumda **üçüncü kez** işe yaradı: Görev 6'nın kendi tanımı SPEC §7 sırasıyla
-çelişiyordu (`test_no_leakage.py` `runner.py`'den önce sıralanıyor ama neye karşı test
-edileceği belirsizdi) — açık bulgu olarak kaydedilip aynı oturumda çözüldü (SPEC §9 Changelog +
-GECMIS.md "Görev 6").
+Repoda şu an olanlar: `src/config.py` (artık `PILOT_MODEL`/`PILOT_CONDITIONS`/`PILOT_BENCHMARK`
+dahil), `src/metrics.py` (Görev 3), `src/benchmarks.py` (Görev 4), `src/quantize.py` +
+`src/measure.py` (Görev 5, tam implementasyon, dört mod da — bf16, affine, mxfp4, recipe —
+gerçek dönüşümle fonksiyonel doğrulandı), `src/runner.py` (Görev 7, **tam** — `cell_id`,
+`compute_eligibility`, `assert_phase3_allowed`, `run_all`, `run_pilot`, CLI), `prompts/mc_letter.txt`
+(donmuş, SHA-256 `config.PROMPT_SHA256` ile korunuyor), `tests/test_prompt_frozen.py`,
+`tests/test_determinism.py` (PREREG §4.6.6, gerçek `assert`'li 2 test), `tests/test_metrics.py`
+(13 test), `tests/test_benchmarks.py` (9 test), `tests/test_no_leakage.py` (8 test, Görev 6),
+`requirements.txt` + `requirements.lock.txt` (`statsmodels`, `scipy` dahil), `Makefile`,
+`.gitignore`, `results/{cells,meta,tables,figures}` iskeleti (henüz boş — Görev 8'de ilk gerçek
+hücreler yazılacak), `scratch/` (14 keşif script'i, hâlâ commit'te). `CLAUDE.md` Adım 2'deki
+görev-numarası taraması bu oturumda **dördüncü kez** işe yaradı: `Makefile`'ın `pilot:` hedefi
+(Görev 1'de yazılmış) hiçbir zaman implemente edilmemiş bir CLI/`--pilot` bayrağı ve adlandırılmamış
+bir "bir model" bekliyordu — açık bulgu olarak kaydedilip aynı oturumda çözüldü (SPEC §9
+Changelog + GECMIS.md "Görev 7").
 
-**DUR noktası yok şu an** — Görev 6 kullanıcı onayı gerektirmiyordu, mutasyon kanıtı
-(PROTOKOL Kural 4) üç sözleşme için de ayrı ayrı yapıldı ve GECMIS.md'ye kaydedildi. Sıradaki
-iş Görev 7 (`src/runner.py::run_all`, `cell_id` zaten var).
+**DUR noktası yok şu an** — Görev 7 kullanıcı onayı gerektirmiyordu (kritik koruma testi değil,
+Görev 6'nın mutasyonla kanıtlanmış testlerine karşı yazılan gerçek implementasyon). Kabul kriteri
+(`inspect.getsource` kontrolü) çalıştırıldı ve gösterildi; ek olarak PROTOKOL Kural 6 gereği
+cache'teki 0.5B modeliyle gerçek bir uçtan uca çağrı (`scratchpad/`, `results/`'a dokunmadan)
+yapılıp GECMIS.md'ye kaydedildi. Sıradaki iş Görev 8: `make pilot` çalıştırılacak ve **elle**
+doğrulanacak (SPEC §8) — bu, delege edilemeyen, kullanıcının kendi gözüyle bakması gereken bir
+adım.
 
-## Son oturumda ne oldu (2026-07-25, Görev 6 — test_no_leakage.py + mutasyon kanıtı)
+## Son oturumda ne oldu (2026-07-25, Görev 7 — runner.py::run_all + pilot açık bulgusu)
+
+1. `run_all(force=False)`: PHASE 1 (tüm bf16 referans hücreleri) → PHASE 2 (diskteki bf16
+   parquet'lerinden `eligibility.json` yazımı, bellek içi Faz-1 sonuçlarına değil — resumability
+   için) → PHASE 3 (uygun modeller + taban kontrolü için tüm kuantize hücreler). Tek yardımcı
+   fonksiyon `_run_and_write_cell`: build → measure → parquet+meta yaz → teardown, tamamı
+   `try/except Exception` içinde (asla `raise` etmiyor); zaten tamamlanmış hücreler (parquet
+   var) `force=False` iken atlanıyor.
+2. **Açık bulgu / çözüm:** `Makefile`'ın `pilot:` hedefi `python -m src.runner --pilot`
+   çağırıyordu ama ne bir CLI ne de pilot modeli hiçbir yerde tanımlıydı. Aynı oturumda çözüldü:
+   `config.PILOT_MODEL="qwen2.5-1.5b"` (en hızlı ana model, keşifte %73 doğruluk) +
+   `run_pilot()` (aynı üç-fazlı sırayı `run_all` ile aynı yardımcı fonksiyonları kullanarak,
+   `run_all`'ın SPEC imzasını değiştirmeden, SPEC §8'deki 3 hücreye uyguluyor) + `__main__`/
+   `argparse --pilot`. Detay: GECMIS.md "Görev 7".
+3. **Fonksiyonel doğrulama (Kural 6):** `inspect.getsource` tabanlı kabul kriteri statik; ek
+   olarak `_run_and_write_cell` cache'teki `qwen2.5-0.5b` (taban kontrolü, dönüştürme
+   gerektirmiyor) ile gerçekten çağrıldı — 1000 satırlık doğru şema, cache-atlama (ikinci
+   çağrıda meta `mtime` değişmedi), gerçek `compute_eligibility` çıktısı
+   (`{"arc_challenge": 0.518, "eligible": True, "role": "floor_control"}`), `assert_phase3_allowed`
+   `raise` etmedi. Not: 0.518, feasibility'nin 30-item'lık %33 tahmininden farklı — kod hatası
+   değil, örneklem büyüklüğü farkı (taban kontrolü zaten uygunluktan bağımsız tam merdiveni
+   koşuyor, bu sayı Faz 3'ü etkilemiyor).
+4. Kabul kriteri çalıştırıldı ve gösterildi (aşağıda). `pytest tests/ -q` → 33 passed, regresyon
+   yok.
+
+## Önceki oturum (2026-07-25, Görev 6 — test_no_leakage.py + mutasyon kanıtı)
 
 1. **Adım 2 taraması / görev tanımı çelişkisi:** SPEC §7 build order `test_no_leakage.py`'yi
    (madde 6) `runner.py`'den (madde 7) önce sıralıyor, ama testin "eligibility.json yokken
@@ -205,9 +236,10 @@ Fizibiliteden ön-kayda kadar tüm zincir tamamlandı:
 
 ## Kritik açık noktalar
 
-- `src/runner.py::run_all` henüz yok (Görev 7) — üç faz sırası (`cell_id`, `compute_eligibility`,
-  `assert_phase3_allowed` zaten hazır ve mutasyonla kanıtlanmış), parquet cache, teardown,
-  never-raise davranışı eklenmeli
+- Görev 8 (`make pilot`) hâlâ **gerçekten koşulmadı** — `run_all`/`run_pilot` şimdiye kadar yalnızca
+  tek bir bf16 hücreyle (dönüştürme gerektirmeyen 0.5B) fonksiyonel doğrulandı. Gerçek bir
+  `affine_b4_g64`/`affine_b2_g64` dönüşümünün `run_pilot` üzerinden uçtan uca çalıştığı, ve
+  2-bit hücrenin bf16'dan **belirgin kötü** çıktığı (SPEC §8 sağlık kontrolü) henüz görülmedi.
 
 ## Bütçe hatırlatması
 
@@ -229,5 +261,6 @@ Disk: `convert → evaluate → delete`, HF cache ≈ 20 GB.
 | 2026-07-25 | `test_determinism.py` gerçek pytest testine çevrildi (16/16 yeşil); `CLAUDE.md` protokol boşluğu kapatıldı | (önceki oturum) |
 | 2026-07-25 | Görev 4 — `src/benchmarks.py` + `tests/test_benchmarks.py` (9 test), MMLU/ARC seçenek sayısı açık bulgusu çözüldü, 25/25 yeşil | (önceki oturum) |
 | 2026-07-25 | Görev 5 — `src/quantize.py` + `src/measure.py`, `mixed_*` recipe açık bulgusu çözüldü, dört mod fonksiyonel doğrulandı | (önceki oturum) |
-| 2026-07-25 | Görev 6 — `tests/test_no_leakage.py` (8 test) + `src/runner.py` kısmi implementasyonu, 3 mutasyon kanıtı | (bu oturum) |
+| 2026-07-25 | Görev 6 — `tests/test_no_leakage.py` (8 test) + `src/runner.py` kısmi implementasyonu, 3 mutasyon kanıtı | (önceki oturum) |
+| 2026-07-25 | Görev 7 — `src/runner.py::run_all` + `run_pilot`/CLI, `make pilot` açık bulgusu çözüldü | (bu oturum) |
 | | | |

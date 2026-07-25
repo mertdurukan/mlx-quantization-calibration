@@ -379,3 +379,10 @@ After `make pilot`:
   quantization parameter is chosen or varied — so implementing them now (rather than as a
   `NotImplementedError` skeleton) carries none of the "science" risk SPEC §0 prohibits;
   `run_all` remains Görev 7. See GECMIS.md "Görev 6".
+- 2026-07-25 — §2 `config.py` gains `PILOT_MODEL`, `PILOT_CONDITIONS`, `PILOT_BENCHMARK`;
+  §3 `src/runner.py` gains `run_pilot()` (no signature change to `run_all`) plus a
+  `__main__`/`argparse` entry point. The Makefile's `pilot:` target (`python -m src.runner
+  --pilot`, committed in Görev 1) named a CLI and an unnamed "one model" that neither §2 nor
+  §3 defined. Discovered while implementing Görev 7; resolved same session — pure wiring
+  (reuses `run_all`'s own phase-ordering building blocks), no quantization parameter chosen
+  beyond the frozen `CONDITIONS` list. See GECMIS.md "Görev 7".

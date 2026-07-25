@@ -358,6 +358,59 @@ regresyon yok).
 
 ---
 
+## Görev 7 — `src/runner.py::run_all` (2026-07-25)
+
+### `run_all` tasarımı
+Üç fazlı sıra `_run_and_write_cell` adlı tek bir yardımcı fonksiyonla uygulandı (build ->
+measure -> parquet+meta yaz -> teardown, `try/except Exception` ile sarılı — asla `raise`
+etmiyor, SPEC §0 madde 2). Faz 2, Faz 1'in bellekteki sonuçlarını değil, **diskteki**
+`results/cells/*.parquet` dosyalarını okuyarak `compute_eligibility`'ye veriyor — böylece
+yarıda kesilip devam ettirilen bir koşu, önceki oturumdan kalan bf16 hücreleriyle de doğru
+uygunluk hesaplar (SPEC §5 resumability). Faz 3, `eligible=True` **veya** `role=
+"floor_control"` olan modelleri alıyor (PREREG §4.2: taban kontrolü kendi uygunluk kararından
+bağımsız olarak tam merdiveni koşar).
+
+`pd.DataFrame({"is_correct":...}).mean()` üzerinde `status="failed"` satırlarının
+`is_correct=None` değerlerinin `compute_eligibility`'yi bozup bozmadığı **çalıştırılarak**
+doğrulandı (Kural 6): pandas object-dtype `.mean()` `None`'ları NaN gibi atlıyor, hata
+fırlatmıyor — yani bir item'ın ağ/model hatasıyla başarısız olması, o hücrenin bf16 doğruluk
+hesabını bozmuyor, sadece payda küçülüyor.
+
+### Açık bulgu: `make pilot` bir CLI/model beklerken hiçbiri tanımlı değildi
+`Makefile`'daki `pilot:` hedefi (Görev 1'de yazılmış) `$(PYTHON) -m src.runner --pilot`
+çağırıyor, ama SPEC §3'ün `runner.py` sözleşmesi yalnızca `run_all(force)`'ı tanımlıyor —
+`__main__` girişi yok, `--pilot` bayrağı yok. Ayrıca SPEC §8/YAPILACAKLAR Görev 8 "bir model"
+diyor ama modelin adı hiçbir belgede geçmiyor. **AÇIK BULGULAR'a eklendi** ("Engellediği görev:
+8"), aynı oturumda çözüldü: `run_pilot()` eklendi — SPEC §8'deki 3 hücreyi (bf16,
+affine_b4_g64, affine_b2_g64 × arc_challenge) `run_all` ile **aynı** üç-fazlı sırayla
+(`_run_and_write_cell`/`compute_eligibility`/`assert_phase3_allowed` yeniden kullanılarak)
+koşturuyor; `run_all`'ın SPEC'teki imzası değişmedi. Model seçimi `config.PILOT_MODEL =
+"qwen2.5-1.5b"` olarak `config.py`'ye eklendi (SPEC §9 Changelog) — dört ana modelin en hızlısı
+ve keşif fazında %73 doğrulukla uygunluk barının belirgin üzerinde; bilinçli mühendislik
+kararı, PREREG'e dokunmuyor (pilot verisi §0 Pilot İfşası gereği zaten nihai tablolara
+girmiyor). **Kararın ne zaman verildiği:** sonuçlar görülmeden önce, yalnızca hız/uygunluk
+marjı gerekçesiyle.
+
+Pilot hücrelerinin normal `cell_id` altında normal `results/` ağacına yazılması **bilinçli**:
+tam koşunun Faz 1 cache'i (SPEC §5) bu hücreleri yeniden hesaplamak yerine kullanır; tam
+koşunun kendi Faz 2'si tüm bf16 hücrelerinden `eligibility.json`'ı zaten yeniden üretir, yani
+pilotun tek-model'lik `eligibility.json`'ı kalıcı değil, geçici bir yan üründür.
+
+### Fonksiyonel doğrulama (Kural 6 — varlık değil, çalıştırma)
+`inspect.getsource` tabanlı kabul kriteri (YAPILACAKLAR'daki komut) yalnızca statik bir
+kontrol. Ek olarak `runner._run_and_write_cell` cache'teki `qwen2.5-0.5b` (floor control,
+dönüştürme gerektirmiyor) ile **gerçekten** çağrıldı (geçici `scratchpad/runner_smoke/`
+dizinine, `results/`'a dokunulmadan): 1000 satırlık doğru şemalı parquet yazıldı
+(`n_failed_items=0`), meta json SPEC §4 alanlarıyla eşleşti, ikinci çağrı cache nedeniyle
+atlandı (meta dosyasının `mtime`'ı değişmedi), `compute_eligibility` gerçek veriden
+`{"qwen2.5-0.5b": {"arc_challenge": 0.518, "eligible": True, "role": "floor_control"}}`
+üretti, `assert_phase3_allowed` `raise` etmedi. Not: bu 0.518, feasibility fazındaki 30 item'lık
+%33 tahmininden belirgin farklı (1000 item'lık gerçek örneklem) — bir kod hatası değil, örneklem
+büyüklüğü farkı; floor control modelin tam merdiveni her koşulda çalıştığı için (yukarıya bkz.)
+bu sayı Faz 3'ün davranışını etkilemiyor. Test dizini sonra silindi.
+
+---
+
 ## Kardeş ML çalışmasından devralınan dersler
 
 `~/github-projects/imbalance-calibration` — tamamlandı, yayında. Orada yakalanan yedi hata,
