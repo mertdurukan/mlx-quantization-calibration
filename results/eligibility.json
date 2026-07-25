@@ -1,6 +1,28 @@
 {
+  "llama3.2-1b": {
+    "arc_challenge": 0.222,
+    "mmlu": 0.238,
+    "eligible": false
+  },
+  "llama3.2-3b": {
+    "arc_challenge": 0.222,
+    "mmlu": 0.238,
+    "eligible": false
+  },
+  "qwen2.5-0.5b": {
+    "arc_challenge": 0.518,
+    "mmlu": 0.436,
+    "eligible": true,
+    "role": "floor_control"
+  },
   "qwen2.5-1.5b": {
     "arc_challenge": 0.765,
+    "mmlu": 0.571,
+    "eligible": true
+  },
+  "qwen2.5-3b": {
+    "arc_challenge": 0.81,
+    "mmlu": 0.647,
     "eligible": true
   }
 }

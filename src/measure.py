@@ -16,6 +16,15 @@ def _format_prompt(template: str, item) -> str:
     return template.format(question=item.question, options=options_block)
 
 
+def _option_token_ids(tokenizer, labels) -> list:
+    """Logit index for each option letter. Uses the LAST token of
+    `encode(" " + label)`, not the first: some tokenizers (e.g. Llama-3.2)
+    prepend a constant leading special token (BOS) to every encode() call,
+    which would otherwise make every label resolve to that same BOS index.
+    The label's own token is always last regardless of a leading BOS."""
+    return [tokenizer.encode(" " + label)[-1] for label in labels]
+
+
 def _score_item(model, tokenizer, template, item) -> dict:
     prompt = _format_prompt(template, item)
     ids = tokenizer.encode(prompt)
@@ -23,7 +32,7 @@ def _score_item(model, tokenizer, template, item) -> dict:
     t0 = time.perf_counter()
     logits = model(mx.array([ids]))[0, -1, :]
     logprobs = logits - mx.logsumexp(logits)
-    option_logprobs = [float(logprobs[tokenizer.encode(" " + label)[0]]) for label in item.labels]
+    option_logprobs = [float(logprobs[tid]) for tid in _option_token_ids(tokenizer, item.labels)]
     latency_ms = (time.perf_counter() - t0) * 1000
 
     probs = mx.softmax(mx.array(option_logprobs)).tolist()
