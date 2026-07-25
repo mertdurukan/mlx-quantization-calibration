@@ -19,25 +19,52 @@
 
 ## Şu an
 
-**FAZ 3, Görev 1-2-3-4 tamamlandı. Sırada Görev 5 (`src/quantize.py` + `src/measure.py`).**
-`src/benchmarks.py` yazıldı (`Item`, `load_items`) — ARC-Challenge id'ye göre sıralı ilk 1000,
-MMLU 57 konuya orantılı stratified (seed 0, kalan konu adına göre dağıtılır). `pytest tests/ -v`
-→ **25 passed** (13 metrik + 2 determinizm/mutasyon + 1 prompt-freeze + 9 benchmarks).
+**FAZ 3, Görev 1-2-3-4-5 tamamlandı. Sırada Görev 6 (`tests/test_no_leakage.py` + MUTASYON KANITI).**
+`src/quantize.py` (`build`, `teardown`) ve `src/measure.py` (`run_cell`) yazıldı. `pytest tests/ -v`
+→ **25 passed** (yeni test dosyası yok — Görev 5'in SPEC talimatı test-önce gerektirmiyordu).
 
-Repoda şu an olanlar: `src/config.py`, `src/metrics.py` (tam implementasyon, Görev 3),
-`src/benchmarks.py` (tam implementasyon, Görev 4), `prompts/mc_letter.txt` (donmuş, SHA-256
-`config.PROMPT_SHA256` ile korunuyor), `tests/test_prompt_frozen.py`, `tests/test_determinism.py`
-(PREREG §4.6.6, gerçek `assert`'li 2 test), `tests/test_metrics.py` (13 test),
-`tests/test_benchmarks.py` (9 test — determinizm, 57 konu kapsaması, `answer_idx` aralığı,
-ARC sıralaması), `requirements.txt` + `requirements.lock.txt` (`statsmodels`, `scipy` dahil),
-`Makefile`, `.gitignore`, `results/{cells,meta,tables,figures}` iskeleti, `scratch/` (14 keşif
-script'i, hâlâ commit'te). `CLAUDE.md` Adım 2'deki görev-numarası taraması bu oturumda ilk kez
-gerçek işe yaradı: Görev 4'e etiketli açık bulgu ("MMLU seçenek sayısı doğrulanmadı") tarama
-sırasında yakalandı ve implementasyona başlamadan **çalıştırılarak** çözüldü — bkz. aşağı.
+Repoda şu an olanlar: `src/config.py`, `src/metrics.py` (Görev 3), `src/benchmarks.py` (Görev 4),
+`src/quantize.py` + `src/measure.py` (Görev 5, tam implementasyon, dört mod da — bf16, affine,
+mxfp4, recipe — gerçek dönüşümle fonksiyonel doğrulandı), `prompts/mc_letter.txt` (donmuş,
+SHA-256 `config.PROMPT_SHA256` ile korunuyor), `tests/test_prompt_frozen.py`,
+`tests/test_determinism.py` (PREREG §4.6.6, gerçek `assert`'li 2 test), `tests/test_metrics.py`
+(13 test), `tests/test_benchmarks.py` (9 test), `requirements.txt` + `requirements.lock.txt`
+(`statsmodels`, `scipy` dahil), `Makefile`, `.gitignore`, `results/{cells,meta,tables,figures}`
+iskeleti, `scratch/` (14 keşif script'i, hâlâ commit'te). `CLAUDE.md` Adım 2'deki görev-numarası
+taraması bu oturumda **ikinci kez** işe yaradı: Görev 5'e etiketli açık bulgu (`mixed_*` recipe
+çağrı biçimi) tarama sırasında yakalandı ve implementasyona başlamadan **çalıştırılarak**
+çözüldü — bkz. aşağı.
 
-**DUR noktası yok şu an** — Görev 4 kullanıcı onayı gerektirmiyordu. Sıradaki iş Görev 5.
+**DUR noktası yok şu an** — Görev 5 kullanıcı onayı gerektirmiyordu. Sıradaki iş Görev 6, ve
+Görev 6 PROTOKOL Kural 4 gereği **mutasyon kanıtı** içeriyor — atlanamaz.
 
-## Son oturumda ne oldu (2026-07-25, Görev 4 — benchmarks.py)
+## Son oturumda ne oldu (2026-07-25, Görev 5 — quantize.py + measure.py)
+
+1. **Adım 2 taraması Görev 5'i engelleyen bir açık bulgu buldu:** "`mixed_*` recipe'lerin nasıl
+   çağrıldığı doğrulanmadı · Engellediği görev: 5". `mlx_lm/convert.py` kaynağı okunarak ve
+   cache'teki `Qwen2.5-0.5B-Instruct-bf16` ile **gerçek bir `convert()` çağrısı** yapılarak
+   çözüldü: `quant_predicate` doğrudan `condition_tag` string'i (`mlx_lm.QUANT_RECIPES` ile
+   birebir eşleşiyor), `q_mode="affine"` zorunlu, `q_group_size=None`/`q_bits=None`. `mixed_2_6`
+   ile dönüştürülen modelin `config.json`'ında 169 katmanda yalnızca `{2, 6}` bit görüldü, model
+   `load()`+`generate()` ile gerçekten çalıştırıldı. Detay: GECMIS.md.
+2. `src/quantize.py` yazıldı: `build(model_key, condition_tag, out_dir)` dört dalı yönetiyor
+   (bf16 → cache yolu, `effective_bits=16.0`; affine/mxfp4 → doğrudan bits/group_size; recipe →
+   `quant_predicate=`). `effective_bits`, `convert()`'in stdout'undan (`"Quantized model with
+   X bits per weight."`) regex ile parse ediliyor — SPEC'in "varsayılmaz" kuralı. `teardown`
+   dizini siler.
+3. `src/measure.py` yazıldı: `run_cell(model_path, items)`. Warmup semantiği SPEC §4'teki meta
+   şemasından (`n_items_scored`/`n_warmup_discarded` ayrı alanlar) çıkarıldı: ilk `N_WARMUP`
+   item önce çalıştırılıp atılıyor, **sonra tüm** `items` (1000'in tamamı, ilk 20 dahil)
+   skorlanıyor — yani skorlanan sayı her zaman `N_ITEMS`, warmup ek maliyet. Güven, seçenek
+   harfi token'larının (` A`, ` B`, ...) log-prob'ları üzerinden softmax ile hesaplanıyor; tek
+   item hatası `status="failed"` ile hücreyi düşürmüyor.
+4. Kabul kriteri çalıştırıldı: `build('qwen2.5-1.5b','affine_b4_g64',...)` →
+   `effective_bits: 4.501 | nominal 4 ile ayni mi: False`. Ek fonksiyonel doğrulama: bf16
+   (cache yolu, 16.0), mxfp4_b4_g32 (4.252), mixed_2_6 (2.937, `build` üzerinden de aynı sonuç);
+   `measure.run_cell` cache'teki 0.5B + 30 ARC item ile çalıştırıldı → 30 satır, 0 failed,
+   doğruluk ~%37. `pytest tests/ -q` → 25 passed (regresyon yok).
+
+## Önceki oturum (2026-07-25, Görev 4 — benchmarks.py)
 
 1. **Adım 2 taraması Görev 4'ü engelleyen bir açık bulgu buldu:** "MMLU'da seçenek sayısı her
    zaman 4 mü, doğrulanmadı · Engellediği görev: 4". İmplementasyona başlamadan önce
@@ -147,8 +174,7 @@ Fizibiliteden ön-kayda kadar tüm zincir tamamlandı:
 
 ## Kritik açık noktalar
 
-- `src/quantize.py` ve `src/measure.py` henüz yok (Görev 5) — `mixed_*` recipe çağrı biçimi
-  hâlâ doğrulanmadı (AÇIK BULGU, Görev 5'i engelliyor)
+- `tests/test_no_leakage.py` henüz yok (Görev 6) — mutasyon kanıtı zorunlu (PROTOKOL Kural 4)
 - Uygunluk kapısı (bf16 ≥ %50) sırası `runner.py`'de mekanik olarak zorlanmalı (Görev 7)
 
 ## Bütçe hatırlatması
@@ -169,5 +195,6 @@ Disk: `convert → evaluate → delete`, HF cache ≈ 20 GB.
 | 2026-07-25 | Görev 2 — metrik testleri yazıldı, implementasyon YOK, kullanıcı onayı bekleniyor | (önceki oturum) |
 | 2026-07-25 | Görev 2 onaylandı; Görev 3 — `src/metrics.py` implementasyonu, statsmodels/scipy eklendi, test unpacking hatası düzeltildi, 14/14 yeşil | (önceki oturum) |
 | 2026-07-25 | `test_determinism.py` gerçek pytest testine çevrildi (16/16 yeşil); `CLAUDE.md` protokol boşluğu kapatıldı | (önceki oturum) |
-| 2026-07-25 | Görev 4 — `src/benchmarks.py` + `tests/test_benchmarks.py` (9 test), MMLU/ARC seçenek sayısı açık bulgusu çözüldü, 25/25 yeşil | (bu oturum) |
+| 2026-07-25 | Görev 4 — `src/benchmarks.py` + `tests/test_benchmarks.py` (9 test), MMLU/ARC seçenek sayısı açık bulgusu çözüldü, 25/25 yeşil | (önceki oturum) |
+| 2026-07-25 | Görev 5 — `src/quantize.py` + `src/measure.py`, `mixed_*` recipe açık bulgusu çözüldü, dört mod fonksiyonel doğrulandı | (bu oturum) |
 | | | |

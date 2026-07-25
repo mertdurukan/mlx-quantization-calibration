@@ -248,6 +248,63 @@ kararı şimdi veriyle doğrulandı, kod tarafında hiçbir yerde "4 seçenek" s
 
 ---
 
+## Görev 5 öncesi açık bulgu çözümü (2026-07-25)
+
+### `mixed_*` recipe çağrı biçimi doğrulandı — `quant_predicate` string, `q_group_size=None`
+Görev 1'de kaydedilen açık bulgu ("`mixed_*` recipe'lerin nasıl çağrıldığı doğrulanmadı ·
+Engellediği görev: 5"), CLAUDE.md Adım 2'deki görev-numarası taramasıyla yakalandı ve
+implementasyona başlamadan **çalıştırılarak** çözüldü. `mlx_lm/convert.py` kaynağı okundu ve
+gerçek bir `convert()` çağrısıyla (`Qwen2.5-0.5B-Instruct-bf16`, cache'te hazır) doğrulandı:
+
+- `mlx_lm.convert.QUANT_RECIPES == ["mixed_2_6", "mixed_3_4", "mixed_3_6", "mixed_4_6"]` —
+  `config.CONDITIONS`'taki `mixed_*` etiketleriyle **birebir aynı string**. `condition_tag`
+  doğrudan `quant_predicate=` argümanına geçirilebiliyor, ayrı bir eşleme tablosu gerekmiyor.
+- `quant_predicate` bir `str` olduğunda `convert()` içeride `q_mode != "affine"` ise
+  `ValueError` fırlatıyor — yani recipe çağrılarında `q_mode="affine"` **zorunlu**
+  (mxfp4/mxfp8 recipe yok, PREREG §4.1'deki "mixed recipes — mode: —" satırıyla tutarlı).
+- `q_group_size` recipe çağrısında `None` geçilmeli (PREREG §4.1 tablosundaki "group_size:
+  default" tam olarak bunu ifade ediyor). `None`, `mixed_quant_predicate_builder`'ın kendi
+  varsayılanını (`64`) **ezmiyor** çünkü zincirin sonunda `mx.core.quantize(group_size=None,
+  ...)` `affine` modu için kendi iç varsayılanı 64'ü uyguluyor — `config.json`'da
+  `quantization.group_size == 64` olarak doğrulandı (üst seviye), per-layer sözlüklerde
+  `group_size: None` görünmesi kozmetik (predicate'in döndürdüğü ham değer), gerçek
+  kuantizasyona etkisi yok.
+- `q_bits=None` de aynı şekilde geçilmeli — `quant_predicate` her katman için kendi
+  `{"bits": ...}` sözlüğünü döndürdüğünden üst seviye `bits` argümanı per-layer override'ları
+  etkilemiyor.
+- Uçtan uca doğrulama: `mixed_2_6` ile dönüştürülen 0.5B modelin `config.json`'ında 169
+  per-layer girişte **yalnızca `{2, 6}`** bit değerleri görüldü (recipe adıyla birebir
+  eşleşiyor), model `mlx_lm.load()` + `generate()` ile **gerçekten çalıştırıldı** (çökme yok).
+  Konsol logu `"[INFO] Quantized model with 2.937 bits per weight."` satırını üretti — SPEC'in
+  istediği "efektif bit dönüşüm logundan parse edilir" kuralı bu recipe için de geçerli ve
+  test edildi.
+
+**Sonuç:** `src/quantize.py::build`'ın `recipe` dalı, `condition_tag`'i doğrudan
+`quant_predicate=` olarak geçiriyor, `q_mode="affine"`, `q_group_size=None`, `q_bits=None`.
+
+### Warmup semantiği: 20 item **ek**, 1000'den **düşülmüyor**
+SPEC §3 `measure.run_cell` metni ("ilk `N_WARMUP` item çalıştırılır ve atılır... sayılmaz")
+tek başına iki okumaya açıktı: (a) toplam 1000 item'ın ilk 20'si warmup olur, geriye kalan
+980'i skorlanır; (b) warmup 1000'in **dışında**, aynı ilk-20 item iki kez çalıştırılır (önce
+ısınma, sonra gerçek skor), skorlanan toplam yine 1000 kalır. SPEC §4'teki meta şeması
+(`"n_items_scored": 1000, "n_warmup_discarded": 20` — **ayrı ayrı** alanlar, biri diğerinden
+düşülmüyor) okuması (b)'yi doğruluyor: `N_ITEMS=1000` her hücrede **skorlanan** sayıdır,
+warmup ekstra bir maliyettir. **Karar, sonuç görülmeden önce**, yalnızca SPEC §4 şema
+tanımına dayanarak verildi: `run_cell`, `items[:N_WARMUP]`'ı önce (atılarak) çalıştırıyor,
+sonra **tüm** `items` listesini (1000'in tamamı, ilk 20 dahil) skorluyor. Görev 6'da
+`tests/test_no_leakage.py` bu sözleşmeyi (`n_scored == n_items`) mekanik olarak kilitleyecek.
+
+### Fonksiyonel doğrulama (Kural 6) — üç mod da gerçek dönüşümle test edildi
+`src/quantize.py::build` her üç dal için (bf16, affine, mxfp4) ve `recipe` dalı için cache'teki
+`Qwen2.5-0.5B-Instruct-bf16` ile gerçekten çalıştırıldı: `affine_b4_g64` → 4.501 bit (Görev 5
+kabul kriteri, `1.5b` ile), `bf16` → cache yolu döndü (dönüştürme yok, `effective_bits=16.0`),
+`mxfp4_b4_g32` → 4.252 bit, `mixed_2_6` → 2.937 bit. `src/measure.py::run_cell` da aynı
+dönüştürülmüş 0.5B model + 30 ARC-Challenge item'ıyla çalıştırıldı: 30 satır, 0 `status="failed"`,
+doğruluk ~%37 (0.5B'nin beklenen düşük-doğruluk aralığında, GECMIS'teki "0.5B ana ızgaradan
+çıkarıldı" notuyla tutarlı).
+
+---
+
 ## Kardeş ML çalışmasından devralınan dersler
 
 `~/github-projects/imbalance-calibration` — tamamlandı, yayında. Orada yakalanan yedi hata,

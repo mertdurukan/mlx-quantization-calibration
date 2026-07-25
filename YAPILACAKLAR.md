@@ -95,7 +95,7 @@ print(len(a), [x.item_id for x in a[:3]]==[x.item_id for x in b[:3]])"
 
 ---
 
-### [ ] Görev 5 — `src/quantize.py` + `src/measure.py`
+### [x] Görev 5 — `src/quantize.py` + `src/measure.py` — TAMAMLANDI 2026-07-25
 **Ön koşul:** Görev 4
 **Yap:** SPEC §3'teki sözleşmeler.
 - `quantize.build` → `snapshot_download` **önce**, sonra `convert`; `effective_bits` **dönüşüm
@@ -227,7 +227,7 @@ GitHub vitrini (description, topics), release + Zenodo DOI, sonra arXiv / doğru
 > `- [ ] **[TARİH]** <bulgu> · Engellediği görev: <no|yok> · Ciddiyet: kritik|orta|düşük`
 
 - [ ] **[2026-07-24]** `mxfp8` group size kısıtı doğrulanmadı (mxfp4'ün 32 olduğu kanıtlandı, mxfp8 varsayıldı). Ön-kayıtta mxfp8 koşulu yok, o yüzden şimdilik engel değil. · Engellediği görev: yok · Ciddiyet: düşük
-- [ ] **[2026-07-24]** `mixed_*` recipe'lerin nasıl çağrıldığı (`quant_predicate` string mi, builder fonksiyonu mu) doğrulanmadı. Görev 5'te kanıtlanmalı. · Engellediği görev: 5 · Ciddiyet: orta
+- [x] **[2026-07-24]** `mixed_*` recipe'lerin nasıl çağrıldığı (`quant_predicate` string mi, builder fonksiyonu mu) doğrulanmadı. Görev 5'te kanıtlanmalı. **Çözüldü (2026-07-25, Görev 5 öncesi):** `mlx_lm/convert.py` kaynağı okundu + gerçek `convert()` çağrısıyla doğrulandı — `quant_predicate` doğrudan `condition_tag` string'i (`"mixed_2_6"` vb., `QUANT_RECIPES` ile birebir eşleşiyor), `q_mode="affine"` zorunlu, `q_group_size=None`/`q_bits=None` (recipe kendi per-layer bit/group değerlerini döndürüyor, gerçek group size iç varsayılan 64'e düşüyor — `config.json`'da doğrulandı). Detay: GECMIS.md. · Engellediği görev: yok (çözüldü) · Ciddiyet: orta
 - [ ] **[2026-07-24]** Llama-3.2-1B ve 3B'nin doğruluğu hiç ölçülmedi (sadece erişilebilirliği doğrulandı). Uygunluk kapısı bunu FAZ 1'de zaten yakalayacak, ama havuzun 4'ten aza düşme riski var. · Engellediği görev: yok · Ciddiyet: orta
 - [x] **[2026-07-24]** MMLU'da seçenek sayısı her zaman 4 mü, doğrulanmadı. `n_options` sabit varsayılmamalı. **Çözüldü (2026-07-25, Görev 4 öncesi):** `cais/mmlu` `all`/test split'i (14042 satır) **çalıştırılarak** tarandı — hepsi tam 4 seçenekli. Ayrıca `allenai/ai2_arc` ARC-Challenge test split'i (1172 satır) de tarandı: seçenek sayısı **{3, 4, 5} arasında değişiyor** — bu da SPEC'teki `Item.options: list[str]` + `n_options` kolonunun sabit varsayılmaması gerektiğini doğruluyor, `load_items`/`run_cell` seçenek sayısını asla 4'e sabitlememeli. Detay: GECMIS.md. · Engellediği görev: yok (çözüldü) · Ciddiyet: orta
 - [x] **[2026-07-25]** `tests/test_determinism.py` pytest `assert` içermiyor — top-level script, import edildiğinde (yani her `make test`'te) gerçek bir 1.5B model conversion'ı çalıştırıyor ve sadece print ediyor. `pytest` onu topluyor ama hiçbir test fonksiyonu bulamıyor (0 test), yine de içeriği collection sırasında **çalışıyor** — her `make test` artık ağ/HF-cache'e bağımlı ve yavaş, ve gerçek bir pass/fail sinyali yok. PREREG §4.6.6 sözleşmesi "geçti" olarak commit edilmişti ama pytest formatında değil. **Çözüldü:** `pytest.fixture(scope="module")` + iki gerçek test fonksiyonuna (`test_repeated_inference_is_bit_identical`, `test_injected_noise_is_detected`) çevrildi; sözleşme ve mutasyon kanıtı aynı, artık gerçek pass/fail veriyor. `pytest tests/ -v` → 16/16 passed (bkz. 2 yeni test). · Engellediği görev: yok · Ciddiyet: orta
@@ -247,3 +247,4 @@ GitHub vitrini (description, topics), release + Zenodo DOI, sonra arXiv / doğru
 - [x] **2026-07-25** Görev 2 — `tests/test_metrics.py` (13 test) yazıldı, `src/metrics.py` imza iskeleti, kullanıcı onayı alındı
 - [x] **2026-07-25** Görev 3 — `src/metrics.py` implementasyonu; `statsmodels`/`scipy` eklendi; testte bulunan unpacking hatası kullanıcı onayıyla düzeltildi; `pytest tests/` → 14 passed
 - [x] **2026-07-25** Görev 4 — `src/benchmarks.py` (`Item`, `load_items`) + `tests/test_benchmarks.py` (9 test); Görev 4'ü engelleyen açık bulgu (MMLU seçenek sayısı) çözüldü; `pytest tests/` → 25 passed
+- [x] **2026-07-25** Görev 5 — `src/quantize.py` (`build`, `teardown`) + `src/measure.py` (`run_cell`); Görev 5'i engelleyen açık bulgu (`mixed_*` recipe çağrı biçimi) çözüldü; dört mod da (bf16, affine, mxfp4, recipe) gerçek dönüşümle fonksiyonel doğrulandı; kabul kriteri → `effective_bits: 4.501 | ... False`
