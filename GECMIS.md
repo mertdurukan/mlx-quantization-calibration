@@ -121,6 +121,42 @@ model conversion'ı tetikliyor, pytest 0 test topluyor. Bir sonraki oturumda ele
 
 ---
 
+## Görev 2 — metrik testleri, implementasyon YOK (2026-07-25)
+
+### `src/metrics.py` yazılmadı — YAPILACAKLAR'ın açık talimatına uyuldu
+Görev 2 metni iki yerde çelişiyordu: "Yap" bölümü `src/metrics.py`'yi **YAZMA** diyor, kabul
+kriteri ise "hepsi `NotImplementedError` ile FAIL etmeli" diyor. Modül hiç yoksa bu mümkün
+değil — import `ModuleNotFoundError` ile **collection hatası** verir, tek tek test FAIL'i
+değil. Çalıştırılıp doğrulandı (`pytest tests/test_metrics.py -q` → "1 error during
+collection"). SPEC §7 madde 2 metrics.py'nin bu aşamada var olmadığını teyit ediyor, yani
+YAZMA talimatı doğru kabul edildi, stub bile yazılmadı. Karar: kullanıcıya gerçek çıktı
+gösterilecek, kabul kriteri metni muhtemelen yanlış yazılmış — düzeltme kullanıcıya bırakıldı.
+AÇIK BULGULAR'a eklendi. **Kararın ne zaman verildiği:** sonuçlar (collection hatası)
+görülmeden önce, yalnızca YAPILACAKLAR + SPEC metni okunarak.
+
+### Sentetik test verileri numpy-only referans implementasyonlarla doğrulandı
+`statsmodels`/`scipy` kurulu değil (requirements.txt'te yok, ayrı bir açık bulgu olarak
+kaydedildi). `cal_slope`/`cal_intercept` testlerindeki toleransları (ör. mükemmel kalibrasyonda
+1.0±0.05) rastgele seçmek yerine, sıfırdan bir Newton-Raphson lojistik regresyon (numpy-only)
+yazıp gerçek sayıları hesapladım ve script'i **committe etmedim** (scratch, `/private/tmp`
+altında). Sonuçlar: mükemmel kalibrasyon slope≈1.012/intercept≈0.001, aşırı-uçlu (2× logit)
+slope≈0.501, sistematik aşırı-güven (logit+1 kayma) intercept≈-1.012. ECE için de aynı şekilde
+`np.array_split` tabanlı referans fonksiyon yazıp N=97'de bin boyutlarının (7,6) en fazla 1
+farklı olduğunu, N=50000 mükemmel kalibrasyonda ECE<0.01 olduğunu, dengeli+sabit-0.9 güvende
+ECE'nin **tam olarak** 0.4'e eşitlendiğini (her bin'in doğruluğu 0.9'un altında kaldığı için
+mutlak değer toplamının teleskopik olarak sadeleşmesiyle) ve dar-aralık/eşit-genişlik-kör
+kurgusunda equal-width tek-bin ECE'sinin tam 0.0, equal-mass'ın ise >0.05 çıktığını doğruladım.
+**Neden önemli:** kardeş çalışmada tam bu adım atlanmış ve ECE testi sıralı `y` üretildiği için
+doğru kodda bile patlamıştı (PROTOKOL Kural 3) — burada tersine, testi yazmadan önce verinin
+gerçekten iddia edilen davranışı ürettiğini kanıtladım.
+
+### `bootstrap_ci` dönüş tipi `(lo, point, hi)` tuple olarak varsayıldı
+SPEC §3 dönüş tipini belirtmiyor. Test dosyası bu sözleşmeyi `(lo, point, hi)` tuple olarak
+sabitliyor — Görev 3 bunu değiştiremez (testi zayıflatmadan geçirme kuralı). Karar sonuçlar
+görülmeden, yalnızca yaygın kullanım deseni baz alınarak verildi.
+
+---
+
 ## Kardeş ML çalışmasından devralınan dersler
 
 `~/github-projects/imbalance-calibration` — tamamlandı, yayında. Orada yakalanan yedi hata,

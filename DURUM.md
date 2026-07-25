@@ -19,19 +19,41 @@
 
 ## Şu an
 
-**FAZ 3, Görev 1 tamamlandı.** İskelet ayakta, prompt şablonu donduruldu, `src/config.py` tek
-gerçek kaynak olarak yazıldı. Henüz gerçek metrik/benchmark/quantize kodu yok.
+**FAZ 3, Görev 1 tamamlandı. Görev 2 yazıldı, kullanıcı onayı BEKLENİYOR — Görev 3'e geçilmedi.**
+`tests/test_metrics.py` yazıldı (13 test), `src/metrics.py` **yazılmadı** (talimat gereği).
+Kabul kriteri çalıştırıldı: `ModuleNotFoundError` ile collection hatası (aşağıda gerekçesi var
+— YAPILACAKLAR'daki kabul kriteri metni muhtemelen yanlış yazılmış, AÇIK BULGULAR'a eklendi).
 
 Repoda şu an olanlar: `src/config.py` (+ `__init__.py`), `prompts/mc_letter.txt` (donmuş,
 SHA-256 `config.PROMPT_SHA256` ile korunuyor), `tests/test_prompt_frozen.py`,
-`tests/test_determinism.py` (taşındı, PREREG §4.6.6), `requirements.txt` +
-`requirements.lock.txt`, `Makefile`, `.gitignore`, `results/{cells,meta,tables,figures}`
-iskeleti, `scratch/` (14 keşif script'i taşındı, hâlâ commit'te — bkz. GECMIS.md).
+`tests/test_determinism.py` (taşındı, PREREG §4.6.6), `tests/test_metrics.py` (yeni, 13 test,
+hepsi `src.metrics` importunda collection hatasıyla düşüyor — implementasyon yok),
+`requirements.txt` + `requirements.lock.txt`, `Makefile`, `.gitignore`,
+`results/{cells,meta,tables,figures}` iskeleti, `scratch/` (14 keşif script'i taşındı, hâlâ
+commit'te — bkz. GECMIS.md).
 
-Sıradaki görev: `YAPILACAKLAR.md` → **Görev 2** (metrik testleri — önce test, implementasyon YOK,
-kullanıcı onayından sonra Görev 3).
+**DUR noktasındayız (PROTOKOL Kural 3):** `tests/test_metrics.py`'yi kullanıcıya göster, onay
+al. Onaylanırsa sıradaki iş Görev 3 (`src/metrics.py` implementasyonu) — ama önce
+`requirements.txt`'e `statsmodels`+`scipy` eklenmeli (AÇIK BULGULAR, Görev 3'ü engelliyor).
 
-## Son oturumda ne oldu (2026-07-25)
+## Son oturumda ne oldu (2026-07-25, devam)
+
+1. `tests/test_metrics.py` yazıldı — YAPILACAKLAR Görev 2'deki 13 testin hepsi: `cal_slope`
+   (mükemmel + aşırı-uçlu), `cal_intercept` (mükemmel + sistematik aşırı-güven), `ece`
+   (eşit-kütle referans eşleşmesi + bin-boyutu garantisi, mükemmel kalibrasyon, dengeli+sabit
+   güven ≈0.4, eşit-genişlik-kör/eşit-kütle-gören kurgu), `overconfidence_rate` (elle vaka),
+   `brier` (elle vaka), `bootstrap_ci` (nokta=tam-örneklem + kwargs iletimi), clipping (0/1 güven)
+2. Her sentetik veri, numpy-only Newton-Raphson referans implementasyonlarla **çalıştırılarak**
+   doğrulandı (statsmodels kurulu değil) — script committe edilmedi (bkz. GECMIS.md)
+3. Kabul kriteri çalıştırıldı: `ModuleNotFoundError: No module named 'src.metrics'`
+   (collection hatası, tek tek `NotImplementedError` FAIL'i değil)
+4. **İki açık bulgu kaydedildi:** (a) Görev 2'nin kabul kriteri metni ile "YAZMA" talimatı
+   çelişiyor — YAZMA'ya uyuldu, kullanıcı onayı/düzeltmesi bekleniyor; (b) `requirements.txt`'te
+   `statsmodels`/`scipy` yok, Görev 3'ü engelliyor
+5. `bootstrap_ci` dönüş tipi `(lo, point, hi)` tuple olarak test dosyasında sabitlendi (SPEC
+   bunu belirtmiyordu) — GECMIS.md'ye karar olarak yazıldı
+
+## Önceki oturum (2026-07-25, sabah)
 
 1. Dizin iskeleti oluşturuldu: `src/`, `tests/`, `prompts/`, `results/{cells,meta,tables,figures}`,
    `scratch/`
@@ -86,5 +108,6 @@ Disk: `convert → evaluate → delete`, HF cache ≈ 20 GB.
 | Tarih | Ne yapıldı | Commit |
 |---|---|---|
 | 2026-07-24 | Fizibilite kapısı, eksen keşfi, ön-kayıt, determinizm | `ffa07c7` … `c5ea71c` |
-| 2026-07-25 | Görev 1 — ortam iskeleti, config, prompt dondurma | (bu oturum) |
+| 2026-07-25 | Görev 1 — ortam iskeleti, config, prompt dondurma | `2a4d0c5` |
+| 2026-07-25 | Görev 2 — metrik testleri yazıldı, implementasyon YOK, kullanıcı onayı bekleniyor | (bu oturum) |
 | | | |
