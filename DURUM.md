@@ -24,7 +24,16 @@ convert path çakışması) bulundu ve çözüldü, sağlık kontrolü kullanıc
 **onaylandı**: 2-bit hücresi bf16'dan belirgin kötü (acc 0.244 vs 0.765, ECE 0.498 vs 0.130) —
 kuantizasyon gerçekten uygulanıyor. Süre bütçesi (~7.75 saat tahmini, en hızlı modelle) kullanıcıya
 bildirildi, kullanıcı tam koşuya (Görev 9) onay verdi: "Onaylıyorum, tam koşuyu başlat."
-Sırada Görev 9 — `caffeinate -i make reproduce`, kesinti/devam testiyle.**
+
+**Görev 9 sürüyor.** `caffeinate -i make reproduce` başlatıldı (arka plan görevi `bsc7u30gf`),
+`test` (33 passed) → `src.runner` (`run_all`, tam 140 hücrelik ızgara) aşamasında. **Kesinti/devam
+testi yapıldı ve geçti** (SPEC'in kendi kabul kriteri): ilk koşu ~5 dk sonra `TaskStop` ile
+kesildi (henüz hiçbir yeni hücre yazılmamıştı, ilk bf16 hücresi ortasındaydı — indirme/ölçüm
+aşaması), yeniden başlatıldıktan sonra pilot'un 3 hücresinin parquet `mtime`'ları **değişmedi**
+(20:12/20:19/20:23, aynı) — tamamlanmış hücreler gerçekten atlanıyor, yeniden hesaplanmıyor.
+Tam koşu artık kesintisiz sürüyor, tamamlanınca bildirilecek. **Not:** `make reproduce`'un son
+adımı `src.analyze`'ı çağırıyor ama o modül henüz yok (Görev 10) — grid bittikten sonra beklenen
+bir `ModuleNotFoundError` ile bitecek, veri kaybı yok (bkz. AÇIK BULGULAR, düşük ciddiyet).
 `src/runner.py::run_all` tamamen implemente edildi (üç fazlı sıra, parquet cache, teardown,
 never-raise), artı Görev 7 sırasında keşfedilen bir açık bulgu (`make pilot`'ın hiç tanımlanmamış
 bir CLI/model beklemesi) çözülürken eklenen `run_pilot()` + `__main__`/`argparse` girişi.
