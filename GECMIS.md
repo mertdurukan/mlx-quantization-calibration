@@ -228,6 +228,26 @@ genel "en iyisini yap" onayıyla, sonuç görülmeden önce.
 
 ---
 
+## Görev 4 öncesi açık bulgu çözümü (2026-07-25)
+
+### MMLU/ARC-Challenge seçenek sayısı doğrulandı — sabit varsayılamaz
+Görev 1'de kaydedilen açık bulgu ("MMLU'da seçenek sayısı her zaman 4 mü, doğrulanmadı"),
+Görev 4'ü (`src/benchmarks.py`) engelliyordu. CLAUDE.md Adım 2'deki görev-numarası taramasıyla
+yakalandı ve implementasyona başlamadan **çalıştırılarak** çözüldü:
+
+- `cais/mmlu` `all` split, `test` (14042 satır) — hepsinin `choices` uzunluğu taranarak
+  tek bir küme elde edildi: `{4}`. MMLU her zaman 4 seçenekli.
+- `allenai/ai2_arc` `ARC-Challenge` `test` (1172 satır) — aynı tarama: `{3, 4, 5}`. ARC-Challenge
+  **sabit değil.**
+
+**Sonuç:** `src/benchmarks.py::Item.options` zaten bir `list[str]` olarak tasarlanmıştı
+(SPEC §3) ve `results/` şemasında ayrı bir `n_options` kolonu var (SPEC §4) — bu tasarım
+kararı şimdi veriyle doğrulandı, kod tarafında hiçbir yerde "4 seçenek" sabitlenmeyecek.
+`load_items` seçenek sayısını kaynaktan olduğu gibi alacak, `answer_idx`'i o item'ın kendi
+`options`/`labels` uzunluğuna göre geçerli aralıkta üretecek.
+
+---
+
 ## Kardeş ML çalışmasından devralınan dersler
 
 `~/github-projects/imbalance-calibration` — tamamlandı, yayında. Orada yakalanan yedi hata,

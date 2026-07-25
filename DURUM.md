@@ -19,29 +19,47 @@
 
 ## Şu an
 
-**FAZ 3, Görev 1-2-3 tamamlandı. Sırada Görev 4 (`src/benchmarks.py` + örnekleme
-determinizmi).** `src/metrics.py` tam olarak implemente edildi (`ece`, `cal_slope`,
-`cal_intercept`, `brier`, `overconfidence_rate`, `mean_conf_by_correctness`,
-`bootstrap_ci`) — `statsmodels` GLM (`offset=` ile) ve numpy kullanıyor. `tests/test_determinism.py`
-gerçek pytest testine çevrildi (eski açık bulgu kapandı). `pytest tests/ -v` →
-**16 passed** (13 metrik testi + 2 determinizm/mutasyon testi + 1 prompt-freeze testi).
+**FAZ 3, Görev 1-2-3-4 tamamlandı. Sırada Görev 5 (`src/quantize.py` + `src/measure.py`).**
+`src/benchmarks.py` yazıldı (`Item`, `load_items`) — ARC-Challenge id'ye göre sıralı ilk 1000,
+MMLU 57 konuya orantılı stratified (seed 0, kalan konu adına göre dağıtılır). `pytest tests/ -v`
+→ **25 passed** (13 metrik + 2 determinizm/mutasyon + 1 prompt-freeze + 9 benchmarks).
 
 Repoda şu an olanlar: `src/config.py`, `src/metrics.py` (tam implementasyon, Görev 3),
-`prompts/mc_letter.txt` (donmuş, SHA-256 `config.PROMPT_SHA256` ile korunuyor),
-`tests/test_prompt_frozen.py`, `tests/test_determinism.py` (PREREG §4.6.6, artık gerçek
-`assert`'li 2 test — `test_repeated_inference_is_bit_identical`,
-`test_injected_noise_is_detected`), `tests/test_metrics.py` (13 test, hepsi geçiyor — bir
-unpacking hatası kullanıcı onayıyla düzeltildi, bkz. aşağı), `requirements.txt` +
-`requirements.lock.txt` (artık `statsmodels`, `scipy` dahil), `Makefile`, `.gitignore`,
-`results/{cells,meta,tables,figures}` iskeleti, `scratch/` (14 keşif script'i, hâlâ commit'te).
-`CLAUDE.md` Adım 2'ye bir kural eklendi: görev başlamadan önce `AÇIK BULGULAR`'da o görev
-numarasına etiketli işaretlenmemiş bulgu var mı taranacak (önceki oturumda kullanıcıya
-sorulmuş, bu oturumda onaylanıp uygulandı).
+`src/benchmarks.py` (tam implementasyon, Görev 4), `prompts/mc_letter.txt` (donmuş, SHA-256
+`config.PROMPT_SHA256` ile korunuyor), `tests/test_prompt_frozen.py`, `tests/test_determinism.py`
+(PREREG §4.6.6, gerçek `assert`'li 2 test), `tests/test_metrics.py` (13 test),
+`tests/test_benchmarks.py` (9 test — determinizm, 57 konu kapsaması, `answer_idx` aralığı,
+ARC sıralaması), `requirements.txt` + `requirements.lock.txt` (`statsmodels`, `scipy` dahil),
+`Makefile`, `.gitignore`, `results/{cells,meta,tables,figures}` iskeleti, `scratch/` (14 keşif
+script'i, hâlâ commit'te). `CLAUDE.md` Adım 2'deki görev-numarası taraması bu oturumda ilk kez
+gerçek işe yaradı: Görev 4'e etiketli açık bulgu ("MMLU seçenek sayısı doğrulanmadı") tarama
+sırasında yakalandı ve implementasyona başlamadan **çalıştırılarak** çözüldü — bkz. aşağı.
 
-**DUR noktası yok şu an** — Görev 3 kullanıcı onayı gerektirmiyordu (test onayı Görev 2'de
-alınmıştı). Sıradaki iş Görev 4.
+**DUR noktası yok şu an** — Görev 4 kullanıcı onayı gerektirmiyordu. Sıradaki iş Görev 5.
 
-## Son oturumda ne oldu (2026-07-25, açık bulgu temizliği + protokol geliştirme)
+## Son oturumda ne oldu (2026-07-25, Görev 4 — benchmarks.py)
+
+1. **Adım 2 taraması Görev 4'ü engelleyen bir açık bulgu buldu:** "MMLU'da seçenek sayısı her
+   zaman 4 mü, doğrulanmadı · Engellediği görev: 4". İmplementasyona başlamadan önce
+   **çalıştırılarak** çözüldü: `cais/mmlu` `all`/test (14042 satır) tarandı → hepsi tam 4
+   seçenekli. `allenai/ai2_arc` ARC-Challenge test (1172 satır) de tarandı → seçenek sayısı
+   **{3, 4, 5} arasında değişiyor**. Bu, SPEC'teki `Item.options: list[str]` tasarımının
+   (sabit 4 değil) doğru olduğunu kanıtladı. Detay: GECMIS.md.
+2. `src/benchmarks.py` yazıldı: `Item` (frozen dataclass), `load_items(benchmark)`.
+   - ARC: `choices.label` içinde `answerKey`'in indeksini bularak `answer_idx` üretiliyor
+     (bazı ARC satırlarında etiketler `"1","2","3","4"` — harf değil, doğrulanarak görüldü).
+   - MMLU: konu başına orantılı kota (`N_ITEMS * count_s // total`), kalan `numpy` ile
+     `seed=config.SEED` kullanılarak konu adı sırasına göre dağıtılıyor; her konu içinde
+     `rng.choice(..., replace=False)` ile örnekleniyor. `item_id` doğal id olmadığı için
+     `mmlu_{subject}_{orijinal_indeks}` olarak üretiliyor (deterministik, tekil).
+   - Harfler her iki kaynakta da pozisyondan (`A, B, C, ...`) üretiliyor, kaynaktan alınmıyor.
+3. `tests/test_benchmarks.py` (9 test): determinizm (iki çağrı → aynı `item_id` listesi),
+   `N_ITEMS` sayısı, `answer_idx` geçerli aralıkta, MMLU 57 konunun hepsi temsil ediliyor,
+   MMLU `item_id`'leri tekil, ARC `item_id`'leri `id`'ye göre artan sıralı.
+4. Kabul kriteri çalıştırıldı: `pytest tests/test_benchmarks.py -q` → 9 passed;
+   `load_items('mmlu')` iki kez çağrıldı → `1000 True`. `pytest tests/ -q` → 25 passed.
+
+## Önceki oturum (2026-07-25, açık bulgu temizliği + protokol geliştirme)
 
 1. `tests/test_determinism.py` gerçek pytest testine çevrildi: `pytest.fixture(scope="module")`
    ile modeli/veri kümesini bir kez kurup iki test fonksiyonuna (`test_repeated_inference_is_bit_identical`,
@@ -129,10 +147,9 @@ Fizibiliteden ön-kayda kadar tüm zincir tamamlandı:
 
 ## Kritik açık noktalar
 
-- `src/` hiç yok — implementasyon sıfırdan başlayacak
-- `prompts/mc_letter.txt` **henüz yazılmadı** ve donmadı. İlk koşudan önce donmalı.
-- MMLU stratified örnekleme mantığı henüz yazılmadı (57 konu, deterministik olmalı)
-- Uygunluk kapısı (bf16 ≥ %50) sırası `runner.py`'de mekanik olarak zorlanmalı
+- `src/quantize.py` ve `src/measure.py` henüz yok (Görev 5) — `mixed_*` recipe çağrı biçimi
+  hâlâ doğrulanmadı (AÇIK BULGU, Görev 5'i engelliyor)
+- Uygunluk kapısı (bf16 ≥ %50) sırası `runner.py`'de mekanik olarak zorlanmalı (Görev 7)
 
 ## Bütçe hatırlatması
 
@@ -151,5 +168,6 @@ Disk: `convert → evaluate → delete`, HF cache ≈ 20 GB.
 | 2026-07-25 | Görev 1 — ortam iskeleti, config, prompt dondurma | `2a4d0c5` |
 | 2026-07-25 | Görev 2 — metrik testleri yazıldı, implementasyon YOK, kullanıcı onayı bekleniyor | (önceki oturum) |
 | 2026-07-25 | Görev 2 onaylandı; Görev 3 — `src/metrics.py` implementasyonu, statsmodels/scipy eklendi, test unpacking hatası düzeltildi, 14/14 yeşil | (önceki oturum) |
-| 2026-07-25 | `test_determinism.py` gerçek pytest testine çevrildi (16/16 yeşil); `CLAUDE.md` protokol boşluğu kapatıldı | (bu oturum) |
+| 2026-07-25 | `test_determinism.py` gerçek pytest testine çevrildi (16/16 yeşil); `CLAUDE.md` protokol boşluğu kapatıldı | (önceki oturum) |
+| 2026-07-25 | Görev 4 — `src/benchmarks.py` + `tests/test_benchmarks.py` (9 test), MMLU/ARC seçenek sayısı açık bulgusu çözüldü, 25/25 yeşil | (bu oturum) |
 | | | |
