@@ -1,5 +1,6 @@
 """src/runner.py — grid loop, caching, convert->evaluate->delete (SPEC §3)."""
 import json
+import os
 import tempfile
 import time
 from pathlib import Path
@@ -76,7 +77,11 @@ def _run_and_write_cell(model_key: str, condition_tag: str, benchmark: str, resu
         return
 
     t0 = time.perf_counter()
-    out_dir = tempfile.mkdtemp(prefix=f"{cid}__") if condition_tag != "bf16" else ""
+    if condition_tag != "bf16":
+        out_dir = tempfile.mkdtemp(prefix=f"{cid}__")
+        os.rmdir(out_dir)  # mlx_lm.convert() refuses to write to a path that already exists
+    else:
+        out_dir = ""
     meta = {
         "cell_id": cid, "model": model_key, "condition": condition_tag, "benchmark": benchmark,
         "mlx_version": mx.__version__, "mlx_lm_version": mlx_lm.__version__,

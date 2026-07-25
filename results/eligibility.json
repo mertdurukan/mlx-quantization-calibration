@@ -1,0 +1,6 @@
+{
+  "qwen2.5-1.5b": {
+    "arc_challenge": 0.765,
+    "eligible": true
+  }
+}

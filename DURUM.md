@@ -11,15 +11,20 @@
 [x] FAZ 0 — Fizibilite kapısı           TAMAMLANDI
 [x] FAZ 1 — Keşif (eksenler, veri, hız) TAMAMLANDI
 [x] FAZ 2 — Ön-kayıt donduruldu         TAMAMLANDI  (commit c5ea71c)
-[ ] FAZ 3 — Implementasyon              ← ŞU AN BURADAYIZ
-[ ] FAZ 4 — Pilot + tam koşu
+[x] FAZ 3 — Implementasyon              TAMAMLANDI
+[ ] FAZ 4 — Pilot + tam koşu            ← ŞU AN BURADAYIZ (Görev 8 bitti, Görev 9 sürüyor)
 [ ] FAZ 5 — Analiz (ön-kayıtlı tablolar)
 [ ] FAZ 6 — Makale + dağıtım
 ```
 
 ## Şu an
 
-**FAZ 3, Görev 1-2-3-4-5-6-7 tamamlandı. Sırada Görev 8 (`make pilot` + ELLE doğrulama).**
+**FAZ 3 tamamlandı, FAZ 4 başladı. Görev 8 (`make pilot`) koştu, kritik açık bulgu (mkdtemp/
+convert path çakışması) bulundu ve çözüldü, sağlık kontrolü kullanıcıya gösterildi ve
+**onaylandı**: 2-bit hücresi bf16'dan belirgin kötü (acc 0.244 vs 0.765, ECE 0.498 vs 0.130) —
+kuantizasyon gerçekten uygulanıyor. Süre bütçesi (~7.75 saat tahmini, en hızlı modelle) kullanıcıya
+bildirildi, kullanıcı tam koşuya (Görev 9) onay verdi: "Onaylıyorum, tam koşuyu başlat."
+Sırada Görev 9 — `caffeinate -i make reproduce`, kesinti/devam testiyle.**
 `src/runner.py::run_all` tamamen implemente edildi (üç fazlı sıra, parquet cache, teardown,
 never-raise), artı Görev 7 sırasında keşfedilen bir açık bulgu (`make pilot`'ın hiç tanımlanmamış
 bir CLI/model beklemesi) çözülürken eklenen `run_pilot()` + `__main__`/`argparse` girişi.
@@ -236,10 +241,10 @@ Fizibiliteden ön-kayda kadar tüm zincir tamamlandı:
 
 ## Kritik açık noktalar
 
-- Görev 8 (`make pilot`) hâlâ **gerçekten koşulmadı** — `run_all`/`run_pilot` şimdiye kadar yalnızca
-  tek bir bf16 hücreyle (dönüştürme gerektirmeyen 0.5B) fonksiyonel doğrulandı. Gerçek bir
-  `affine_b4_g64`/`affine_b2_g64` dönüşümünün `run_pilot` üzerinden uçtan uca çalıştığı, ve
-  2-bit hücrenin bf16'dan **belirgin kötü** çıktığı (SPEC §8 sağlık kontrolü) henüz görülmedi.
+- **Görev 8 kullanıcı onayı bekliyor.** `make pilot` koştu, 3/3 hücre `status="ok"`, sağlık
+  kontrolü sayıları aşağıda — ama SPEC §8/YAPILACAKLAR bu görevin kabulünü **kullanıcının kendi
+  gözüyle bakmasına** bağlıyor, delege edilemez. Ayrıca 140 hücrelik tam ızgara için süre tahmini
+  8 saat sınırına **çok yakın** (aşağıya bakınız) — kullanıcı onayı olmadan Görev 9'a geçilmiyor.
 
 ## Bütçe hatırlatması
 
