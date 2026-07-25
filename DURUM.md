@@ -19,26 +19,57 @@
 
 ## Şu an
 
-**FAZ 3, Görev 1-2-3-4-5 tamamlandı. Sırada Görev 6 (`tests/test_no_leakage.py` + MUTASYON KANITI).**
-`src/quantize.py` (`build`, `teardown`) ve `src/measure.py` (`run_cell`) yazıldı. `pytest tests/ -v`
-→ **25 passed** (yeni test dosyası yok — Görev 5'in SPEC talimatı test-önce gerektirmiyordu).
+**FAZ 3, Görev 1-2-3-4-5-6 tamamlandı. Sırada Görev 7 (`src/runner.py::run_all`).**
+`tests/test_no_leakage.py` (8 test, 3 sözleşme) + `src/runner.py`'nin kısmi implementasyonu
+(`cell_id`, `compute_eligibility`, `assert_phase3_allowed`) yazıldı; `run_all` hâlâ
+`NotImplementedError` — Görev 7'nin işi. `pytest tests/ -v` → **33 passed.**
 
 Repoda şu an olanlar: `src/config.py`, `src/metrics.py` (Görev 3), `src/benchmarks.py` (Görev 4),
 `src/quantize.py` + `src/measure.py` (Görev 5, tam implementasyon, dört mod da — bf16, affine,
-mxfp4, recipe — gerçek dönüşümle fonksiyonel doğrulandı), `prompts/mc_letter.txt` (donmuş,
-SHA-256 `config.PROMPT_SHA256` ile korunuyor), `tests/test_prompt_frozen.py`,
-`tests/test_determinism.py` (PREREG §4.6.6, gerçek `assert`'li 2 test), `tests/test_metrics.py`
-(13 test), `tests/test_benchmarks.py` (9 test), `requirements.txt` + `requirements.lock.txt`
+mxfp4, recipe — gerçek dönüşümle fonksiyonel doğrulandı), `src/runner.py` (Görev 6, kısmi —
+`cell_id`/`compute_eligibility`/`assert_phase3_allowed` gerçek, `run_all` iskelet),
+`prompts/mc_letter.txt` (donmuş, SHA-256 `config.PROMPT_SHA256` ile korunuyor),
+`tests/test_prompt_frozen.py`, `tests/test_determinism.py` (PREREG §4.6.6, gerçek `assert`'li
+2 test), `tests/test_metrics.py` (13 test), `tests/test_benchmarks.py` (9 test),
+`tests/test_no_leakage.py` (8 test, Görev 6), `requirements.txt` + `requirements.lock.txt`
 (`statsmodels`, `scipy` dahil), `Makefile`, `.gitignore`, `results/{cells,meta,tables,figures}`
 iskeleti, `scratch/` (14 keşif script'i, hâlâ commit'te). `CLAUDE.md` Adım 2'deki görev-numarası
-taraması bu oturumda **ikinci kez** işe yaradı: Görev 5'e etiketli açık bulgu (`mixed_*` recipe
-çağrı biçimi) tarama sırasında yakalandı ve implementasyona başlamadan **çalıştırılarak**
-çözüldü — bkz. aşağı.
+taraması bu oturumda **üçüncü kez** işe yaradı: Görev 6'nın kendi tanımı SPEC §7 sırasıyla
+çelişiyordu (`test_no_leakage.py` `runner.py`'den önce sıralanıyor ama neye karşı test
+edileceği belirsizdi) — açık bulgu olarak kaydedilip aynı oturumda çözüldü (SPEC §9 Changelog +
+GECMIS.md "Görev 6").
 
-**DUR noktası yok şu an** — Görev 5 kullanıcı onayı gerektirmiyordu. Sıradaki iş Görev 6, ve
-Görev 6 PROTOKOL Kural 4 gereği **mutasyon kanıtı** içeriyor — atlanamaz.
+**DUR noktası yok şu an** — Görev 6 kullanıcı onayı gerektirmiyordu, mutasyon kanıtı
+(PROTOKOL Kural 4) üç sözleşme için de ayrı ayrı yapıldı ve GECMIS.md'ye kaydedildi. Sıradaki
+iş Görev 7 (`src/runner.py::run_all`, `cell_id` zaten var).
 
-## Son oturumda ne oldu (2026-07-25, Görev 5 — quantize.py + measure.py)
+## Son oturumda ne oldu (2026-07-25, Görev 6 — test_no_leakage.py + mutasyon kanıtı)
+
+1. **Adım 2 taraması / görev tanımı çelişkisi:** SPEC §7 build order `test_no_leakage.py`'yi
+   (madde 6) `runner.py`'den (madde 7) önce sıralıyor, ama testin "eligibility.json yokken
+   Faz 3 çalışamaz" ve "uygunluk yalnızca bf16'dan" sözleşmeleri `runner.py`'de bir şeye karşı
+   test edilmeyi gerektiriyordu. AÇIK BULGULAR'a eklendi, aynı oturumda çözüldü: `src/runner.py`'ye
+   iki saf fonksiyon (`compute_eligibility`, `assert_phase3_allowed`) SPEC §3'e eklenerek gerçek
+   implemente edildi (kuantizasyon parametresi riski yok); `cell_id` de yazıldı (trivial string
+   formatting); `run_all` Görev 7'de kalıyor (`NotImplementedError` iskelet). SPEC §9 Changelog.
+2. `tests/test_no_leakage.py` yazıldı (8 test): 3'ü `measure.run_cell`'in warmup'ı sızdırmadığını
+   (satır sayısı == item sayısı, tekrar eden `item_id` yok, çıktı id'leri girdiyle birebir),
+   3'ü `runner.compute_eligibility`'nin yalnızca `condition=="bf16"` satırlarından hesapladığını
+   (aynı modelin kuantize satırları karışsa bile doğruluk kirlenmiyor, floor control etiketleniyor),
+   2'si `runner.assert_phase3_allowed`'ın `eligibility.json` yokken `RuntimeError` fırlattığını
+   doğruluyor. Hepsi gerçek koda karşı, tek çağrıyla `pytest tests/test_no_leakage.py -v` →
+   8/8 passed.
+3. **Üç ayrı mutasyon kanıtı (PROTOKOL Kural 4, atlanamaz):** (a) `measure.run_cell`'e warmup
+   satırlarını da çıktıya ekleyen bozukluk → 2 test `45 == 25` / tekrar eden `t0..t19` ile FAIL;
+   (b) `compute_eligibility`'den bf16 filtresi kaldırıldı → beklenen `0.3` yerine kirlenmiş
+   `0.6316` ile FAIL; (c) `assert_phase3_allowed`'ın kapısı `if False` ile devre dışı bırakıldı →
+   `DID NOT RAISE RuntimeError` ile FAIL. Üçü de kendi doğru sebebiyle patladı, sonra dosyalar
+   satır satır orijinaline döndürüldü (`git diff HEAD -- src/measure.py` boş; `runner.py` henüz
+   commit'te değil, elle karşılaştırıldı). Detay: GECMIS.md "Görev 6".
+4. Kabul kriteri: mutasyon çıktıları yukarıda özetlendiği gibi kullanıcıya gösterildi.
+   `pytest tests/ -q` → **33 passed** (25 önceki + 8 yeni, regresyon yok).
+
+## Önceki oturum (2026-07-25, Görev 5 — quantize.py + measure.py)
 
 1. **Adım 2 taraması Görev 5'i engelleyen bir açık bulgu buldu:** "`mixed_*` recipe'lerin nasıl
    çağrıldığı doğrulanmadı · Engellediği görev: 5". `mlx_lm/convert.py` kaynağı okunarak ve
@@ -174,8 +205,9 @@ Fizibiliteden ön-kayda kadar tüm zincir tamamlandı:
 
 ## Kritik açık noktalar
 
-- `tests/test_no_leakage.py` henüz yok (Görev 6) — mutasyon kanıtı zorunlu (PROTOKOL Kural 4)
-- Uygunluk kapısı (bf16 ≥ %50) sırası `runner.py`'de mekanik olarak zorlanmalı (Görev 7)
+- `src/runner.py::run_all` henüz yok (Görev 7) — üç faz sırası (`cell_id`, `compute_eligibility`,
+  `assert_phase3_allowed` zaten hazır ve mutasyonla kanıtlanmış), parquet cache, teardown,
+  never-raise davranışı eklenmeli
 
 ## Bütçe hatırlatması
 
@@ -196,5 +228,6 @@ Disk: `convert → evaluate → delete`, HF cache ≈ 20 GB.
 | 2026-07-25 | Görev 2 onaylandı; Görev 3 — `src/metrics.py` implementasyonu, statsmodels/scipy eklendi, test unpacking hatası düzeltildi, 14/14 yeşil | (önceki oturum) |
 | 2026-07-25 | `test_determinism.py` gerçek pytest testine çevrildi (16/16 yeşil); `CLAUDE.md` protokol boşluğu kapatıldı | (önceki oturum) |
 | 2026-07-25 | Görev 4 — `src/benchmarks.py` + `tests/test_benchmarks.py` (9 test), MMLU/ARC seçenek sayısı açık bulgusu çözüldü, 25/25 yeşil | (önceki oturum) |
-| 2026-07-25 | Görev 5 — `src/quantize.py` + `src/measure.py`, `mixed_*` recipe açık bulgusu çözüldü, dört mod fonksiyonel doğrulandı | (bu oturum) |
+| 2026-07-25 | Görev 5 — `src/quantize.py` + `src/measure.py`, `mixed_*` recipe açık bulgusu çözüldü, dört mod fonksiyonel doğrulandı | (önceki oturum) |
+| 2026-07-25 | Görev 6 — `tests/test_no_leakage.py` (8 test) + `src/runner.py` kısmi implementasyonu, 3 mutasyon kanıtı | (bu oturum) |
 | | | |

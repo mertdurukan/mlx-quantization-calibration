@@ -229,6 +229,17 @@ Same family as the sibling ML study. Every function `(y_true, y_prob, **kw) -> f
 def cell_id(model_key: str, condition_tag: str, benchmark: str) -> str:
     """f'{model_key}__{condition_tag}__{benchmark}' — no hashing, human-readable."""
 
+def compute_eligibility(cells: pd.DataFrame) -> dict:
+    """PREREG §4.2 gate, computed from `condition == 'bf16'` rows of `cells` ONLY,
+    even if non-bf16 rows for the same model are already present. Returns the
+    results/eligibility.json record: per-model, per-benchmark bf16 accuracy plus a
+    mechanical `eligible` verdict; FLOOR_CONTROL models are tagged role="floor_control".
+    """
+
+def assert_phase3_allowed(results_dir) -> None:
+    """Raise RuntimeError unless {results_dir}/eligibility.json exists
+    (SPEC §0 prohibition 7 / PREREG §4.2 ordering)."""
+
 def run_all(force: bool = False) -> None:
     """Executes the grid in a MANDATORY ORDER:
 
@@ -361,3 +372,10 @@ After `make pilot`:
   Needed by `tests/test_prompt_frozen.py` (YAPILACAKLAR Görev 1), which the original §2 listing
   didn't account for. Pure implementation constant (hash of the frozen template), not a science
   parameter — does not touch PREREG. See GECMIS.md.
+- 2026-07-25 — §3 `src/runner.py` gains `compute_eligibility` and `assert_phase3_allowed`,
+  not in the original block. §7 build order places `tests/test_no_leakage.py` (item 6) before
+  `src/runner.py` (item 7), but that test's eligibility-ordering contract needs *something*
+  in `runner.py` to test against. Both new functions are pure gating/bookkeeping logic — no
+  quantization parameter is chosen or varied — so implementing them now (rather than as a
+  `NotImplementedError` skeleton) carries none of the "science" risk SPEC §0 prohibits;
+  `run_all` remains Görev 7. See GECMIS.md "Görev 6".

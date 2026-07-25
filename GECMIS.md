@@ -305,6 +305,59 @@ doğruluk ~%37 (0.5B'nin beklenen düşük-doğruluk aralığında, GECMIS'teki 
 
 ---
 
+## Görev 6 — `tests/test_no_leakage.py` + mutasyon kanıtı (2026-07-25)
+
+### Açık bulgu: `runner.py` yokken sızıntı/sıra testleri nasıl yazılır
+SPEC §7 build order, `test_no_leakage.py`'yi (madde 6) `runner.py`'den (madde 7) **önce**
+sıralıyor, ama testin kendi tanımı ("Faz 3, eligibility.json yokken çalışamaz", "uygunluk
+yalnızca bf16'dan") `runner.py`'de bir şeye karşı test edilmeyi gerektiriyor — modül hiç
+yoksa test totolojik ya da imkansız olurdu. **AÇIK BULGULAR'a eklendi** ("Görev 6:
+runner.py henüz yok, sızıntı/sıra testleri neye karşı yazılacak? · Engellediği görev: 6 ·
+Ciddiyet: orta"), sonra **aynı oturumda çözüldü**: `src/runner.py`'ye SPEC §3'e eklenen iki
+yeni saf fonksiyonla (`compute_eligibility`, `assert_phase3_allowed`) **kısmi** bir
+implementasyon yazıldı — `cell_id` ve `run_all` (gerçek `NotImplementedError` iskeleti)
+Görev 7'de kalıyor. Gerekçe: bu iki fonksiyon hiçbir kuantizasyon parametresi seçmiyor/
+değiştirmiyor (SPEC §0 madde 1 riski yok), yalnızca kapı/muhasebe mantığı — Kural 3 ek
+deseninin ("imza iskeleti") aksine burada iskelet değil **gerçek implementasyon** yazmak
+daha doğru seçim, çünkü asıl istenen (mutasyonla kanıtlanmış sızıntı koruması) ancak çalışan
+bir implementasyona karşı mümkün. SPEC §9 Changelog'a işlendi. **Kararın ne zaman verildiği:**
+sonuçlar (testlerin geçmesi) görülmeden önce, yalnızca SPEC §7 sırası + SPEC §0 madde 1
+okunarak.
+
+### `compute_eligibility`'nin girdi tasarımı: tam `cells` DataFrame'i, önceden filtrelenmiş dict değil
+İlk tasarım seçeneği, fonksiyonun zaten bf16-only bir `{model: {benchmark: accuracy}}`
+sözlüğü almasıydı — ama bu, "sızıntı" riskini test edilemez hale getirirdi: girdi zaten
+filtrelenmişse, fonksiyonun kendisi hiçbir zaman yanlış filtreleyemez. PREREG §4.2'nin asıl
+endişesi ("uygunluk kuantize davranış görülmeden önce karar verilmeli") ancak fonksiyon
+**tüm hücrelerin** (bf16 + kuantize karışık) ham sonuçlarını alıp kendi içinde
+`condition == "bf16"` filtresi uyguladığında anlamlı şekilde test edilebilir. Bu yüzden
+imza `compute_eligibility(cells: pd.DataFrame)` olarak değiştirildi — SPEC §3'e bu haliyle
+yazıldı.
+
+### Mutasyon kanıtı — üç ayrı sözleşme, üçü de doğru sebeple patladı (PROTOKOL Kural 4)
+Üç geçici bozuk implementasyon yazıldı, ilgili teste karşı koşuldu, çıktı gösterildi, sonra
+**satır satır orijinaline geri döndürüldü** (`git diff HEAD -- src/measure.py` boş; `runner.py`
+henüz commit'te olmadığı için `git diff` izlemiyor, ama düzeltme öncesi/sonrası dosya içeriği
+elle karşılaştırılarak doğrulandı).
+
+1. **Warmup sızıntısı** (`src/measure.py::run_cell`): warmup döngüsü, skorlanan satırları da
+   `rows`'a ekleyecek şekilde bozuldu. `test_scored_row_count_equals_input_items_not_more` →
+   `45 == 25` ile FAIL (25 item yerine 45 satır — ilk 20 item iki kez göründü);
+   `test_no_duplicate_item_ids_in_output` → `t0`..`t19`'un iki kez göründüğü gösterilerek FAIL.
+2. **Uygunluk sızıntısı** (`src/runner.py::compute_eligibility`): `bf16 = cells[cells["condition"]
+   == "bf16"]` satırı `bf16 = cells` ile değiştirildi (filtre kaldırıldı).
+   `test_eligibility_ignores_quantized_rows_for_the_same_model` → beklenen `0.3` yerine
+   `0.6316` (bf16 + kuantize karışımı) ile FAIL — yani kirlenmiş doğruluk kanıtlandı.
+3. **Sıra kapısı devre dışı** (`src/runner.py::assert_phase3_allowed`): `if not path.exists()`
+   → `if False` yapıldı (kapı hep açık). `test_phase3_blocked_without_eligibility_file` →
+   `DID NOT RAISE RuntimeError` ile FAIL.
+
+Üçü de **kendi doğru nedeniyle** patladı (yanlış assertion, yanlış tolerans değil). Bozuk
+kodlar silinip orijinal haline getirildi; `pytest tests/ -q` → 33 passed (25 önceki + 8 yeni,
+regresyon yok).
+
+---
+
 ## Kardeş ML çalışmasından devralınan dersler
 
 `~/github-projects/imbalance-calibration` — tamamlandı, yayında. Orada yakalanan yedi hata,

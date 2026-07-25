@@ -116,7 +116,7 @@ teardown('/tmp/q_t1')"
 
 ---
 
-### [ ] Görev 6 — Sızıntı/sıra sözleşme testleri + **MUTASYON KANITI**
+### [x] Görev 6 — Sızıntı/sıra sözleşme testleri + **MUTASYON KANITI** — TAMAMLANDI 2026-07-25
 **Ön koşul:** Görev 5
 **Yap:** `tests/test_no_leakage.py`:
 - Warmup item'ları çıktıda **yok** (n_scored == n_items, warmup ayrı sayılır)
@@ -234,6 +234,7 @@ GitHub vitrini (description, topics), release + Zenodo DOI, sonra arXiv / doğru
 - [x] **[2026-07-25]** Görev 2 kabul kriteri metni ("hepsi `NotImplementedError` ile FAIL etmeli") ile aynı görevin "Yap" talimatı ("`src/metrics.py`'yi **YAZMA**") çelişiyordu: modül hiç yoksa import `ModuleNotFoundError` ile collection hatası verir, tek tek `NotImplementedError` FAIL'i değil. **Çözüldü:** kullanıcıyla birlikte karar verildi — `src/metrics.py`'ye SPEC §3'ün **imza iskeleti** yazıldı (her gövde yalnızca `raise NotImplementedError`, sıfır mantık). PROTOKOL Kural 3'e bu desen kalıcı ek olarak yazıldı. `pytest tests/test_metrics.py -q` artık 13/13 `NotImplementedError` ile FAIL veriyor — doğrulandı. · Engellediği görev: yok · Ciddiyet: düşük
 - [x] **[2026-07-25]** `requirements.txt` içinde `statsmodels` ve `scipy` **yok**, ama SPEC §3 `cal_intercept`'in "`statsmodels` GLM, `offset=` ile" uygulanmasını zorunlu kılıyor. Şu an kurulu değiller (`ModuleNotFoundError`). Görev 2'nin referans hesaplarını (bkz. `tests/test_metrics.py`) numpy-only Newton-Raphson ile bağımsız doğruladım, bu yüzden Görev 2'yi engellemiyor — ama Görev 3 (`src/metrics.py` implementasyonu) bu bağımlılık eklenmeden başlayamaz (SPEC §0 madde 8: sabitlenmemiş bağımlılık eklenemez, `requirements.txt` + `requirements.lock.txt` aynı commit'te güncellenmeli). **Çözüldü:** `statsmodels==0.14.6` + `scipy==1.18.0` eklendi, `requirements.lock.txt` yeniden üretildi (`pip freeze`), GLM `offset=` fit'i fonksiyonel olarak doğrulandı (PROTOKOL Kural 6). · Engellediği görev: 3 · Ciddiyet: orta
 - [x] **[2026-07-25]** `tests/test_metrics.py::test_cal_slope_perfect_calibration_is_near_one` içinde gerçek bir hata bulundu: `expected_slope, _ = _fit_reference_cal_slope_intercept(y, conf)` tuple'ı yanlış sırayla açıyordu (fonksiyon `(intercept, slope)` döndürüyor, test `expected_slope`'a intercept'i atıyordu). `metrics.cal_slope`'un doğru olduğu bağımsız doğrulandı (referans `b1` ile ondalık düzeyinde eşleşme: 1.0124437146123444 vs 1.012443714612344). **Çözüldü:** kullanıcı onayıyla tek satır düzeltildi (`_, expected_slope = ...`), bkz. GECMIS.md "Görev 3". · Engellediği görev: yok (çözüldü) · Ciddiyet: orta
+- [x] **[2026-07-25]** Görev 6 (`tests/test_no_leakage.py`), SPEC §7'ye göre `runner.py`'den (Görev 7) önce sıralanıyor, ama testin sözleşmeleri ("eligibility.json yokken Faz 3 çalışamaz", "uygunluk yalnızca bf16'dan") `runner.py`'de bir şeye karşı test edilmeyi gerektiriyor — modül hiç yoksa test totolojik/imkansız olurdu. **Çözüldü:** `src/runner.py`'ye SPEC §3'e eklenen iki saf fonksiyonla (`compute_eligibility`, `assert_phase3_allowed`) kısmi implementasyon yazıldı (kuantizasyon parametresi seçmiyor/değiştirmiyor, SPEC §0 madde 1 riski yok); `cell_id`/`run_all` Görev 7'de kalıyor. SPEC §9 Changelog + GECMIS.md "Görev 6". · Engellediği görev: yok (çözüldü) · Ciddiyet: orta
 
 ---
 
@@ -248,3 +249,4 @@ GitHub vitrini (description, topics), release + Zenodo DOI, sonra arXiv / doğru
 - [x] **2026-07-25** Görev 3 — `src/metrics.py` implementasyonu; `statsmodels`/`scipy` eklendi; testte bulunan unpacking hatası kullanıcı onayıyla düzeltildi; `pytest tests/` → 14 passed
 - [x] **2026-07-25** Görev 4 — `src/benchmarks.py` (`Item`, `load_items`) + `tests/test_benchmarks.py` (9 test); Görev 4'ü engelleyen açık bulgu (MMLU seçenek sayısı) çözüldü; `pytest tests/` → 25 passed
 - [x] **2026-07-25** Görev 5 — `src/quantize.py` (`build`, `teardown`) + `src/measure.py` (`run_cell`); Görev 5'i engelleyen açık bulgu (`mixed_*` recipe çağrı biçimi) çözüldü; dört mod da (bf16, affine, mxfp4, recipe) gerçek dönüşümle fonksiyonel doğrulandı; kabul kriteri → `effective_bits: 4.501 | ... False`
+- [x] **2026-07-25** Görev 6 — `tests/test_no_leakage.py` (8 test) + `src/runner.py` kısmi implementasyonu (`cell_id`, `compute_eligibility`, `assert_phase3_allowed`); üç ayrı mutasyon (warmup sızıntısı, uygunluk sızıntısı, sıra kapısı devre dışı) üçü de doğru sebeple FAIL verdi, bozuk kod silindi; `pytest tests/` → 33 passed
