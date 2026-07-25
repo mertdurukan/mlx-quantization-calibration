@@ -22,22 +22,36 @@
 **FAZ 3, Görev 1-2-3 tamamlandı. Sırada Görev 4 (`src/benchmarks.py` + örnekleme
 determinizmi).** `src/metrics.py` tam olarak implemente edildi (`ece`, `cal_slope`,
 `cal_intercept`, `brier`, `overconfidence_rate`, `mean_conf_by_correctness`,
-`bootstrap_ci`) — `statsmodels` GLM (`offset=` ile) ve numpy kullanıyor. `pytest tests/ -q`
-→ **14 passed** (13 metrik testi + 1 prompt-freeze testi; `test_determinism.py` pytest
-formatında olmadığı için 0 test topluyor — ayrı, engellemeyen açık bulgu).
+`bootstrap_ci`) — `statsmodels` GLM (`offset=` ile) ve numpy kullanıyor. `tests/test_determinism.py`
+gerçek pytest testine çevrildi (eski açık bulgu kapandı). `pytest tests/ -v` →
+**16 passed** (13 metrik testi + 2 determinizm/mutasyon testi + 1 prompt-freeze testi).
 
 Repoda şu an olanlar: `src/config.py`, `src/metrics.py` (tam implementasyon, Görev 3),
 `prompts/mc_letter.txt` (donmuş, SHA-256 `config.PROMPT_SHA256` ile korunuyor),
-`tests/test_prompt_frozen.py`, `tests/test_determinism.py` (PREREG §4.6.6),
-`tests/test_metrics.py` (13 test, hepsi geçiyor — bir unpacking hatası kullanıcı onayıyla
-düzeltildi, bkz. aşağı), `requirements.txt` + `requirements.lock.txt` (artık `statsmodels`,
-`scipy` dahil), `Makefile`, `.gitignore`, `results/{cells,meta,tables,figures}` iskeleti,
-`scratch/` (14 keşif script'i, hâlâ commit'te).
+`tests/test_prompt_frozen.py`, `tests/test_determinism.py` (PREREG §4.6.6, artık gerçek
+`assert`'li 2 test — `test_repeated_inference_is_bit_identical`,
+`test_injected_noise_is_detected`), `tests/test_metrics.py` (13 test, hepsi geçiyor — bir
+unpacking hatası kullanıcı onayıyla düzeltildi, bkz. aşağı), `requirements.txt` +
+`requirements.lock.txt` (artık `statsmodels`, `scipy` dahil), `Makefile`, `.gitignore`,
+`results/{cells,meta,tables,figures}` iskeleti, `scratch/` (14 keşif script'i, hâlâ commit'te).
+`CLAUDE.md` Adım 2'ye bir kural eklendi: görev başlamadan önce `AÇIK BULGULAR`'da o görev
+numarasına etiketli işaretlenmemiş bulgu var mı taranacak (önceki oturumda kullanıcıya
+sorulmuş, bu oturumda onaylanıp uygulandı).
 
 **DUR noktası yok şu an** — Görev 3 kullanıcı onayı gerektirmiyordu (test onayı Görev 2'de
 alınmıştı). Sıradaki iş Görev 4.
 
-## Son oturumda ne oldu (2026-07-25, Görev 2 onayı + Görev 3)
+## Son oturumda ne oldu (2026-07-25, açık bulgu temizliği + protokol geliştirme)
+
+1. `tests/test_determinism.py` gerçek pytest testine çevrildi: `pytest.fixture(scope="module")`
+   ile modeli/veri kümesini bir kez kurup iki test fonksiyonuna (`test_repeated_inference_is_bit_identical`,
+   `test_injected_noise_is_detected`) böldü. Sözleşme ve mutasyon kanıtı aynı kaldı, sadece
+   gerçek bir pass/fail sinyali kazandı. `pytest tests/ -v` → 16/16 passed.
+2. `CLAUDE.md` Adım 2'ye AÇIK BULGULAR görev-numarası taraması eklendi — bir önceki oturumda
+   tespit edilen protokol boşluğu (görev başlarken yalnızca "Ön koşul" satırı kontrol
+   ediliyordu, o göreve etiketli açık bulgular otomatik taranmıyordu) kapatıldı.
+
+## Önceki oturum (2026-07-25, Görev 2 onayı + Görev 3)
 
 1. Görev 2 testleri (13 test, kabul kriteri çıktısı: 13/13 `NotImplementedError` ile FAIL)
    kullanıcıya sunuldu ve **onaylandı**.
@@ -136,5 +150,6 @@ Disk: `convert → evaluate → delete`, HF cache ≈ 20 GB.
 | 2026-07-24 | Fizibilite kapısı, eksen keşfi, ön-kayıt, determinizm | `ffa07c7` … `c5ea71c` |
 | 2026-07-25 | Görev 1 — ortam iskeleti, config, prompt dondurma | `2a4d0c5` |
 | 2026-07-25 | Görev 2 — metrik testleri yazıldı, implementasyon YOK, kullanıcı onayı bekleniyor | (önceki oturum) |
-| 2026-07-25 | Görev 2 onaylandı; Görev 3 — `src/metrics.py` implementasyonu, statsmodels/scipy eklendi, test unpacking hatası düzeltildi, 14/14 yeşil | (bu oturum) |
+| 2026-07-25 | Görev 2 onaylandı; Görev 3 — `src/metrics.py` implementasyonu, statsmodels/scipy eklendi, test unpacking hatası düzeltildi, 14/14 yeşil | (önceki oturum) |
+| 2026-07-25 | `test_determinism.py` gerçek pytest testine çevrildi (16/16 yeşil); `CLAUDE.md` protokol boşluğu kapatıldı | (bu oturum) |
 | | | |

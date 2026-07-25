@@ -205,6 +205,29 @@ implementasyona uydurmak için gevşetilmedi") korundu.
 
 ---
 
+## Açık bulgu temizliği + protokol geliştirmesi (2026-07-25)
+
+### `tests/test_determinism.py` gerçek pytest testine çevrildi
+Görev 1'de kaydedilen açık bulgu: dosya bir top-level script'ti (assert yok, import anında
+gerçek bir model conversion'ı çalıştırıyordu, pytest 0 test topluyordu). Sözleşmenin kendisi
+(iki koşu bit-bit aynı + 1e-6 gürültü yakalanıyor) daha önce çalıştırılarak doğrulanmıştı;
+değişen yalnızca ifade biçimi — `pytest.fixture(scope="module")` ile model bir kez kuruluyor,
+iki ayrı test fonksiyonu (`test_repeated_inference_is_bit_identical`,
+`test_injected_noise_is_detected`) kendi `assert`'iyle geçiyor/kalıyor. `pytest tests/ -v` →
+16 passed (13 metrik + 2 determinizm/mutasyon + 1 prompt-freeze).
+
+### `CLAUDE.md` Adım 2'ye AÇIK BULGULAR görev-numarası taraması eklendi
+Önceki oturumda kullanıcıya sorulan bir protokol boşluğu: Adım 2 yalnızca bir görevin kendi
+"Ön koşul" satırını (başka bir numaralı görevi referans alan) kontrol ediyordu, ama
+`AÇIK BULGULAR`'daki "Engellediği görev: N" etiketli satırları göreve başlamadan **otomatik
+taramıyordu** — yani bir bulgu, ilgili görev numarasına doğru şekilde etiketlense bile,
+görev başlarken fark edilmeden atlanabilirdi. Kullanıcı onayıyla eklendi: artık Adım 2, o
+görev numarasına etiketli işaretlenmemiş bir bulgu varsa, onu da "sağlanmamış ön koşul" gibi
+ele alıyor. **Karar ne zaman verildi:** önerildiği oturumda değil, kullanıcının bu oturumdaki
+genel "en iyisini yap" onayıyla, sonuç görülmeden önce.
+
+---
+
 ## Kardeş ML çalışmasından devralınan dersler
 
 `~/github-projects/imbalance-calibration` — tamamlandı, yayında. Orada yakalanan yedi hata,
