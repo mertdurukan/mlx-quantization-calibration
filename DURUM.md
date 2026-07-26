@@ -32,9 +32,15 @@ LICENSE eklendi**, **CITATION.cff eklendi**, **results/cells+meta (5.7M) git'e a
 (kullanıcı kararı — analiz artık koşusuz reprodüklenebilir), Tablo 4 caption CI-netliği.
 Detay: GECMIS.md "Görev 14 arası — Uçtan uca denetim".
 
-**Sıradaki adım:** `git push` (origin 20+ commit geride, public repo şu an içeriği göstermiyor)
-+ `gh release create v1.0.0` (taslak metin hazır, kullanıcı onayı alınacak) → Zenodo DOI
-otomatik → DOI rozeti README'ye → arXiv/e-posta ayrı karar.
+**Push + release tamamlandı (2026-07-26):** `git push origin main` temiz gitti (fast-forward,
+force gerekmedi — trailer temizliği yalnızca push edilmemiş commit'lerdeydi);
+`gh release create v1.0.0` yayınlandı:
+https://github.com/mertdurukan/mlx-quantization-calibration/releases/tag/v1.0.0
+Zenodo toggle'ı açık olduğu için DOI otomatik basılacak (birkaç dakika).
+
+**Sıradaki adım:** Zenodo DOI'yi kontrol et → DOI rozetini README'ye ekle → commit+push.
+Sonrası (ayrı karar, kullanıcıyla): arXiv / doğrudan e-posta. Yerel `backup-pre-trailer-clean`
+branch'i (trailer temizliği öncesi yedek) hâlâ duruyor — DOI doğrulandıktan sonra silinebilir.
 
 **Önceki durum (Görev 13 tamamlandı): `paper.md` yazıldı** (471 satır — abstract, giriş, related work, yöntem,
 sonuçlar, tartışma, sınırlar, sapmalar, reprodüksiyon, kaynakça). Related work için literatür
