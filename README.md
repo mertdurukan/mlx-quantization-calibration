@@ -87,12 +87,14 @@ if any, are logged append-only in [`DEVIATIONS.md`](DEVIATIONS.md).
 
 | File/dir | What |
 |---|---|
+| [`paper.md`](paper.md) | the full write-up — abstract, related work, method, all five tables, three figures, limitations |
 | `PREREG.md` | frozen pre-registration — hypotheses, design, analysis plan |
 | `SPEC.md` | implementation contract for the code in `src/` |
 | `DEVIATIONS.md` | append-only log of any departure from `PREREG.md` |
 | `src/` | quantize → measure → analyze pipeline |
 | `tests/` | known-answer + leakage/ordering tests (see `PROTOKOL.md` for the discipline behind them) |
 | `results/` | generated tables, figures, per-cell parquet — reproducible from `src/`, never edited by hand |
+| `ARXIV.md` | how the arXiv LaTeX package is built from `paper.md` (`make paper`) and what goes on the submission form |
 
 Sibling study: [`imbalance-calibration`](https://github.com/mertdurukan/imbalance-calibration) looks at the
 same question — "does the model know how honest it is" — for class-imbalanced training rather

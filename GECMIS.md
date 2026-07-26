@@ -747,3 +747,87 @@ eksiksiz; DEVIATIONS boş ve paper §7 ile tutarlı; make verify canlı geçti; 
 
 **Denetimde bulunup release'i bekleyen:** origin/main 20 commit gerideydi (public repo'da
 kod/sonuç/paper görünmüyordu) — push, release adımıyla birlikte yapılacak.
+
+---
+
+## Görev 14 (devam) — arXiv paketi (2026-07-26)
+
+### Karar: `paper.md` tek kaynak kalır, arXiv sürümü **türetilir**
+
+İki seçenek vardı: (a) arXiv için ayrı bir `paper-arxiv.md`/`.tex` tutmak, (b) `paper.md`'yi tek
+kaynak bırakıp LaTeX'i script'le üretmek. (a) seçildiğinde iki dosya kaçınılmaz olarak birbirinden
+ayrışır — bir sayı düzeltmesi birinde yapılıp diğerinde yapılmaz ve hangisinin doğru olduğu
+belirsizleşir; bu, PROTOKOL Kural 11'in ("üretilmiş çıktı elle düzenlenmez") tam olarak önlemeye
+çalıştığı hata sınıfı, sadece tablolar yerine makale üzerinde. **(b) seçildi:**
+`scripts/build_paper.py` + `make paper`, çıktı `build/arxiv/` (gitignore'da, üretilmiş artefakt).
+
+### Açık bulgu: `paper.md`'de Zenodo DOI ve mutlak bağlantı yoktu
+
+Paketi hazırlarken fark edildi (YAPILACAKLAR AÇIK BULGULAR, 2026-07-26): başlık bloğunda
+"**Repository:** this repository." yazıyordu ve `PREREG.md`/`SPEC.md`/`README.md`/`GECMIS.md`'ye
+6 **göreli** bağlantı vardı. Repo içinde doğru, ama arXiv'e giden tek başına duran bir PDF'te
+ölü bağlantı — okuyucu ön-kaydı bulamaz, ki bu çalışmanın ana iddiası ön-kayıtlı olması.
+Düzeltildi: mutlak GitHub URL'leri + concept DOI (`10.5281/zenodo.21596523`) başlık bloğunda ve
+§8'de.
+
+§8'e eklenen "arşiv `results/cells/` + `results/meta/` içeriyor, dolayısıyla analiz 6.6 saatlik
+ölçüm ızgarasını yeniden koşmadan reprodüklenebilir" iddiası **varsayılmadı, doğrulandı:**
+`git ls-tree -r --name-only v1.0.0 | grep -c "^results/cells/"` → 114, meta → 114. (Tag yerelde
+yoktu, `git fetch --tags` ile çekildi — release `gh release create` ile GitHub tarafında
+oluşturulmuştu.) DOI'ler de Zenodo API'sinden doğrulandı: sürüm `…524`, concept `…523`, başlık ve
+MIT lisansı doğru.
+
+### Kural 1 uygulaması: arXiv gereksinimleri bellekten değil kaynağından
+
+Üç şey bellekten varsayılabilirdi, hepsi kaynağından okundu (WebFetch, 2026-07-26):
+
+1. **PDF-mi-LaTeX-mi:** arXiv "does not accept dvi, PS, or PDF created from TeX/LaTeX source"
+   (info.arxiv.org/help/submit). Yani yerel PDF gönderilemez — LaTeX kaynağı gönderilir, arXiv
+   derler. Bu, DURUM.md'nin önceki oturumda yazdığı "markdown değil PDF gerekir" notunu
+   **düzeltiyor**: gereken şey PDF değil, TeX kaynağı.
+2. **Motor desteği:** xelatex Kasım 2025'te eklenmiş, lualatex **desteklenmiyor**; TeX Live 2023
+   ve 2025 (2025 varsayılan) (info.arxiv.org/help/faq/texlive.html). Buna rağmen **pdflatex
+   seçildi** — `paper.md`'de yalnızca 10 çeşit ASCII-dışı karakter var (—, §, ×, –, ö, Δ, ·, ≥,
+   ≤, ć) ve bunları `newunicodechar` ile eşlemek, fontspec/font-varlığı riskini arXiv'in
+   derleyicisine taşımaktan daha güvenli.
+3. **Endorsement:** ilk gönderimde gerekiyor; kurumsal e-posta + sahiplenilmiş ortak-yazarlık
+   olmadan yerleşik bir yazardan istenmesi gerekiyor (info.arxiv.org/help/endorsement).
+   Kullanıcının adresi kurumsal değil → cs.LG için endorsement beklenmeli. ARXIV.md §2.
+
+### Kural 6 uygulaması: "derlendi" değil, "arXiv'in yapacağı şeyi yaptım"
+
+`main.tex` üretmek yeterli kanıt değildi. Sırayla:
+
+- TinyTeX kuruldu (`--no-path` ile — installer aksi hâlde `/etc/paths.d` için sudo istiyor),
+  eksik paketler tlmgr ile eklendi. İlk iki derleme denemesi gerçekten patladı
+  (`caption.sty` yok → sonra `newunicodechar.sty` yok) — paket listesi tahminle değil hata
+  mesajıyla oluştu.
+- Derleme logu denetlendi: 4 `Overfull \hbox` bulundu, biri 94pt (uzun `\texttt{}` dosya yolu
+  satır sonuna sığmıyor, `hyphenat[htt]` + `emergencystretch` ile 0.11pt'a indirildi —
+  kalan 3 taşma tablo hizalamasında ve görsel olarak fark edilmez).
+- PDF **gözle** okundu (9 sayfa, `pdftoppm` üzerinden). Üç gerçek kusur bulundu, hiçbiri log'da
+  görünmüyordu: (a) her figür caption'ı "Figure 1: Figure 1: …" diye çift numaralanıyordu
+  (markdown alt-text'i kendi numarasını taşıyor, LaTeX bir de kendisi ekliyor); (b) Figure 2
+  neredeyse tamamen boş bir sayfada yüzüyordu (float yerleşimi → `!ht`); (c) abstract'teki URL
+  `xurl` yüzünden "ht tps://…" diye kelime ortasından kırılıyordu (autolink → etiketli link).
+  Üçü de düzeltildi, sayfa sayısı 10 → 9.
+- **Dönüşümün sadakati programatik doğrulandı:** `paper.md`'nin tablo satırlarındaki 237 tekil
+  ondalık sayının ve 6 arXiv künyesinin hepsi `pdftotext` çıktısında bulundu (eksik: 0). Pandoc'un
+  sayıları bozmadığı bir iddia değil, sayım.
+- **Tarball tek başına, temiz bir dizinde derlendi** — arXiv'in yapacağı işlem. `main.tex` + 3 PNG
+  açıldı, iki geçiş pdflatex koşuldu, birebir aynı 9 sayfa/768054 bayt çıktı. Repo dizinine gizli
+  bir bağımlılık kalmadığının kanıtı.
+
+### Karar: yayın araçları `requirements.txt`'e eklenmedi
+
+`pandoc`, TinyTeX ve `poppler` araştırma bağımlılığı değil, yazım/yayın aracı. SPEC §0 madde 8
+sabitlenmiş **Python** bağımlılıklarını düzenliyor ve `make reproduce` bunların hiçbirine ihtiyaç
+duymuyor — `make paper` ayrı, opsiyonel bir hedef. Kurulum komutları ARXIV.md §6'da kayıtlı.
+
+### Gönderilmeyen şey
+
+arXiv'e **gönderim yapılmadı.** Ajanın kullanıcının arXiv hesabına girmesi doğru değil ve
+gönderim geri alınamaz bir dış eylem (duyurulduktan sonra kaldırılamaz, yalnızca v2 eklenebilir).
+Paket hazır, metadata (kategori, comments, lisans, abstract) ARXIV.md §3'te forma girilecek
+biçimde yazılı, adımlar §4'te. Kullanıcının kendi yapacağı iş: endorsement + form + arXiv'in
+derlediği PDF'i yerel `main.pdf` ile karşılaştırıp onaylama.

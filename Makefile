@@ -1,4 +1,4 @@
-.PHONY: setup verify test prompt-freeze pilot reproduce
+.PHONY: setup verify test prompt-freeze pilot reproduce paper
 
 PYTHON := ./.venv/bin/python
 
@@ -43,3 +43,8 @@ pilot:
 reproduce: test
 	$(PYTHON) -m src.runner
 	$(PYTHON) -m src.analyze
+
+# Derive the arXiv LaTeX package from paper.md (the single source) into
+# build/arxiv/. Needs pandoc and a LaTeX distribution; see ARXIV.md.
+paper:
+	$(PYTHON) scripts/build_paper.py

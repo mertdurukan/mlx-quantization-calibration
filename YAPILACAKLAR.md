@@ -305,6 +305,33 @@ Tablo 4 caption netliği — detay: GECMIS.md "Görev 14 arası"). **Kalan:** `g
 v1.0.0 (taslak hazır, onay bekliyor) → Zenodo DOI → DOI rozeti README'ye → arXiv/e-posta
 (ayrı karar).
 
+**Devam (2026-07-26, push + release + DOI):** `git push origin main` temiz gitti (fast-forward),
+`gh release create v1.0.0` yayınlandı, Zenodo entegrasyonu DOI'yi otomatik bastı — sürüm DOI
+`10.5281/zenodo.21596524`, concept DOI `10.5281/zenodo.21596523`, API'den doğrulandı (başlık,
+sürüm, MIT lisansı). Concept-DOI rozeti README'ye, `doi:` alanı CITATION.cff'e eklendi.
+
+**Devam (2026-07-26, arXiv paketi):** `scripts/build_paper.py` + `make paper` yazıldı —
+`paper.md` **tek kaynak** kalıyor, arXiv LaTeX'i ondan türetiliyor (ayrı bir makale sürümü
+tutulmuyor: sürüm sapması riski, bkz. GECMIS.md). Çıktı `build/arxiv/` (gitignore'da):
+`arxiv-submission.tar.gz` (`main.tex` + 3 figür, 408 KB — arXiv'e yüklenecek dosya),
+`main.pdf` (9 sayfa, yalnızca okuma için), `abstract-for-arxiv-form.txt` (düz-ASCII, 233 kelime).
+`ARXIV.md` yazıldı: forma girilecek metadata (cs.LG primary + cs.CL cross-list, comments,
+lisans), adım adım gönderim, endorsement gereksinimi, artık riskler.
+
+arXiv gereksinimleri kaynağından doğrulandı (Kural 1) ve önceki oturumun bir notu **düzeltildi**:
+arXiv TeX'ten üretilmiş PDF'i **kabul etmiyor** — LaTeX kaynağı gönderilir, arXiv kendisi derler.
+`paper.md`'ye Zenodo DOI + mutlak URL'ler eklendi (açık bulgu, yukarıda). Kural 6 doğrulaması:
+PDF gözle okundu ve log'da görünmeyen üç kusur bulunup düzeltildi (çift figür numarası, boş
+sayfada yüzen Figure 2, abstract'te kelime ortasından kırılan URL — 10→9 sayfa); dönüşümün
+sadakati programatik sayıldı (237 tekil tablo sayısı + 6 arXiv künyesi, eksik 0); tarball **temiz
+bir dizinde tek başına derlendi** (arXiv'in yapacağı işlem, birebir aynı çıktı).
+`pytest tests/` → 62 passed, `git diff HEAD -- tests/` boş.
+
+**Kalan (kullanıcıda, delege edilemez):** arXiv gönderimi. Ajan kullanıcının arXiv hesabına
+girmedi — gönderim geri alınamaz bir dış eylem (duyurulduktan sonra kaldırılamaz, yalnızca v2).
+Sıra: endorsement → form → tarball → arXiv'in derlediği PDF'i yerel `main.pdf` ile karşılaştır →
+onayla. Bkz. `ARXIV.md`.
+
 ---
 
 ## 🔍 AÇIK BULGULAR
@@ -315,6 +342,7 @@ v1.0.0 (taslak hazır, onay bekliyor) → Zenodo DOI → DOI rozeti README'ye �
 > geçilmez. Format:
 > `- [ ] **[TARİH]** <bulgu> · Engellediği görev: <no|yok> · Ciddiyet: kritik|orta|düşük`
 
+- [x] **[2026-07-26]** arXiv gönderim paketi hazırlanırken `paper.md`'de iki gerçek boşluk bulundu: (a) Zenodo DOI'si (`10.5281/zenodo.21596523`) hiçbir yerde geçmiyor — oysa DURUM.md arXiv ön koşulu olarak bunu listeliyor ve makale artık arşivlenmiş bir veri/kod sürümüne atıf verebilir durumda; (b) başlık bloğunda "**Repository:** this repository." yazıyor ve `PREREG.md`/`SPEC.md`/`README.md`/`GECMIS.md`'ye **göreli** bağlantılar var — repo içinde doğru çalışıyorlar ama arXiv'e giden tek başına duran PDF'te ölü bağlantıya dönüşüyorlar (okuyucu ön-kaydı bulamaz, ki bu çalışmanın ana iddiası "ön-kayıtlı" olması). Repo Temmuz 2026'da public olduğu için mutlak URL'ler artık yazılabilir. Çözüm: `paper.md` **tek kaynak** olarak kalır (ayrı bir arXiv sürümü tutulmaz — sürüm sapması riski), göreli bağlantılar mutlak GitHub URL'lerine çevrilir ve DOI eklenir; arXiv `.tex`'i bu tek kaynaktan pandoc ile üretilir. **Çözüldü (2026-07-26):** DOI başlık bloğuna ve §8'e eklendi (concept + sürüm DOI'si ayrı ayrı, Zenodo API'sinden doğrulanarak); 6 göreli `.md` bağlantısı mutlak GitHub URL'ine çevrildi; "this repository" yerine gerçek URL yazıldı. §8'e eklenen "arşiv `results/cells/` içeriyor, analiz koşusuz reprodüklenebilir" iddiası `git ls-tree v1.0.0` ile doğrulandı (114 cell + 114 meta gerçekten tag'de). · Engellediği görev: 14 (çözüldü) · Ciddiyet: orta
 - [ ] **[2026-07-24]** `mxfp8` group size kısıtı doğrulanmadı (mxfp4'ün 32 olduğu kanıtlandı, mxfp8 varsayıldı). Ön-kayıtta mxfp8 koşulu yok, o yüzden şimdilik engel değil. · Engellediği görev: yok · Ciddiyet: düşük
 - [x] **[2026-07-24]** `mixed_*` recipe'lerin nasıl çağrıldığı (`quant_predicate` string mi, builder fonksiyonu mu) doğrulanmadı. Görev 5'te kanıtlanmalı. **Çözüldü (2026-07-25, Görev 5 öncesi):** `mlx_lm/convert.py` kaynağı okundu + gerçek `convert()` çağrısıyla doğrulandı — `quant_predicate` doğrudan `condition_tag` string'i (`"mixed_2_6"` vb., `QUANT_RECIPES` ile birebir eşleşiyor), `q_mode="affine"` zorunlu, `q_group_size=None`/`q_bits=None` (recipe kendi per-layer bit/group değerlerini döndürüyor, gerçek group size iç varsayılan 64'e düşüyor — `config.json`'da doğrulandı). Detay: GECMIS.md. · Engellediği görev: yok (çözüldü) · Ciddiyet: orta
 - [x] **[2026-07-24]** Llama-3.2-1B ve 3B'nin doğruluğu hiç ölçülmedi (sadece erişilebilirliği doğrulandı). Uygunluk kapısı bunu FAZ 1'de zaten yakalayacak, ama havuzun 4'ten aza düşme riski var. **Çözüldü (2026-07-26, Görev 9):** ölçüldü — `llama3.2-1b` eşiğin altında kaldı (arc 0.475/mmlu 0.435, eligible=false), ama **`llama3.2-3b` eşiği geçti** (arc 0.713/mmlu 0.569, eligible=true) ve tam merdiveni işlendi (28 hücre). Havuz 4'ün altına düşmedi: `qwen2.5-1.5b`, `qwen2.5-3b`, `llama3.2-3b` (3 ana model, eligible) + `qwen2.5-0.5b` (floor control). · Engellediği görev: yok (çözüldü) · Ciddiyet: orta

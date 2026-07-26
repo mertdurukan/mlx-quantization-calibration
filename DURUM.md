@@ -14,12 +14,13 @@
 [x] FAZ 3 — Implementasyon              TAMAMLANDI
 [x] FAZ 4 — Pilot + tam koşu            TAMAMLANDI
 [x] FAZ 5 — Analiz (ön-kayıtlı tablolar) TAMAMLANDI
-[ ] FAZ 6 — Makale + dağıtım             ← ŞU AN BURADAYIZ (Görev 14 kısmen bitti — vitrin tamam, gerisi repo public olana kadar durdu)
+[ ] FAZ 6 — Makale + dağıtım             ← ŞU AN BURADAYIZ (Görev 14: vitrin+public+release+DOI+arXiv paketi tamam; kalan tek adım kullanıcının arXiv gönderimi)
 ```
 
 ## Şu an
 
-**Görev 14 sürüyor: vitrin + public + uçtan uca denetim tamamlandı, sırada push + release.**
+**Görev 14 sürüyor: arXiv paketi hazır, gönderim kullanıcıda.** (Aşağıdaki paragraflar
+kronolojik: vitrin → public → denetim → push/release → DOI → arXiv paketi.)
 Bu oturumda sırasıyla: (1) `gh repo edit` ile description + 9 topic; (2) kullanıcı onayıyla repo
 **public** yapıldı; (3) kullanıcı Zenodo'da GitHub entegrasyonunu açtı (toggle ON — release
 yayınlanınca DOI otomatik basılacak); (4) release taslağı hazırlanmışken kullanıcı **uçtan uca
@@ -42,15 +43,31 @@ Zenodo toggle'ı açık olduğu için DOI otomatik basılacak (birkaç dakika).
 `10.5281/zenodo.21596523` (her zaman en son sürüme yönlenir). API'den doğrulandı: başlık, sürüm
 ve MIT lisansı doğru alınmış. Concept-DOI rozeti README'ye, `doi:` alanı CITATION.cff'e eklendi.
 
-**Görev 14'te kalan tek şey:** arXiv gönderimi (ve/veya doğrudan e-posta). **Kullanıcı kararı
-(2026-07-26): arXiv gönderimi YAPILACAK, ayrı bir oturumda ele alınacak.** Bir sonraki oturum
-buradan başlamalı. arXiv için bilinen gereksinimler: (1) markdown değil PDF gerekir —
-`paper.md`'nin LaTeX/PDF'e dönüştürülmesi (pandoc bir seçenek); (2) kullanıcının arXiv hesabı;
-(3) hedef kategoride (muhtemelen cs.LG veya cs.CL) endorsement gerekebilir; (4) gönderim geri
-alınamaz — duyurulduktan sonra kaldırılamaz, yalnızca yeni versiyon eklenebilir; (5) makaleye
-Zenodo DOI'si (`10.5281/zenodo.21596523`) ve repo URL'i eklenmeli. Yerel
-`backup-pre-trailer-clean` branch'i hâlâ duruyor — silinebilir (DOI arşivi başarıyla oluştu),
-kullanıcıya soruldu, cevap bekliyor.
+**arXiv paketi hazır (2026-07-26, bu oturum).** `make paper` → `scripts/build_paper.py`,
+`paper.md`'yi (tek kaynak, elle ikinci bir sürüm tutulmuyor) pandoc ile LaTeX'e çevirip
+`build/arxiv/`'a şunları koyuyor: `arxiv-submission.tar.gz` (yüklenecek dosya — `main.tex` + 3
+figür, 408 KB), `main.pdf` (yalnızca okuma için, 9 sayfa), `abstract-for-arxiv-form.txt`
+(düz-ASCII, 233 kelime). Forma girilecek metadata + adım adım gönderim + artık riskler
+**`ARXIV.md`**'de.
+
+Bu oturumda düzeltilen üç şey: (1) önceki oturumun "arXiv'e PDF gerekir" notu **yanlıştı** —
+arXiv TeX'ten üretilmiş PDF'i kabul etmiyor, LaTeX kaynağı gönderilir ve arXiv kendisi derler
+(kaynağından doğrulandı); (2) `paper.md`'de Zenodo DOI'si hiç yoktu ve 6 göreli `.md` bağlantısı
+vardı — tek başına duran bir PDF'te ölü bağlantı olacaklardı, mutlak URL'lere çevrildi ve DOI
+başlık bloğu + §8'e eklendi; (3) PDF gözle okunurken log'da görünmeyen üç kusur bulundu ve
+düzeltildi (çift figür numarası, boş sayfada yüzen Figure 2, abstract'te "ht tps://" diye kırılan
+URL) — sayfa 10'dan 9'a indi. Doğrulamalar: 237 tekil tablo sayısı + 6 arXiv künyesi PDF'te
+eksiksiz (programatik sayım), tarball temiz dizinde tek başına derlendi (arXiv'in yapacağı
+işlem), `pytest tests/` → 62 passed, `git diff HEAD -- tests/` boş. Detay: GECMIS.md "Görev 14
+(devam) — arXiv paketi".
+
+**Görev 14'te kalan tek şey — kullanıcının kendi yapacağı iş:** arXiv'e gönderim. Ajan
+kullanıcının arXiv hesabına girmedi ve girmemeli; gönderim geri alınamaz bir dış eylem. Sıra:
+endorsement (cs.LG, kurumsal olmayan e-posta yüzünden muhtemelen gerekli — ARXIV.md §2) → form
+(§3) → tarball yükle → **arXiv'in derlediği PDF'i yerel `main.pdf` ile karşılaştır** → onayla.
+
+Yerel `backup-pre-trailer-clean` branch'i hâlâ duruyor — silinebilir (DOI arşivi başarıyla
+oluştu), kullanıcıya soruldu, cevap bekliyor. Ajan silmedi (geri alınamaz).
 
 **Önceki durum (Görev 13 tamamlandı): `paper.md` yazıldı** (471 satır — abstract, giriş, related work, yöntem,
 sonuçlar, tartışma, sınırlar, sapmalar, reprodüksiyon, kaynakça). Related work için literatür
@@ -415,5 +432,7 @@ Disk: `convert → evaluate → delete`, HF cache ≈ 20 GB.
 | 2026-07-26 | Görev 11 — veri-tarama-yasağı kontrolü: analiz çıktısı elle incelendi, kayıt-dışı test yok, değişiklik yapılmadı. FAZ 5 tamamlandı | (önceki oturum) |
 | 2026-07-26 | Görev 12 — `README.md` yazıldı (bulgu paragrafı, manşet sayılar, `make reproduce`, kapsam sınırları), gerçek verilerle doğrulandı. FAZ 6 başladı | (önceki oturum) |
 | 2026-07-26 | Görev 13 — `paper.md` yazıldı (8 bölüm, 5 tablo + 3 figür gömülü); related work 6 gerçek kaynakla (WebSearch+WebFetch, tam metin, ≤15 kelime alıntı, programatik doğrulama) yazıldı; en yakın önceki çalışma (Proskurina vd. 2024) bulunup açık bulgu olarak kaydedildi; ilk taslaktaki yazar-adı tahminleri ve bir elle-sayma hatası (H2 hücre sayıları) kod/kaynağa karşı kontrol edilip düzeltildi | (önceki oturum) |
-| 2026-07-26 | Görev 14 (kısmen) — GitHub vitrini (`gh repo edit`: description + 9 topic) uygulandı ve doğrulandı; repo public'e alma, release, Zenodo DOI, arXiv/e-posta kullanıcı kararıyla ertelendi (repo private kalıyor) | (bu oturum) |
+| 2026-07-26 | Görev 14 (kısmen) — GitHub vitrini (`gh repo edit`: description + 9 topic) uygulandı ve doğrulandı; repo public'e alma, release, Zenodo DOI, arXiv/e-posta kullanıcı kararıyla ertelendi (repo private kalıyor) | (önceki oturum) |
+| 2026-07-26 | Görev 14 (devam) — uçtan uca denetim (8 bulgu düzeltildi), push + release v1.0.0, Zenodo DOI basıldı ve API'den doğrulandı, DOI rozeti README'ye | `da739b3`…`9a5491e` |
+| 2026-07-26 | Görev 14 (devam) — arXiv paketi: `scripts/build_paper.py` + `make paper` (paper.md tek kaynak, LaTeX türetilir), `ARXIV.md` (metadata + adımlar + artık riskler); `paper.md`'ye Zenodo DOI + mutlak URL'ler; PDF gözle denetlendi (3 kusur düzeltildi, 10→9 sayfa); tarball temiz dizinde tek başına derlendi; 237 tablo sayısı + 6 künye programatik doğrulandı; 62/62 test | (bu oturum) |
 | | | |

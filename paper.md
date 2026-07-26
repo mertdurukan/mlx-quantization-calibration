@@ -1,8 +1,11 @@
 # The Calibration Cost of the MLX Quantization Ladder
 
 **Author:** Mert Durukan
-**Status:** results reported against the pre-registration frozen in [`PREREG.md`](PREREG.md).
-**Repository:** this repository. Reproduction instructions in §8.
+**Status:** results reported against the pre-registration frozen in
+[`PREREG.md`](https://github.com/mertdurukan/mlx-quantization-calibration/blob/main/PREREG.md).
+**Code and data:** <https://github.com/mertdurukan/mlx-quantization-calibration> ·
+archived at [`10.5281/zenodo.21596523`](https://doi.org/10.5281/zenodo.21596523).
+Reproduction instructions in §8.
 
 ---
 
@@ -59,7 +62,7 @@ This paper reports a pre-registered, falsification-oriented study of that gap, s
 MLX on Apple Silicon — the one deployment target where CUDA-only quantization toolchains
 (GPTQ, AWQ, bitsandbytes) simply do not run, and where the accuracy-only evaluation habit of
 the MLX ecosystem is least likely to be corrected by borrowing results from elsewhere. Four
-hypotheses (RQ1–RQ4 in [`PREREG.md`](PREREG.md) §2) were frozen before any calibration number
+hypotheses (RQ1–RQ4 in [`PREREG.md`](https://github.com/mertdurukan/mlx-quantization-calibration/blob/main/PREREG.md) §2) were frozen before any calibration number
 was computed. All four are falsified as literally stated; §5 argues that the *way* each one
 fails is itself the finding.
 
@@ -142,7 +145,7 @@ study targets.
 ## 3. Method
 
 Full design detail, frozen before any calibration number was computed, is in
-[`PREREG.md`](PREREG.md); this section summarizes it.
+[`PREREG.md`](https://github.com/mertdurukan/mlx-quantization-calibration/blob/main/PREREG.md); this section summarizes it.
 
 **Models.** Four candidate bf16 sources (Qwen2.5-1.5B/3B-Instruct, Llama-3.2-1B/3B-Instruct),
 gated into the main grid by a pre-specified, bf16-only eligibility rule (≥50% accuracy on at
@@ -432,6 +435,14 @@ make setup
 make reproduce   # make test -> python -m src.runner -> python -m src.analyze
 ```
 
+The exact snapshot these results were computed from is archived at
+[`10.5281/zenodo.21596523`](https://doi.org/10.5281/zenodo.21596523) (concept DOI, always
+resolving to the latest version; the `v1.0.0` release this paper reports is
+`10.5281/zenodo.21596524`). That archive includes `results/cells/` and `results/meta/` — the
+per-item log-probabilities for all 114 cells — so every table and figure in this paper can be
+regenerated with `python -m src.analyze` alone, without re-running the ~6.6-hour measurement
+grid.
+
 Requires Apple Silicon (MLX has no CUDA path). Environment: Python 3.14, `mlx-lm==0.31.3`,
 `mlx==0.32.0`, pinned in `requirements.lock.txt`; measured on an Apple M4 Pro, 24GB unified
 memory. The grid is resumable — a cell already written to `results/cells/` is skipped, so an
@@ -466,9 +477,9 @@ differing/falsified cell lists) underlying §4's summaries.
   the Final Layer: Intermediate Representations for Better Multilingual Calibration in Large
   Language Models.* [arXiv:2510.03136](https://arxiv.org/abs/2510.03136)
 
-Internal: [`PREREG.md`](PREREG.md) (frozen design and hypotheses), [`SPEC.md`](SPEC.md)
-(implementation contract), [`README.md`](README.md) (repository front page),
-[`GECMIS.md`](GECMIS.md) (decision and incident log), `results/tables/verdicts.json` (full
+Internal: [`PREREG.md`](https://github.com/mertdurukan/mlx-quantization-calibration/blob/main/PREREG.md) (frozen design and hypotheses), [`SPEC.md`](https://github.com/mertdurukan/mlx-quantization-calibration/blob/main/SPEC.md)
+(implementation contract), [`README.md`](https://github.com/mertdurukan/mlx-quantization-calibration/blob/main/README.md) (repository front page),
+[`GECMIS.md`](https://github.com/mertdurukan/mlx-quantization-calibration/blob/main/GECMIS.md) (decision and incident log), `results/tables/verdicts.json` (full
 mechanical verdict trail). Sibling study:
 [`imbalance-calibration`](https://github.com/mertdurukan/imbalance-calibration), the same
 "does the model know how honest it is"
