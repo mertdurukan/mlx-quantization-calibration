@@ -80,8 +80,10 @@ def extract(md: str) -> dict[str, str]:
 
     rest = lines[abstract_start + 1 :]
     next_heading = next(
-        i for i, ln in enumerate(rest) if ln.startswith("## ")
+        (i for i, ln in enumerate(rest) if ln.startswith("## ")), None
     )
+    if next_heading is None:
+        raise SystemExit("no '## ' heading after the abstract; nothing to typeset")
     abstract = "\n".join(rest[:next_heading]).strip().strip("-").strip()
     body = "\n".join(rest[next_heading:])
 

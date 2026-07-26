@@ -1,4 +1,4 @@
-.PHONY: setup verify test prompt-freeze pilot reproduce paper
+.PHONY: setup verify test prompt-freeze pilot reproduce paper verify-analysis
 
 PYTHON := ./.venv/bin/python
 
@@ -43,6 +43,13 @@ pilot:
 reproduce: test
 	$(PYTHON) -m src.runner
 	$(PYTHON) -m src.analyze
+
+# Re-derive results/tables/ from the committed per-item measurements and check the
+# output is byte-identical to what is committed. ~10 min, no model downloads, no GPU.
+# This is the cheap half of `reproduce` and the machine-checkable form of the claim
+# that nothing under results/ was hand-edited.
+verify-analysis:
+	$(PYTHON) scripts/verify_reproducibility.py
 
 # Derive the arXiv LaTeX package from paper.md (the single source) into
 # build/arxiv/. Needs pandoc and a LaTeX distribution; see ARXIV.md.

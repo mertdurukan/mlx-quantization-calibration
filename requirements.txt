@@ -6,3 +6,10 @@ pytest==9.1.1
 statsmodels==0.14.6
 scipy==1.18.0
 matplotlib==3.11.1
+# Imported directly by src/ (pandas, numpy) and required at runtime for the
+# per-cell parquet I/O (pyarrow). Previously arrived only transitively via
+# datasets/statsmodels; pinned here at the versions already in
+# requirements.lock.txt so the resolved environment is unchanged.
+numpy==2.5.1
+pandas==3.0.5
+pyarrow==25.0.0
