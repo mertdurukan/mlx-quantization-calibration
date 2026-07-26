@@ -14,26 +14,43 @@
 [x] FAZ 3 — Implementasyon              TAMAMLANDI
 [x] FAZ 4 — Pilot + tam koşu            TAMAMLANDI
 [x] FAZ 5 — Analiz (ön-kayıtlı tablolar) TAMAMLANDI
-[ ] FAZ 6 — Makale + dağıtım             ← ŞU AN BURADAYIZ (Görev 12 bitti, sırada Görev 13)
+[ ] FAZ 6 — Makale + dağıtım             ← ŞU AN BURADAYIZ (Görev 13 bitti, sırada Görev 14)
 ```
 
 ## Şu an
 
-**Görev 12 tamamlandı: `README.md` yazıldı.** Tek paragraf bulgu (H1'in qwen2.5-3b/arc'ta
-gerçek monoton-olmayan ihlali — 3-bit ECE 0.434, 2-bit'ten daha kötü, CI'lar örtüşmüyor; H2'nin
-model başına yön tutarsızlığı — llama3.2-3b onaylıyor, qwen2.5-1.5b arc'ta çoğunlukla çelişiyor;
-H3'ün 6 hücreden yalnızca 1'inde fark göstermesi), manşet sayı tablosu, `make reproduce`
-talimatı, PREREG §6 kapsam sınırları, repo haritası. Manşet tablosundaki her sayı
-`results/tables/*.csv` + `eligibility.json`'dan okunarak, 2-bit doğruluk yüzdeleri gerçek
-parquet'lerden (`is_correct.mean()`) hesaplanarak dolduruldu — ilk taslakta bunlar tahmindi,
-yazarken fark edilip düzeltildi (bkz. GECMIS.md "Görev 12"). Ayrıca ilk taslakta "kardeş çalışma"
-için uydurma bir GitHub URL'i yazılmıştı, commit'ten önce yerel dizin yoluna düzeltildi.
-Görevin YAPILACAKLAR'da açık bir kabul kriteri komutu yoktu (yalnızca içerik gereksinimi);
-kanıt olarak dosyanın varlığı ve `git diff HEAD -- tests/`'in boş kaldığı gösterildi.
+**Görev 13 tamamlandı: `paper.md` yazıldı** (471 satır — abstract, giriş, related work, yöntem,
+sonuçlar, tartışma, sınırlar, sapmalar, reprodüksiyon, kaynakça). Related work için literatür
+taraması gerçekten yapıldı: `WebSearch` ile 6 aday kaynak bulundu (RLHF aşırı-güveni, verbalize
+güven/kalibrasyon farkı, LLM-hakem aşırı-güveni, çok-dilli kalibrasyon boşluğu, en yakın önceki
+çalışma olarak kuantizasyon+güven, MLX/Apple Silicon çalışma-zamanı literatürü), her biri
+`WebFetch` ile gerçek arXiv sayfasından (bir tanesi için ayrıca HTML tam metinden) okunarak
+doğrulandı. Her alıntı kaynağın gerçek metninden birebir substring ve ≤15 kelime — bir script'le
+programatik olarak sayılarak doğrulandı. **Yazar isimleri de ayrıca doğrulandı ve ilk taslakta
+4 kaynağın yazarını yanlış tahmin ettiğim ortaya çıktı** ("Kwon" yerine gerçeği Proskurina vd.,
+"Bhat & Chen" yerine Rajesh vd., "Xiong" yerine K. Tian vd., "Zhao" yerine Zhou vd.) — hepsi
+`WebFetch` ile arXiv sayfasından gerçek isim listesi çekilerek düzeltildi (Kural 1: olgu-kanıt,
+bellekten/tahminden verme).
 
-FAZ 6 başladı. Sırada **Görev 13 — `paper.md`** var (abstract, giriş, related work — kaynaklar
-tam metin okunacak, ≤15 kelime alıntı —, yöntem, sonuçlar, tartışma, sınırlar, reprodüksiyon).
-Görev 10'da not edilen qwen2.5-3b'nin 3-bit ters-U bulgusu Görev 13'te işlenecek.
+**Önemli literatür bulgusu:** en yakın önceki çalışma (Proskurina vd., NAACL 2024 Findings,
+arXiv:2405.00632) GPTQ 4-bit kuantizasyonun LLM güvenini **ECE ve ACE dahil** kalibrasyon
+metrikleriyle ölçüyor — bu, PREREG §1'in "kesişim boş" çerçevesini literal okunduğunda kısmen
+yanlışlıyor. `PREREG.md`'ye dokunulmadı (donmuş, Kural 4); bulgu `YAPILACAKLAR.md`'ye açık
+bulgu olarak kaydedildi ve `paper.md` §2.2'de dürüstçe ele alındı — bu çalışmanın gerçek
+farkının "kuantizasyon güveni etkiler" (zaten biliniyordu) değil, tam bit merdiveni + mod
+karşılaştırması + mixed recipe'ler + ön-kayıtlı falsifikasyon + MLX runtime'ı olduğu netleştirildi.
+
+Sonuçlar bölümündeki tüm sayılar (5 tablo + `verdicts.json`) `results/tables/*.csv`'den
+pandas/python ile programatik üretildi, elle yazılmadı. **Kendi taslağımda bir hata yakalandı ve
+düzeltildi (Kural 5, iddiaya değil koda bak):** H2 özetinde confirming/contradicting hücre
+sayılarını ilk yazımda elle sayarken 13/32 yazmışım; `verdicts.json`'u `Counter` ile programatik
+sayınca gerçek sayının **13/36** olduğu ortaya çıktı, metin düzeltildi. 3 figür
+(`results/figures/figure{1,2,3}_*.png`) makaleye gömüldü, dosyaların gerçekten var olduğu
+doğrulandı. Görevin açık bir kabul kriteri komutu yoktu (yalnızca içerik gereksinimi); kanıt:
+dosya var (471 satır), `git diff HEAD -- tests/` boş.
+
+FAZ 6 sürüyor. Sırada **Görev 14 — Dağıtım** var (GitHub vitrini, release + Zenodo DOI, sonra
+arXiv / doğrudan e-posta).
 
 **Önceki durum (Görev 11 tamamlandı):** veri-tarama-yasağı kontrolü yapıldı, `src/analyze.py` +
 çıktılar + `tests/test_analyze.py` elle incelendi, kayıt-dışı hiçbir test bulunamadı — değişiklik
@@ -332,7 +349,7 @@ Fizibiliteden ön-kayda kadar tüm zincir tamamlandı:
 
 ## Kritik açık noktalar
 
-- Yok. Görev 12 tamamlandı: `README.md` yazıldı, FAZ 6 başladı. Sırada Görev 13 (`paper.md`).
+- Yok. Görev 13 tamamlandı: `paper.md` yazıldı. Sırada Görev 14 (Dağıtım).
 
 ## Bütçe hatırlatması (gerçekleşen, referans için)
 
@@ -363,5 +380,6 @@ Disk: `convert → evaluate → delete`, HF cache ≈ 20 GB.
 | 2026-07-25→26 | Görev 9 — tam koşu (kesinti/devam testi geçti), Llama BOS token açık bulgusu bulundu ve çözüldü, düzeltme koşusu — nihai 114/114 `status="ok"` | (bu oturum) |
 | 2026-07-26 | Görev 10 — `src/analyze.py` (test-önce+onay+mutasyon kanıtı, 27 test), gerçek 114 hücrelik veride iki koşu, `overconfidence_rate` açık bulgusu çözüldü, Tablo 1-4+taban-kontrol+verdicts.json+3 figür üretildi | (önceki oturum) |
 | 2026-07-26 | Görev 11 — veri-tarama-yasağı kontrolü: analiz çıktısı elle incelendi, kayıt-dışı test yok, değişiklik yapılmadı. FAZ 5 tamamlandı | (önceki oturum) |
-| 2026-07-26 | Görev 12 — `README.md` yazıldı (bulgu paragrafı, manşet sayılar, `make reproduce`, kapsam sınırları), gerçek verilerle doğrulandı. FAZ 6 başladı | (bu oturum) |
+| 2026-07-26 | Görev 12 — `README.md` yazıldı (bulgu paragrafı, manşet sayılar, `make reproduce`, kapsam sınırları), gerçek verilerle doğrulandı. FAZ 6 başladı | (önceki oturum) |
+| 2026-07-26 | Görev 13 — `paper.md` yazıldı (8 bölüm, 5 tablo + 3 figür gömülü); related work 6 gerçek kaynakla (WebSearch+WebFetch, tam metin, ≤15 kelime alıntı, programatik doğrulama) yazıldı; en yakın önceki çalışma (Proskurina vd. 2024) bulunup açık bulgu olarak kaydedildi; ilk taslaktaki yazar-adı tahminleri ve bir elle-sayma hatası (H2 hücre sayıları) kod/kaynağa karşı kontrol edilip düzeltildi | (bu oturum) |
 | | | |

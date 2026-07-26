@@ -654,3 +654,57 @@ URL'i yazılmıştı — CLAUDE.md'nin sistem talimatı programlamayla ilgisiz U
 Yazarken fark edilip yerel dizin yoluna (`~/github-projects/imbalance-calibration`) düzeltildi,
 commit edilmeden önce. Kayıt altına alınıyor çünkü PROTOKOL Kural 5'in ("iddiaya değil koda bak")
 bir uzantısı: kendi çıktımı da aynı şüphecilikle kontrol etmem gerekiyor.
+
+---
+
+## Görev 13 — `paper.md` (2026-07-26)
+
+### Related work araştırması gerçekten yapıldı (Kural 1)
+6 kaynak `WebSearch` ile bulundu, hepsi `WebFetch` ile gerçek arXiv sayfasından okunarak
+doğrulandı (en yakın önceki çalışma için, arXiv:2405.00632, ilk PDF fetch'i başarısız olunca
+`arxiv.org/html/...` HTML sürümünden tam metin okundu). Her alıntı kaynağın gerçek metninden
+birebir substring seçilerek yazıldı, sonra ayrı bir Python script'iyle kelime sayıları
+programatik doğrulandı (hepsi ≤15 kelime; ilk taslakta MLX runtime karşılaştırma makalesinden
+alınan bir "alıntı" aslında bir metrik listesiydi ve 19 kelimeydi — tırnak işaretleri kaldırılıp
+dolaylı anlatıma çevrildi).
+
+### Yakalanan hata: yazar isimleri doğrulanmadan yazılmıştı
+İlk taslakta 6 kaynaktan 4'ünün yazar adını (soyadını arXiv ID'sinden/arama özetinden tahmin
+ederek) **yanlış** yazmıştım: "Kwon vd." (gerçeği: Proskurina, Brun, Metzler, Velcin — arXiv
+2405.00632), "Bhat & Chen" (gerçeği: Rajesh, Jodhpurkar, Anbuselvan, Singh, Jallepali, Godbole,
+Sharma, Shrivastava — arXiv 2511.05502), "Xiong vd." (gerçeği: K. Tian, Mitchell, Zhou, Sharma,
+Rafailov, Yao, Finn, Manning — arXiv 2305.14975), "Zhao vd." (gerçeği: Zhou, Zhang, Hu, Li,
+Collier, Vulić, Korhonen — arXiv 2510.03136). Referans listesini yazmadan hemen önce her kaynak
+için ayrıca "list the full author names exactly as shown on this page" diye `WebFetch` çağrısı
+yapılarak kontrol edildi, hepsi düzeltildi (metin içi atıflar + Kaynakça). Not: iki farklı kaynağın
+ilk yazarı da "Tian" soyadını taşıyor (Katherine Tian 2023, Zailong Tian 2025) — metin içi atıflar
+karışmasın diye "K. Tian" / "Z. Tian" olarak ayrıştırıldı.
+
+### Açık bulgu: en yakın önceki çalışma PREREG'in "kesişim boş" çerçevesini nüanslandırıyor
+Proskurina vd. (NAACL 2024 Findings, arXiv:2405.00632) GPTQ 4-bit kuantizasyonun LLM güvenini
+**ECE ve ACE dahil** kalibrasyon metrikleriyle, altı benchmark'ta (ArcEasy, BoolQ, HellaSwag,
+OpenBookQA, PiQA, XStory) ölçüyor. `PREREG.md` §1'in "LLM-kalibrasyon tarafı kuantizasyona hiç
+bakmıyor" cümlesi literal okunduğunda tam doğru değil. **`PREREG.md`'ye dokunulmadı** (donmuş,
+PROTOKOL Kural 4/7) — bu bir tasarım sapması değil (hiçbir kuantizasyon parametresi/koşul/metrik
+değişmedi), yalnızca §1'deki arka plan çerçevesinin literatürle tam örtüşmediği bir nüans.
+`YAPILACAKLAR.md`'ye açık bulgu olarak kaydedildi, `paper.md` §2.2'de kaynak dürüstçe atıfla
+verilip bu çalışmanın asıl farkı (tam bit merdiveni + mod karşılaştırması + mixed recipe + MLX
+runtime + ön-kayıtlı falsifikasyon) netleştirildi — Proskurina vd.'nin kapsamadığı beş somut
+metodolojik boşluk maddelenerek.
+
+### Yakalanan hata: kendi taslağımdaki bir elle-sayma hatası
+Tartışma taslağını yazarken H2 (yön hipotezi) için confirming/contradicting hücre sayılarını
+`verdicts.json`'daki listeleri elle sayarak "13 confirming / 32 contradicting" yazmıştım. Tabloları
+ve metni bitirdikten sonra, PROTOKOL Kural 5 gereği kendi iddiamı koda karşı kontrol ederken
+(`python -c "... Counter(...)"`), gerçek sayının **13 confirming / 36 contradicting** olduğu
+ortaya çıktı (36 satırlık listeyi elle sayarken 4 satır atlamışım). Model başına dağılım da
+(`llama3.2-3b`: 10 confirm/2 contradict, `qwen2.5-1.5b`: 3 confirm/16 contradict, `qwen2.5-3b`:
+0 confirm/18 contradict) programatik olarak yeniden hesaplanıp metne işlendi. Diğer tüm sayısal
+iddialar (H1 monotonluk, H3 örtüşme, H4 falsifikasyon, floor-control ECE aralığı, effective_bits)
+aynı yöntemle (`pandas`/`json` ile CSV'lerden doğrudan okuma, elle transkripsiyon değil) üretildiği
+için ayrıca hata bulunmadı.
+
+### Fonksiyonel/varlık doğrulaması
+`paper.md`'nin gömdüğü 3 figür yolu (`results/figures/figure{1,2,3}_*.png`) `ls` ile gerçekten var
+olduğu doğrulandı. `git diff HEAD -- tests/` boş. Kabul kriteri komutu YAPILACAKLAR'da tanımlı
+değildi (yalnızca içerik gereksinimi listesi).
