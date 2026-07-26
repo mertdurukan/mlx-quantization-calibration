@@ -411,6 +411,123 @@ bu sayı Faz 3'ün davranışını etkilemiyor. Test dizini sonra silindi.
 
 ---
 
+## Görev 8 — `make pilot` çalıştırıldı, mkdtemp/convert açık bulgusu (2026-07-25)
+
+### İlk koşu: her iki kuantize hücre `status="failed"`
+`make pilot` ilk çalıştırıldığında bf16 `status="ok"` (206.7s) verdi ama `affine_b4_g64` ve
+`affine_b2_g64` ikisi de anında (`wall_seconds` < 0.4s) `status="failed"` döndü, `n_items_scored: 0`.
+Kök neden: `runner._run_and_write_cell`, `out_dir`'i `tempfile.mkdtemp(prefix=...)` ile önceden
+**oluşturuyordu**, ama `mlx_lm.convert()` kaynağı hedef dizin zaten varsa `ValueError` fırlatıyor
+("Cannot save to the path ... as it already exists"). Görev 5'in fonksiyonel doğrulaması bunu
+yakalamamıştı çünkü orada `quantize.build()` doğrudan, `mkdtemp` kullanmayan sabit bir yolla
+(`/tmp/q_t1`, önceden var olmayan) çağrılmıştı — hata yalnızca `runner.py`'nin orkestrasyon
+yolundan geçince ortaya çıktı. AÇIK BULGULAR'a **kritik** olarak eklendi.
+
+### Çözüm
+`mkdtemp` ile tekil bir isim üretilip hemen `os.rmdir` ile siliniyor — `convert()`'e her zaman
+**yeni ama garantili tekil** bir yol veriliyor (küçük bir TOCTOU penceresi var, ama tek süreçli
+araştırma kodu için kabul edilebilir). `make pilot` yeniden koşuldu: 3/3 hücre `status="ok"`.
+
+### Sağlık kontrolü (kullanıcıya gösterildi, onaylandı)
+| condition | acc | mean_conf | ECE | Brier |
+|---|---|---|---|---|
+| bf16 | 0.765 | 0.896 | 0.130 | 0.168 |
+| affine_b4_g64 | 0.737 | 0.873 | 0.136 | 0.177 |
+| affine_b2_g64 | 0.244 | 0.742 | 0.498 | 0.459 |
+
+2-bit hücresi neredeyse şans seviyesine çöktü ve ECE'si bf16'nın ~4 katı — kuantizasyon
+gerçekten uygulanıyor, `nn.quantize`'ın çıplak `Linear`'da sessiz no-op olma riski (keşifte
+yaşanmıştı) burada gerçekleşmedi.
+
+### Süre bütçesi
+3 hücrenin ortalaması (en hızlı model, tek benchmark) ~199s/hücre → 140 hücreye ölçeklenirse
+~7.75 saat, 8 saatlik sınıra çok yakın. Kullanıcıya bildirildi, tam koşuya onay alındı.
+
+---
+
+## Görev 9 — tam koşu, kesinti/devam testi, Llama BOS token hatası (2026-07-25 → 26)
+
+### Kesinti/devam testi (SPEC'in kendi kabul kriteri)
+`caffeinate -i make reproduce` başlatıldı, ~5 dk sonra (`test` bitmiş, `runner` bir bf16 hücresi
+ortasındayken) kasten `TaskStop` ile kesildi — henüz hiçbir yeni hücre diske yazılmamıştı.
+Yeniden başlatıldığında pilotun 3 hücresinin parquet `mtime`'ları **değişmedi** — tamamlanmış
+hücreler gerçekten atlanıyor, yeniden hesaplanmıyor. Test geçti.
+
+### İlk koşu sonucu: 88/88 `status="ok"`
+Grid tamamlandı, `src.analyze` adımında beklenen `ModuleNotFoundError` ile durdu (Görev 10 henüz
+yok — veri kaybı yok, runner zaten hücre başına diske yazıyor). 88 hücre, 140 değil: o andaki
+`eligibility.json`'da `llama3.2-1b`/`llama3.2-3b` ikisi de `eligible=false` çıkmıştı, bu yüzden
+yalnızca bf16'ları (2'şer hücre) çalıştı.
+
+### Açık bulgu: Llama-3.2 tokenizer'ı `encode()`'a otomatik BOS ekliyor
+Koşu sürerken `eligibility.json`'da `llama3.2-1b` ve `llama3.2-3b` için **birebir aynı** sayılar
+görüldü (`arc_challenge: 0.222`, `mmlu: 0.238`) — iki farklı boyutlu modelin bire bir aynı
+doğruluğu vermesi şüpheli bulundu, araştırıldı. `llama3.2-1b__bf16__arc_challenge.parquet`
+kontrol edildi: `pred_idx` 1000/1000 satırda sabit `0`, `conf_pred` std=0.0 — model her zaman
+"A" seçiyormuş gibi görünüyordu.
+
+Kök neden `transformers.AutoTokenizer` ile doğrudan karşılaştırılarak **kanıtlandı**:
+```
+LLAMA: encode(" A") == [128000, 362]   # 128000 = <|begin_of_text|>, otomatik ekleniyor
+QWEN:  encode(" A") == [362]           # BOS yok
+```
+`measure._score_item`, `tokenizer.encode(" " + label)[0]` ile (encode çıktısının **ilk**
+token'ı) seçenek harfinin logit indeksini alıyordu. Qwen'de doğru (tek token dönüyor), ama
+Llama'da dört seçenek için de **aynı sabit BOS token'ının** (128000) logit'i okunuyordu — dördü
+eşit çıkıyor, softmax sonrası hepsi 0.25, `argmax` ilk elemanı (index 0) seçiyor. Qwen ailesi
+etkilenmedi (tokenizer'ı BOS eklemiyor, sayıları zaten çeşitli/pilot sonuçlarıyla tutarlıydı).
+AÇIK BULGULAR'a **kritik** olarak eklendi.
+
+**Karar (sonuçlar görülmeden önce):** arka planda süren koşu, o an yalnızca uygun bulunan Qwen
+hücrelerini işlediği için (Llama zaten `eligible=false` olduğundan Faz 3'e hiç girmiyordu) daha
+fazla israf yoktu — kullanıcıyla birlikte karar verildi: koşu **durdurulmadı**, düzeltme ayrı bir
+adım olarak ele alındı.
+
+### Düzeltme (test-önce + mutasyon kanıtı, PROTOKOL Kural 3+4)
+`tests/test_measure.py` yazıldı — gerçek model yüklemeden, iki sahte tokenizer'la
+(`_FakeTokenizerWithLeadingBOS`, `_FakeTokenizerWithoutBOS`) `measure._option_token_ids`'i test
+ediyor. İlk çalıştırıldığında beklenen `ImportError` verdi (fonksiyon henüz yoktu). Kullanıcıya
+gösterildi, onay alındı.
+
+`src/measure.py`'ye saf `_option_token_ids(tokenizer, labels)` yardımcı fonksiyonu çıkarıldı:
+`encode(" " + label)[-1]` — etiketin kendi token'ı, başta BOS olsa da olmasa da her zaman **son**
+eleman. `_score_item` bu fonksiyonu kullanacak şekilde güncellendi.
+
+**Mutasyon kanıtı:** `[-1]` kasten `[0]`'a geri döndürüldü, BOS testi doğru sebeple FAIL etti
+(`assert 128000 not in [128000, 128000, 128000, 128000]` — canlı ortamda görülen artefaktın
+birebir aynısı), dosya orijinaline döndürüldü.
+
+**Fonksiyonel doğrulama (Kural 6):** gerçek Llama-3.2-1B tokenizer'ı yüklenip çağrıldı:
+`_option_token_ids(tok, ['A','B','C','D']) == [362, 426, 356, 423]` (dördü farklı, önceki
+`[128000]*4` yerine). `pytest tests/` → 35 passed.
+
+### Düzeltme koşusu ve nihai sonuç
+İlk koşu tamamen bittikten sonra (ikinci bir model-yükleyen süreç artık güvenli) 4 eski/bozuk
+llama bf16 dosyası (parquet+meta) ve `eligibility.json` silindi, `python -m src.runner` tekrar
+çalıştırıldı: Qwen'in 84 hücresi cache'ten atlandı (dosyalar zaten vardı), yalnızca 4 llama bf16
+hücresi düzeltilmiş kodla yeniden ölçüldü, Faz 2 `eligibility.json`'ı doğru sayılarla yeniden
+yazdı, Faz 3 yeni uygunluk kararına göre devam etti.
+
+**Nihai sayılar:**
+| model | arc_challenge | mmlu | eligible |
+|---|---|---|---|
+| llama3.2-1b | 0.475 | 0.435 | false |
+| llama3.2-3b | 0.713 | 0.569 | **true** |
+| qwen2.5-0.5b | 0.518 | 0.436 | true (floor_control) |
+| qwen2.5-1.5b | 0.765 | 0.571 | true |
+| qwen2.5-3b | 0.81 | 0.647 | true |
+
+`llama3.2-3b` düzeltilmiş ölçümle eşiği geçti — bozuk veride (0.222/0.238) bu model **tamamen
+elenmiş** olacaktı, ön-kaydın kendi öngördüğü "havuz 4'ün altına düşebilir" riski (2026-07-24
+tarihli açık bulgu) neredeyse gerçekleşiyordu, ama gerçek neden model kalitesi değil ölçüm
+hatasıydı. Tam merdiveni işlendi (28 hücre). `llama3.2-1b` hâlâ eşiğin altında (yalnızca bf16,
+2 hücre) — bu, gerçek bir sonuç, bir hata değil.
+
+**Nihai grid: 114/114 hücre `status="ok"`, hiç `failed` yok.** Model başına: `qwen2.5-0.5b` 28,
+`qwen2.5-1.5b` 28, `qwen2.5-3b` 28, `llama3.2-3b` 28, `llama3.2-1b` 2.
+
+---
+
 ## Kardeş ML çalışmasından devralınan dersler
 
 `~/github-projects/imbalance-calibration` — tamamlandı, yayında. Orada yakalanan yedi hata,

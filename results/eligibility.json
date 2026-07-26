@@ -1,13 +1,13 @@
 {
   "llama3.2-1b": {
-    "arc_challenge": 0.222,
-    "mmlu": 0.238,
+    "arc_challenge": 0.475,
+    "mmlu": 0.435,
     "eligible": false
   },
   "llama3.2-3b": {
-    "arc_challenge": 0.222,
-    "mmlu": 0.238,
-    "eligible": false
+    "arc_challenge": 0.713,
+    "mmlu": 0.569,
+    "eligible": true
   },
   "qwen2.5-0.5b": {
     "arc_challenge": 0.518,

@@ -1,7 +1,7 @@
 # DURUM — Canlı Durum Dosyası
 
 > **Her oturum sonunda güncellenir.** Bu dosya, "neredeyiz" sorusunun tek cevabıdır.
-> Son güncelleme: 2026-07-25
+> Son güncelleme: 2026-07-26
 
 ---
 
@@ -12,38 +12,44 @@
 [x] FAZ 1 — Keşif (eksenler, veri, hız) TAMAMLANDI
 [x] FAZ 2 — Ön-kayıt donduruldu         TAMAMLANDI  (commit c5ea71c)
 [x] FAZ 3 — Implementasyon              TAMAMLANDI
-[ ] FAZ 4 — Pilot + tam koşu            ← ŞU AN BURADAYIZ (Görev 8 bitti, Görev 9 sürüyor)
-[ ] FAZ 5 — Analiz (ön-kayıtlı tablolar)
+[x] FAZ 4 — Pilot + tam koşu            TAMAMLANDI
+[ ] FAZ 5 — Analiz (ön-kayıtlı tablolar) ← ŞU AN BURADAYIZ (sırada Görev 10)
 [ ] FAZ 6 — Makale + dağıtım
 ```
 
 ## Şu an
 
-**FAZ 3 tamamlandı, FAZ 4 başladı. Görev 8 (`make pilot`) koştu, kritik açık bulgu (mkdtemp/
-convert path çakışması) bulundu ve çözüldü, sağlık kontrolü kullanıcıya gösterildi ve
-**onaylandı**: 2-bit hücresi bf16'dan belirgin kötü (acc 0.244 vs 0.765, ECE 0.498 vs 0.130) —
-kuantizasyon gerçekten uygulanıyor. Süre bütçesi (~7.75 saat tahmini, en hızlı modelle) kullanıcıya
-bildirildi, kullanıcı tam koşuya (Görev 9) onay verdi: "Onaylıyorum, tam koşuyu başlat."
+**FAZ 4 tamamlandı. Sırada Görev 10 (`src/analyze.py`) var.**
 
-**Görev 9 — ilk koşu bitti, ikinci (düzeltme) koşusu sürüyor.** `caffeinate -i make reproduce`
-tamamlandı: kesinti/devam testi geçti (bkz. GECMIS.md), grid **88/88 hücre `status="ok"`, hiç
-`failed` yok** (son adım `src.analyze` beklendiği gibi `ModuleNotFoundError` ile bitti — Görev 10
-henüz yazılmadı, veri kaybı yok). 88 = 140 değil, çünkü bu koşuda `llama3.2-1b`/`llama3.2-3b`
-**bozuk ölçüm yüzünden** `eligible=false` çıkmıştı, o yüzden yalnızca bf16'ları (2'şer hücre)
-çalıştı, tam 14 koşullu merdiven değil.
+Görev 8 (`make pilot`) koştu, kritik açık bulgu (mkdtemp/convert path çakışması) bulundu ve
+çözüldü, sağlık kontrolü kullanıcıya gösterildi ve **onaylandı**: 2-bit hücresi bf16'dan belirgin
+kötü (acc 0.244 vs 0.765, ECE 0.498 vs 0.130) — kuantizasyon gerçekten uygulanıyor. Süre bütçesi
+(~7.75 saat tahmini, en hızlı modelle) kullanıcıya bildirildi, kullanıcı tam koşuya onay verdi.
 
-Bu sırada canlı izlerken kritik bir hata bulundu ve çözüldü (test-önce + mutasyon kanıtıyla,
-kullanıcı onaylı): `measure.py`'nin seçenek-harfi token'ını `encode(...)[0]` yerine `encode(...)[-1]`
-ile okuması gerekiyordu — Llama-3.2 tokenizer'ı her `encode()`'a otomatik BOS ekliyor, `[0]` hep
-aynı BOS token'ını okuyordu, model hep "A" seçiyormuş gibi görünüyordu. Detay: YAPILACAKLAR AÇIK
-BULGULAR + GECMIS.md.
+Görev 9 iki koşuda tamamlandı. **İlk koşu:** `caffeinate -i make reproduce` — kesinti/devam testi
+geçti (~5 dk sonra kasten kesildi, yeniden başlatıldığında tamamlanmış hücrelerin `mtime`'ı
+değişmedi), grid 88/88 hücre `status="ok"` verdi (140 değil — `llama3.2-1b`/`llama3.2-3b` o an
+bozuk bir ölçümden `eligible=false` çıkmıştı, sadece bf16'ları çalıştı; son adım `src.analyze`
+beklendiği gibi `ModuleNotFoundError` ile bitti, Görev 10 henüz yok, veri kaybı yok).
 
-Düzeltme uygulandıktan sonra (ilk koşu tamamen bittiği, ikinci bir model-yükleyen süreç artık
-güvenli olduğu için) 4 eski/bozuk llama bf16 dosyası + `eligibility.json` silindi, `python -m
-src.runner` **arka planda tekrar başlatıldı** (görev `bspu1av8r`): Qwen'in 84 hücresi zaten
-cache'te olduğu için atlanacak, yalnızca 4 llama bf16 hücresi düzeltilmiş kodla yeniden ölçülecek,
-`eligibility.json` doğru sayılarla yeniden yazılacak, ve llama gerçekten eşiği geçerse Faz 3
-onun da tam merdivenini işleyecek (geçmezse yalnızca 4 hücrede kalacak). Tamamlanınca bildirilecek.
+Koşu sürerken canlı izlerken **kritik bir hata bulundu**: `measure.py`'nin seçenek-harfi token'ını
+`encode(...)[0]` yerine `encode(...)[-1]` ile okuması gerekiyordu — Llama-3.2 tokenizer'ı her
+`encode()`'a otomatik BOS ekliyor, `[0]` hep aynı BOS token'ını okuyordu, model hep "A" seçiyormuş
+gibi görünüyordu. Test-önce + mutasyon kanıtıyla, kullanıcı onaylı düzeltildi
+(`tests/test_measure.py`, `pytest tests/` → 35 passed). Detay: YAPILACAKLAR AÇIK BULGULAR + GECMIS.md.
+
+**İkinci (düzeltme) koşu:** ilk koşu tamamen bittikten sonra 4 eski/bozuk llama bf16 dosyası +
+`eligibility.json` silindi, `python -m src.runner` tekrar çalıştırıldı — Qwen'in 84 hücresi
+cache'ten atlandı, yalnızca 4 llama bf16 hücresi düzeltilmiş kodla yeniden ölçüldü. **Nihai sonuç:
+114/114 hücre `status="ok"`, hiç `failed` yok.** `llama3.2-3b` düzeltilmiş ölçümle eşiği geçti
+(arc=0.713/mmlu=0.569, eligible=true — bozuk veride bu model tamamen elenmiş olacaktı) ve tam
+14-koşullu merdiveni işlendi (28 hücre); `llama3.2-1b` eşiğin altında kaldı (arc=0.475/mmlu=0.435,
+yalnızca bf16, 2 hücre). Model başına hücre sayısı: `qwen2.5-0.5b` 28, `qwen2.5-1.5b` 28,
+`qwen2.5-3b` 28, `llama3.2-3b` 28, `llama3.2-1b` 2.
+
+Bu, ön-kayıtta öngörülen "havuz 4'ün altına düşebilir" riskinin gerçekleşmediğini kanıtlıyor: ana
+model havuzu `qwen2.5-1.5b`, `qwen2.5-3b`, `llama3.2-3b` (3 model, eligible) + `qwen2.5-0.5b`
+(floor control) — 4 model, tasarlanan gibi.
 `src/runner.py::run_all` tamamen implemente edildi (üç fazlı sıra, parquet cache, teardown,
 never-raise), artı Görev 7 sırasında keşfedilen bir açık bulgu (`make pilot`'ın hiç tanımlanmamış
 bir CLI/model beklemesi) çözülürken eklenen `run_pilot()` + `__main__`/`argparse` girişi.
@@ -260,17 +266,18 @@ Fizibiliteden ön-kayda kadar tüm zincir tamamlandı:
 
 ## Kritik açık noktalar
 
-- **Görev 8 kullanıcı onayı bekliyor.** `make pilot` koştu, 3/3 hücre `status="ok"`, sağlık
-  kontrolü sayıları aşağıda — ama SPEC §8/YAPILACAKLAR bu görevin kabulünü **kullanıcının kendi
-  gözüyle bakmasına** bağlıyor, delege edilemez. Ayrıca 140 hücrelik tam ızgara için süre tahmini
-  8 saat sınırına **çok yakın** (aşağıya bakınız) — kullanıcı onayı olmadan Görev 9'a geçilmiyor.
+- Yok. Görev 8 ve Görev 9 kullanıcı onayıyla kapatıldı, Llama BOS hatası düzeltildi ve nihai
+  grid (114/114 hücre `status="ok"`) doğrulandı. Sırada Görev 10 — `src/analyze.py` yazılacak.
 
-## Bütçe hatırlatması
+## Bütçe hatırlatması (gerçekleşen, referans için)
 
-Tam ızgara ≈ 140 hücre (5 model × 14 koşul × 2 benchmark). Tahmini **4–6 saat**, resumable.
+Ön-kayıt tahmini ≈ 140 hücreydi (5 model × 14 koşul × 2 benchmark, tümü uygun varsayılarak).
+Gerçekte `llama3.2-1b` eşiği geçemedi, bu yüzden nihai grid **114 hücre** oldu (5 model, ama
+`llama3.2-1b` yalnızca bf16). Toplam koşum süresi (ilk koşu + kesinti testi + ikinci/düzeltme koşusu birlikte) 20:43 – 03:20
+arası, **~6.6 saat** — pilotun en hızlı modelle yaptığı 7.75 saatlik tahminin altında kaldı
+(3B modeller pilotun kullandığı 1.5B'den daha yavaş olsa da, floor control 0.5B ortalamayı
+aşağı çekti ve `llama3.2-1b` yalnızca 2 hücrede kaldı, tam merdiven işlemedi).
 Disk: `convert → evaluate → delete`, HF cache ≈ 20 GB.
-
-**Pilotta tek hücre süresini ölç, 140 ile çarp. 8 saati aşarsa DUR ve bildir.**
 
 ---
 
@@ -287,4 +294,6 @@ Disk: `convert → evaluate → delete`, HF cache ≈ 20 GB.
 | 2026-07-25 | Görev 5 — `src/quantize.py` + `src/measure.py`, `mixed_*` recipe açık bulgusu çözüldü, dört mod fonksiyonel doğrulandı | (önceki oturum) |
 | 2026-07-25 | Görev 6 — `tests/test_no_leakage.py` (8 test) + `src/runner.py` kısmi implementasyonu, 3 mutasyon kanıtı | (önceki oturum) |
 | 2026-07-25 | Görev 7 — `src/runner.py::run_all` + `run_pilot`/CLI, `make pilot` açık bulgusu çözüldü | (bu oturum) |
+| 2026-07-25 | Görev 8 — `make pilot` koştu, mkdtemp/convert açık bulgusu çözüldü, sağlık kontrolü onaylandı | (önceki oturum) |
+| 2026-07-25→26 | Görev 9 — tam koşu (kesinti/devam testi geçti), Llama BOS token açık bulgusu bulundu ve çözüldü, düzeltme koşusu — nihai 114/114 `status="ok"` | (bu oturum) |
 | | | |
