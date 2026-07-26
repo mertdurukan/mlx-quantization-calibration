@@ -42,9 +42,15 @@ Zenodo toggle'ı açık olduğu için DOI otomatik basılacak (birkaç dakika).
 `10.5281/zenodo.21596523` (her zaman en son sürüme yönlenir). API'den doğrulandı: başlık, sürüm
 ve MIT lisansı doğru alınmış. Concept-DOI rozeti README'ye, `doi:` alanı CITATION.cff'e eklendi.
 
-**Görev 14'te kalan tek şey (ayrı karar, kullanıcıyla):** arXiv / doğrudan e-posta. Yerel
-`backup-pre-trailer-clean` branch'i (trailer temizliği öncesi yedek) hâlâ duruyor — artık
-silinebilir (DOI arşivi başarıyla oluştu).
+**Görev 14'te kalan tek şey:** arXiv gönderimi (ve/veya doğrudan e-posta). **Kullanıcı kararı
+(2026-07-26): arXiv gönderimi YAPILACAK, ayrı bir oturumda ele alınacak.** Bir sonraki oturum
+buradan başlamalı. arXiv için bilinen gereksinimler: (1) markdown değil PDF gerekir —
+`paper.md`'nin LaTeX/PDF'e dönüştürülmesi (pandoc bir seçenek); (2) kullanıcının arXiv hesabı;
+(3) hedef kategoride (muhtemelen cs.LG veya cs.CL) endorsement gerekebilir; (4) gönderim geri
+alınamaz — duyurulduktan sonra kaldırılamaz, yalnızca yeni versiyon eklenebilir; (5) makaleye
+Zenodo DOI'si (`10.5281/zenodo.21596523`) ve repo URL'i eklenmeli. Yerel
+`backup-pre-trailer-clean` branch'i hâlâ duruyor — silinebilir (DOI arşivi başarıyla oluştu),
+kullanıcıya soruldu, cevap bekliyor.
 
 **Önceki durum (Görev 13 tamamlandı): `paper.md` yazıldı** (471 satır — abstract, giriş, related work, yöntem,
 sonuçlar, tartışma, sınırlar, sapmalar, reprodüksiyon, kaynakça). Related work için literatür
