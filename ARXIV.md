@@ -18,9 +18,9 @@ make paper
 
 | Dosya | Ne |
 |---|---|
-| `arxiv-submission.tar.gz` | **arXiv'e yüklenecek dosya budur** (`main.tex` + 3 figür, 408 KB) |
-| `main.pdf` | yalnızca senin okuman için — arXiv'e **yüklenmez** (aşağıya bakınız) |
-| `abstract-for-arxiv-form.txt` | forma yapıştırılacak düz-ASCII abstract (233 kelime) |
+| `arxiv-submission.tar.gz` | **arXiv'e yüklenecek dosya budur** (`main.tex` + 3 figür, ~490 KB) |
+| `main.pdf` | yalnızca senin okuman için (11 sayfa) — arXiv'e **yüklenmez** (aşağıya bakınız) |
+| `abstract-for-arxiv-form.txt` | forma yapıştırılacak düz-ASCII abstract (1916 karakter — arXiv sınırı 1920, `build_paper.py` aşılırsa derlemeyi durduruyor) |
 | `main.tex` | pandoc'un `paper.md`'den ürettiği LaTeX |
 
 `paper.md` **tek kaynaktır.** `build/arxiv/` altındaki hiçbir şey elle
@@ -73,7 +73,7 @@ sağlam bir tercih.
 | **Abstract** | `build/arxiv/abstract-for-arxiv-form.txt` içeriğini yapıştır |
 | **Primary category** | `cs.LG` (Machine Learning) |
 | **Cross-list** | `cs.CL` (Computation and Language) |
-| **Comments** | 9 pages, 3 figures, 5 tables. Pre-registered study; design frozen before any calibration number was computed. Code and data: https://github.com/mertdurukan/mlx-quantization-calibration — archived at https://doi.org/10.5281/zenodo.21596523 |
+| **Comments** | 11 pages, 3 figures, 5 tables. Pre-registered study; design frozen before any calibration number was computed. Code and data: https://github.com/mertdurukan/mlx-quantization-calibration — archived at https://doi.org/10.5281/zenodo.21596523 |
 | **License** | CC BY 4.0 önerilir (kod zaten MIT; CC BY, Zenodo kaydıyla ve reprodüklenebilirlik iddiasıyla tutarlı) |
 | **DOI alanı** | boş bırak — Zenodo DOI'si kodun/verinin DOI'si, makalenin dergi DOI'si değil |
 | **Processor** | pdflatex (arXiv otomatik seçmeli; seçmezse pdflatex seç) |
