@@ -61,10 +61,26 @@ eksiksiz (programatik sayım), tarball temiz dizinde tek başına derlendi (arXi
 işlem), `pytest tests/` → 62 passed, `git diff HEAD -- tests/` boş. Detay: GECMIS.md "Görev 14
 (devam) — arXiv paketi".
 
+**İletişim adresi kararı (2026-07-26, kullanıcı):** yazışma adresi `mert@durukan.dev` olacak;
+`paper.md` başlık bloğuna **ve** `CITATION.cff`'e yazıldı (kullanıcı "ikisine de" dedi). Adresin
+gerçekten mail alabildiği DNS'ten doğrulandı (MX: `smtp.google.com`, Google Workspace).
+`build_paper.py` de düzeltildi — başlık bloğu LaTeX gövdesine hiç aktarılmıyordu, yani adres
+yalnızca `paper.md`'ye yazılsa PDF'te **görünmeyecekti**; artık `\author{}` satırına mailto
+linkiyle taşınıyor (PDF'te doğrulandı). **Git commit adresi değişmedi** (kullanıcı kararı):
+tüm commit'ler `1mertacc@gmail.com` ile kalıyor, geçmiş yeniden yazılmıyor (Kural 8).
+
 **Görev 14'te kalan tek şey — kullanıcının kendi yapacağı iş:** arXiv'e gönderim. Ajan
 kullanıcının arXiv hesabına girmedi ve girmemeli; gönderim geri alınamaz bir dış eylem. Sıra:
-endorsement (cs.LG, kurumsal olmayan e-posta yüzünden muhtemelen gerekli — ARXIV.md §2) → form
-(§3) → tarball yükle → **arXiv'in derlediği PDF'i yerel `main.pdf` ile karşılaştır** → onayla.
+**kişisel endorsement** (aşağıya bakınız) → form (ARXIV.md §3) → tarball yükle → **arXiv'in
+derlediği PDF'i yerel `main.pdf` ile karşılaştır** → onayla.
+
+**Endorsement hakkında düzeltme (2026-07-26):** ARXIV.md ilk yazımında bu konu bayat kaynaktan
+yazılmıştı. arXiv **21 Ocak 2026'da** politikayı sıkılaştırmış: otomatik endorsement artık
+akademik e-posta **ve** önceden arXiv yazarlığının **ikisini birden** istiyor. Kullanıcının ikisi
+de yok, dolayısıyla **tek yol cs alanında yerleşik bir arXiv yazarından kişisel endorsement.**
+E-posta adresi seçimi bunu hiç değiştirmiyor (`durukan.dev` de gmail de akademik kurum değil).
+Bu, gönderimin önündeki tek gerçek engel ve zaman alabilir — makaleden bağımsız olarak şimdiden
+başlatılmalı. Bkz. YAPILACAKLAR açık bulgusu + ARXIV.md §2.
 
 Yerel `backup-pre-trailer-clean` branch'i hâlâ duruyor — silinebilir (DOI arşivi başarıyla
 oluştu), kullanıcıya soruldu, cevap bekliyor. Ajan silmedi (geri alınamaz).

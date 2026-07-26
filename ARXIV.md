@@ -33,19 +33,36 @@ düzenlenmez — makalede bir değişiklik gerekiyorsa `paper.md` düzenlenir ve
 arXiv kendisi derler. Bu bir kısıtlama değil avantaj: arXiv derlediği PDF'i sana
 **onaylatmadan yayınlamaz**, yani son kontrol noktası sende.
 
-## 2. Ön koşul: endorsement
+## 2. Ön koşul: endorsement — **kişisel endorsement gerekiyor**
 
 arXiv, bir kullanıcının **ilk** gönderiminde (ve yeni bir kategoriye ilk
-gönderiminde) endorsement istiyor — kaynağından doğrulandı
-(info.arxiv.org/help/endorsement, 2026-07-26). İki yol var:
+gönderiminde) endorsement istiyor. Politika **21 Ocak 2026'da sıkılaştırıldı**
+(blog.arxiv.org/2026/01/21/attention-authors-updated-endorsement-policy —
+2026-07-26'da okundu; Aralık 2025'te Matematik'te başlayan değişikliğin
+genelleştirilmesi). Otomatik endorsement artık **iki koşulun ikisini birden**
+istiyor:
 
-- **Kurumsal e-posta + daha önce ortak-yazarı olduğun makaleleri sahiplenme** →
-  otomatik onaylanabilirsin.
-- Aksi hâlde: alanında yerleşik bir arXiv yazarından endorsement kodu ile talep.
+1. akademik/araştırma kurumundan bir e-posta adresi, **ve**
+2. arXiv'de aynı endorsement alanında yayınlanmış bir makalede önceden yazarlık.
 
-`costorymind@gmail.com` kurumsal bir adres değil, bu yüzden **cs.LG için
-endorsement istenmesi kuvvetle muhtemel.** Bunu gönderim gününden önce
-başlatmak gerekir; hesabı açtığında arXiv sana bir endorsement kodu verir.
+Gerekçe olarak arXiv "bilimsel olmayan gönderimlerde sürdürülemez bir artış"
+gösteriyor; kurumsal e-posta **tek başına** artık yeterli kabul edilmiyor.
+
+**Bunun pratik sonucu: e-posta adresi seçimi endorsement'ı değiştirmiyor.**
+Ne `mert@durukan.dev` (Google Workspace, kişisel alan adı) ne bir gmail adresi
+akademik kurum sayılır; üstelik önceden arXiv yazarlığı da olmadığı için ikinci
+koşul zaten sağlanmıyor. Yani **tek yol kişisel endorsement:** cs alanında
+yerleşik bir arXiv yazarından, hesabı açtığında arXiv'in sana verdiği endorsement
+kodu ile talep etmek. arXiv personeli endorsement veremiyor.
+
+Bunu gönderim gününden **önce** başlat — makaleyi okuyup endorse edebilecek,
+cs.LG/cs.CL'de yayın yapmış bir tanıdık (danışman, meslektaş, yazıştığın bir
+araştırmacı) gerekiyor. Endorser'ın ya seni tanıması ya da makaleyi incelemesi
+bekleniyor.
+
+**Kullanılacak adres:** `mert@durukan.dev` (hesap + yazışma adresi). Endorsement'a
+etkisi yok ama kalıcı ve alan adı sana ait — gmail'e göre yazışma için daha
+sağlam bir tercih.
 
 ## 3. Forma girilecek metadata
 

@@ -1,6 +1,7 @@
 # The Calibration Cost of the MLX Quantization Ladder
 
 **Author:** Mert Durukan
+**Correspondence:** <mert@durukan.dev>
 **Status:** results reported against the pre-registration frozen in
 [`PREREG.md`](https://github.com/mertdurukan/mlx-quantization-calibration/blob/main/PREREG.md).
 **Code and data:** <https://github.com/mertdurukan/mlx-quantization-calibration> ·

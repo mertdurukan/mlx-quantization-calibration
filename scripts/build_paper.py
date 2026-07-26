@@ -104,6 +104,25 @@ def code_availability(byline: str) -> str:
     return "Code and data: " + text
 
 
+def author_line(byline: str) -> str:
+    """Author line for the title block, taken from paper.md's byline.
+
+    The byline block itself is not carried into the LaTeX body, so a
+    correspondence address written only there would silently vanish from the PDF.
+    Kept as markdown (pandoc parses metadata as markdown) rather than raw LaTeX,
+    so the address becomes a real mailto link.
+    """
+    m = re.search(r"\*\*Author:\*\*\s*(.+)", byline)
+    if not m:
+        raise SystemExit("byline block has no '**Author:**' entry")
+    author = m.group(1).strip()
+
+    m = re.search(r"\*\*Correspondence:\*\*\s*<([^>]+)>", byline)
+    if m:
+        author += f" -- <{m.group(1).strip()}>"
+    return author
+
+
 def flatten_figures(body: str, outdir: Path) -> str:
     """Copy results/figures/*.png next to main.tex and rewrite the paths.
 
@@ -166,9 +185,8 @@ def main() -> int:
         "--shift-heading-level-by=-1",
         f"--include-in-header={header}",
         f"--metadata=title:{parts['title']}",
-        "--metadata=author:Mert Durukan",
         "--metadata=date:July 2026",
-        f"--metadata-file={_meta_file(outdir, abstract)}",
+        f"--metadata-file={_meta_file(outdir, abstract, author_line(parts['byline']))}",
         "--variable=documentclass:article",
         "--variable=fontsize:10pt",
         "--variable=geometry:margin=1in",
@@ -247,11 +265,20 @@ def make_tarball(outdir: Path) -> Path:
     return tar
 
 
-def _meta_file(outdir: Path, abstract: str) -> Path:
-    """Abstract goes through a YAML metadata file; it is too long for --metadata."""
+def _meta_file(outdir: Path, abstract: str, author: str) -> Path:
+    """YAML metadata file: the abstract is too long to pass via --metadata, and
+    the author line needs markdown parsing (for the mailto autolink)."""
+
+    def q(s: str) -> str:
+        return s.replace("\\", "\\\\").replace('"', '\\"')
+
     p = outdir / "meta.yaml"
-    body = abstract.replace("\\", "\\\\").replace('"', '\\"')
-    p.write_text('---\nabstract: "' + body + '"\n---\n')
+    p.write_text(
+        "---\n"
+        f'abstract: "{q(abstract)}"\n'
+        f'author: "{q(author)}"\n'
+        "---\n"
+    )
     return p
 
 

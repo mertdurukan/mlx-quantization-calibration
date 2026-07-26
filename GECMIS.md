@@ -831,3 +831,45 @@ gönderim geri alınamaz bir dış eylem (duyurulduktan sonra kaldırılamaz, ya
 Paket hazır, metadata (kategori, comments, lisans, abstract) ARXIV.md §3'te forma girilecek
 biçimde yazılı, adımlar §4'te. Kullanıcının kendi yapacağı iş: endorsement + form + arXiv'in
 derlediği PDF'i yerel `main.pdf` ile karşılaştırıp onaylama.
+
+### Bayat kaynak hatası: arXiv endorsement politikası (2026-07-26)
+
+`ARXIV.md`'nin ilk yazımında endorsement bölümü arXiv'in **statik yardım sayfasından**
+(info.arxiv.org/help/endorsement) yazıldı ve "kurumsal e-posta + ortak-yazarlık sahiplenme →
+otomatik onay" izlenimi verdi. Kullanıcı gönderim adresini sorunca (gmail yerine
+`mert@durukan.dev`) konu yeniden arandı ve arXiv'in **21 Ocak 2026 tarihli blog duyurusu**
+bulundu: otomatik endorsement artık akademik e-posta **ve** önceden arXiv yazarlığının ikisini
+birden istiyor (Aralık 2025'te Matematik'te başlayıp genelleştirilmiş; arXiv'in gerekçesi
+"bilimsel olmayan gönderimlerde sürdürülemez artış"). Yani:
+
+- E-posta adresi seçimi endorsement'ı **hiç** değiştirmiyor — `durukan.dev` (Google Workspace,
+  kişisel alan adı) de bir gmail adresi de akademik kurum sayılmıyor, ve ikinci koşul (önceden
+  arXiv yazarlığı) zaten sağlanmıyor.
+- Tek yol **kişisel endorsement**: cs alanında yerleşik bir arXiv yazarından. arXiv personeli
+  endorsement veremiyor.
+
+**Ders:** PROTOKOL Kural 1'in tazelik maddesi, bir kurumun **kendi** dokümantasyonu için de
+geçerli — yardım sayfası, o kurumun politika duyurusundan bayat olabilir. Bu çalışmanın konu
+seçimi de tam aynı hata sınıfından kurtarılmıştı (bkz. "Neden bu konu"): Ocak 2026 bilgisiyle
+açık görünen bir çelişki, Temmuz'da doğrulandığında çözülmüştü. Aynı ay içinde ikinci kez.
+
+### Karar: yazışma adresi `mert@durukan.dev`, git adresi değişmedi
+
+Repoda üç ayrı adres dolaşıyordu: commit'lerin hepsi `1mertacc@gmail.com` ile imzalı, Claude
+oturum bağlamında `costorymind@gmail.com` görünüyor (ve ben ARXIV.md'ye onu yazmıştım — repoda
+başka hiçbir yerde geçmiyordu), kullanıcı üçüncü olarak `mert@durukan.dev`'i önerdi. Adresin
+gerçekten mail alabildiği varsayılmadı, DNS'ten doğrulandı: `MX 1 smtp.google.com` +
+`v=spf1 include:_spf.google.com` → çalışan bir Google Workspace alan adı.
+
+Kullanıcı kararı: `mert@durukan.dev` **hem** `paper.md` başlık bloğuna **hem** `CITATION.cff`'e
+(akademik norm; karşılığında adres arXiv PDF'i, GitHub ve Zenodo üzerinden kalıcı olarak
+taranabilir hale geliyor — bu ödünleşim kullanıcıya açıkça soruldu). Git commit adresi
+**değişmedi**: tüm geçmiş `1mertacc@gmail.com` ile kalıyor, tek tutarlı yazar kimliği ve GitHub
+atfı korunuyor; geçmiş zaten yeniden yazılmazdı (Kural 8).
+
+**Yakalanan tuzak:** adresi yalnızca `paper.md`'ye yazmak yetmiyordu. `build_paper.py` başlık
+bloğunu LaTeX gövdesine **hiç aktarmıyor** (yalnızca "Code and data" cümlesini abstract'e
+taşıyor), yani yazışma adresi arXiv PDF'inde **sessizce görünmeyecekti** — repo kopyasında
+görünüp yayınlanan kopyada kaybolan bir fark. `author_line()` eklendi: adres başlık bloğundan
+okunup `\author{}` satırına mailto linkiyle taşınıyor. PDF'te doğrulandı (`pdftotext | grep` → 1
+eşleşme, sayfa 1 gözle kontrol edildi) ve tarball yeniden temiz dizinde derlendi.

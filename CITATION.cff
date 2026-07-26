@@ -4,6 +4,7 @@ title: "The Calibration Cost of the MLX Quantization Ladder"
 authors:
   - family-names: "Durukan"
     given-names: "Mert"
+    email: "mert@durukan.dev"
 type: software
 doi: 10.5281/zenodo.21596523
 repository-code: "https://github.com/mertdurukan/mlx-quantization-calibration"
