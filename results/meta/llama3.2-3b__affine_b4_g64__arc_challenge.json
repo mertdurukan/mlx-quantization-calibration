@@ -1,0 +1,16 @@
+{
+  "cell_id": "llama3.2-3b__affine_b4_g64__arc_challenge",
+  "model": "llama3.2-3b",
+  "condition": "affine_b4_g64",
+  "benchmark": "arc_challenge",
+  "mlx_version": "0.32.0",
+  "mlx_lm_version": "0.31.3",
+  "effective_bits": 4.501,
+  "size_mb": 1824.77325,
+  "convert_seconds": 12.271501417002582,
+  "n_items_scored": 1000,
+  "n_warmup_discarded": 20,
+  "n_failed_items": 0,
+  "wall_seconds": 373.5571787500012,
+  "status": "ok"
+}

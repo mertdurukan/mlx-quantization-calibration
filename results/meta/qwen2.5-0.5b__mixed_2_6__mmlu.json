@@ -1,0 +1,16 @@
+{
+  "cell_id": "qwen2.5-0.5b__mixed_2_6__mmlu",
+  "model": "qwen2.5-0.5b",
+  "condition": "mixed_2_6",
+  "benchmark": "mmlu",
+  "mlx_version": "0.32.0",
+  "mlx_lm_version": "0.31.3",
+  "effective_bits": 2.937,
+  "size_mb": 192.929096,
+  "convert_seconds": 3.043999875000736,
+  "n_items_scored": 1000,
+  "n_warmup_discarded": 20,
+  "n_failed_items": 0,
+  "wall_seconds": 123.79157087500062,
+  "status": "ok"
+}

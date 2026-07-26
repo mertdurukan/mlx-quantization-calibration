@@ -1,0 +1,16 @@
+{
+  "cell_id": "llama3.2-3b__mixed_3_6__arc_challenge",
+  "model": "llama3.2-3b",
+  "condition": "mixed_3_6",
+  "benchmark": "arc_challenge",
+  "mlx_version": "0.32.0",
+  "mlx_lm_version": "0.31.3",
+  "effective_bits": 3.871,
+  "size_mb": 1571.891732,
+  "convert_seconds": 4.532491083999048,
+  "n_items_scored": 1000,
+  "n_warmup_discarded": 20,
+  "n_failed_items": 0,
+  "wall_seconds": 119.91535679100343,
+  "status": "ok"
+}

@@ -19,16 +19,22 @@
 
 ## Şu an
 
-**Görev 14 sürüyor: GitHub vitrini tamamlandı, gerisi kullanıcı kararına göre duraklatıldı.**
-`gh repo edit` ile description + 9 topic ayarlandı, `gh repo view` ile doğrulandı. Kullanıcıya
-Görev 14'ün geri kalanının (release, Zenodo DOI, arXiv/e-posta) hepsinin repo'yu **public**
-yapmayı gerektirdiği söylendi; kullanıcı şimdilik **private kalmasını** istedi. Bu yüzden
-release/DOI/arXiv adımları bu oturumda yapılmadı — kod/sonuç tarafında hiçbir değişiklik yok,
-yalnızca dağıtım zamanlaması kullanıcı kararına bağlı bekliyor. Detay: YAPILACAKLAR Görev 14.
+**Görev 14 sürüyor: vitrin + public + uçtan uca denetim tamamlandı, sırada push + release.**
+Bu oturumda sırasıyla: (1) `gh repo edit` ile description + 9 topic; (2) kullanıcı onayıyla repo
+**public** yapıldı; (3) kullanıcı Zenodo'da GitHub entegrasyonunu açtı (toggle ON — release
+yayınlanınca DOI otomatik basılacak); (4) release taslağı hazırlanmışken kullanıcı **uçtan uca
+denetim** istedi — 15 maddelik denetim yapıldı (tüm sayılar programatik doğrulandı: paper'da 84
+tablo hücresi 0 hata, README birebir; kaynakça spot-check temiz; PREREG donmuş; 62/62 test).
+Denetimde 8 bulgu çıktı ve kullanıcı onaylarıyla düzeltildi: Kural 8 trailer temizliği
+(filter-branch, içerik diff'i boş kanıtlı, yedek: `backup-pre-trailer-clean` branch'i), README
+H1 eksik anlatımı, `<this repo>` placeholder'ları, sibling yerel path → gerçek URL, **MIT
+LICENSE eklendi**, **CITATION.cff eklendi**, **results/cells+meta (5.7M) git'e alındı**
+(kullanıcı kararı — analiz artık koşusuz reprodüklenebilir), Tablo 4 caption CI-netliği.
+Detay: GECMIS.md "Görev 14 arası — Uçtan uca denetim".
 
-**DUR noktası:** Görev 14'ün devamı için kullanıcının repo'yu ne zaman public yapmak istediğine
-karar vermesi gerekiyor. O karar verilene kadar sıradaki adım yok — bir sonraki oturumda önce
-kullanıcıya bu sorulmalı.
+**Sıradaki adım:** `git push` (origin 20+ commit geride, public repo şu an içeriği göstermiyor)
++ `gh release create v1.0.0` (taslak metin hazır, kullanıcı onayı alınacak) → Zenodo DOI
+otomatik → DOI rozeti README'ye → arXiv/e-posta ayrı karar.
 
 **Önceki durum (Görev 13 tamamlandı): `paper.md` yazıldı** (471 satır — abstract, giriş, related work, yöntem,
 sonuçlar, tartışma, sınırlar, sapmalar, reprodüksiyon, kaynakça). Related work için literatür

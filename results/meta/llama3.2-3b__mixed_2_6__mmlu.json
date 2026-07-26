@@ -1,0 +1,16 @@
+{
+  "cell_id": "llama3.2-3b__mixed_2_6__mmlu",
+  "model": "llama3.2-3b",
+  "condition": "mixed_2_6",
+  "benchmark": "mmlu",
+  "mlx_version": "0.32.0",
+  "mlx_lm_version": "0.31.3",
+  "effective_bits": 2.994,
+  "size_mb": 1219.864792,
+  "convert_seconds": 4.532425042001705,
+  "n_items_scored": 1000,
+  "n_warmup_discarded": 20,
+  "n_failed_items": 0,
+  "wall_seconds": 168.73563424999884,
+  "status": "ok"
+}

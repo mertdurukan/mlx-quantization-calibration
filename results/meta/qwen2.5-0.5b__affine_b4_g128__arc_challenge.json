@@ -1,0 +1,16 @@
+{
+  "cell_id": "qwen2.5-0.5b__affine_b4_g128__arc_challenge",
+  "model": "qwen2.5-0.5b",
+  "condition": "affine_b4_g128",
+  "benchmark": "arc_challenge",
+  "mlx_version": "0.32.0",
+  "mlx_lm_version": "0.31.3",
+  "effective_bits": 4.252,
+  "size_mb": 274.099169,
+  "convert_seconds": 1.480412749995594,
+  "n_items_scored": 1000,
+  "n_warmup_discarded": 20,
+  "n_failed_items": 0,
+  "wall_seconds": 25.38083266600006,
+  "status": "ok"
+}

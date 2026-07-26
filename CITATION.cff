@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this study or its data, please cite it as below."
+title: "The Calibration Cost of the MLX Quantization Ladder"
+authors:
+  - family-names: "Durukan"
+    given-names: "Mert"
+type: software
+repository-code: "https://github.com/mertdurukan/mlx-quantization-calibration"
+license: MIT
+date-released: 2026-07-26
+version: "1.0.0"
+abstract: >-
+  A pre-registered study of how MLX post-training quantization
+  (bf16 to 8/6/5/4/3/2-bit affine, mxfp4, and four mixed-bit recipes)
+  affects LLM confidence calibration, as distinct from accuracy.
+  All four pre-registered hypotheses are falsified as stated; the
+  full mechanical verdict trail, per-item measurements, and analysis
+  code are included.
+keywords:
+  - quantization
+  - calibration
+  - large language models
+  - MLX
+  - Apple Silicon
+  - expected calibration error
+  - pre-registered research

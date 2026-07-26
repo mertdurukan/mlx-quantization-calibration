@@ -1,5 +1,3 @@
 .venv/
 scratch/
-results/cells/
-results/meta/
 __pycache__/

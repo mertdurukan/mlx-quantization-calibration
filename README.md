@@ -12,9 +12,11 @@ the pre-registered analysis found.
 The ladder does not degrade calibration smoothly and uniformly. Across the three eligible main
 models (`qwen2.5-1.5b`, `qwen2.5-3b`, `llama3.2-3b`), ECE typically holds close to the bf16
 reference through 4-bit and then worsens sharply at 2–3 bits — but the exact shape is
-model-dependent, and one model (`qwen2.5-3b`, ARC-Challenge) shows a statistically significant
-**non-monotonic** dip at 3-bit (ECE 0.434, 95% CI [0.404, 0.463]) that is *worse* than its own
-2-bit cell (ECE 0.254, CI [0.226, 0.281]) — a real reversal in the data, not bootstrap noise,
+model-dependent, and one model (`qwen2.5-3b`) shows a statistically significant
+**non-monotonic** spike at 3-bit on *both* benchmarks — on ARC-Challenge, ECE 0.434
+(95% CI [0.404, 0.463]) is *worse* than its own 2-bit cell (ECE 0.254, CI [0.226, 0.281]);
+the same reversal holds on MMLU (0.422 [0.392, 0.450] at 3-bit vs. 0.292 [0.265, 0.321] at
+2-bit) — a real reversal in the data, not bootstrap noise,
 which falsifies the monotone-degradation hypothesis (H1) as stated. Whether quantization
 systematically shifts confidence *toward* wrong answers (H2) also does not hold uniformly:
 `llama3.2-3b` confirms the predicted direction in several conditions, `qwen2.5-1.5b` contradicts
@@ -34,7 +36,7 @@ reported number in the actual analysis carries a 95% bootstrap CI over items, pe
 ## Reproduce
 
 ```bash
-git clone <this repo>
+git clone https://github.com/mertdurukan/mlx-quantization-calibration.git
 cd mlx-quantization-calibration
 make setup
 make reproduce   # runs tests, the full 114-cell grid, then analysis — several hours on an M4 Pro
@@ -90,6 +92,6 @@ if any, are logged append-only in [`DEVIATIONS.md`](DEVIATIONS.md).
 | `tests/` | known-answer + leakage/ordering tests (see `PROTOKOL.md` for the discipline behind them) |
 | `results/` | generated tables, figures, per-cell parquet — reproducible from `src/`, never edited by hand |
 
-Sibling study: `imbalance-calibration` (`~/github-projects/imbalance-calibration`) looks at the
+Sibling study: [`imbalance-calibration`](https://github.com/mertdurukan/imbalance-calibration) looks at the
 same question — "does the model know how honest it is" — for class-imbalanced training rather
 than quantization.

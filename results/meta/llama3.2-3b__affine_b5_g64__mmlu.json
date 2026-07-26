@@ -1,0 +1,16 @@
+{
+  "cell_id": "llama3.2-3b__affine_b5_g64__mmlu",
+  "model": "llama3.2-3b",
+  "condition": "affine_b5_g64",
+  "benchmark": "mmlu",
+  "mlx_version": "0.32.0",
+  "mlx_lm_version": "0.31.3",
+  "effective_bits": 5.501,
+  "size_mb": 2226.345258,
+  "convert_seconds": 14.826347041002009,
+  "n_items_scored": 1000,
+  "n_warmup_discarded": 20,
+  "n_failed_items": 0,
+  "wall_seconds": 808.7133536659967,
+  "status": "ok"
+}

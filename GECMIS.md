@@ -708,3 +708,42 @@ için ayrıca hata bulunmadı.
 `paper.md`'nin gömdüğü 3 figür yolu (`results/figures/figure{1,2,3}_*.png`) `ls` ile gerçekten var
 olduğu doğrulandı. `git diff HEAD -- tests/` boş. Kabul kriteri komutu YAPILACAKLAR'da tanımlı
 değildi (yalnızca içerik gereksinimi listesi).
+
+---
+
+## Görev 14 arası — Uçtan uca denetim (2026-07-26, kullanıcı talebiyle)
+
+Kullanıcı, release/DOI öncesi her şeyin "best in class" ve çelişkisiz olduğunun uçtan uca
+denetlenmesini istedi. 15 maddelik denetim yapıldı; kanıtlı sonuçlar:
+
+**Temiz çıkanlar:** PREREG donmuş (`git diff c5ea71c..HEAD -- PREREG.md` boş); 62/62 test;
+prompt SHA eşleşiyor; 114/114 hücre ok; README+paper'daki TÜM sayılar programatik doğrulandı
+(paper Tablo 1: 42 hücre, Tablo 2: 12 satır, Tablo 3: 6 satır, Tablo 4: 24 satır — 0 hata;
+README ECE+accuracy değerleri CSV/parquet'ten birebir; H2 metin içi sayılar 13/36, 10/2, 16,
+"every evaluated cell"=0 conf/18 cont verdicts.json'la birebir); kaynakça 3/6 spot-check
+(başlık+tam yazar listesi arXiv'den) birebir; SPEC↔src imzaları tam, Changelog 5 girdiyle
+eksiksiz; DEVIATIONS boş ve paper §7 ile tutarlı; make verify canlı geçti; secret taraması temiz.
+
+**Bulunan ve düzeltilen:**
+1. **PROTOKOL Kural 8 ihlali:** 3 push-edilmemiş commit'te `Co-Authored-By: Claude` trailer'ı.
+   Kullanıcı onayıyla, Kural 8'deki emsalle aynı yöntemle temizlendi: `filter-branch --msg-filter`
+   yalnızca origin/main..HEAD (push edilmemiş 20 commit) aralığında; **içerik diff'i boş
+   doğrulandı** (`git diff backup-pre-trailer-clean HEAD --stat` → boş), commit sayısı 20→20,
+   PREREG commit'ine (push'lu) dokunulmadı. Yedek branch: `backup-pre-trailer-clean`.
+2. **README H1 eksik anlatımı:** ihlal her iki benchmark'ta (verdicts+paper doğru veriyordu),
+   README yalnızca ARC-Challenge diyordu — MMLU sayıları (0.422/0.292, Tablo 1'den) eklendi.
+3. **`git clone <this repo>` placeholder'ı** (README+paper) → gerçek URL.
+4. **Sibling study yerel path'i** (README+paper) → https://github.com/mertdurukan/imbalance-calibration
+   (public olduğu `gh repo view` ile doğrulandı).
+5. **LICENSE yoktu** → MIT eklendi (kullanıcı seçimi; Zenodo lisans ister, lisanssız public
+   repo yasal olarak kullanılamaz).
+6. **CITATION.cff yoktu** → eklendi (Zenodo metadata + GitHub cite kutusu bunu okur).
+7. **Veri yayını kararı (kullanıcı onaylı):** `results/cells/` (5.2M parquet) + `results/meta/`
+   (456K) .gitignore'dan çıkarılıp commit'lendi — paper §8'in "her sayı parquet'lerden yeniden
+   hesaplanır" iddiası artık okuyucu için gerçek (6.6 saatlik grid koşusu olmadan ~10 dk'da
+   analiz reprodüksiyonu).
+8. **Tablo 4 caption netliği:** `within range` hükmünün CI-tabanlı olduğu (nokta 0.245 <
+   taban 0.247 iken "yes" görünen satırın neden ihlal olmadığı) caption'a eklendi.
+
+**Denetimde bulunup release'i bekleyen:** origin/main 20 commit gerideydi (public repo'da
+kod/sonuç/paper görünmüyordu) — push, release adımıyla birlikte yapılacak.

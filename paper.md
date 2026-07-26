@@ -323,7 +323,10 @@ matter at matched bits/group, with one model×benchmark exception" than to a gen
 
 *Table 4 — full H4 table. The single falsified cell (`qwen2.5-1.5b`/arc_challenge/`mixed_3_6`)
 beats both of its components rather than landing between them — a favorable, not adverse,
-exception.*
+exception. The `within range` verdict is CI-adjudicated per the falsification statement above:
+a point estimate marginally outside the component range (e.g. `qwen2.5-3b`/mmlu/`mixed_2_6`,
+0.245 vs. a floor of 0.247) still reads `yes` when its 95% interval overlaps the range — only
+an interval-confirmed departure counts as falsified.*
 
 Mixed-bit recipes interpolate almost exactly as their design intends. The one exception is a
 recipe that is *better calibrated* than either uniform bit-width it mixes, on the same model
@@ -423,7 +426,7 @@ falsification criterion.
 ## 8. Reproducibility
 
 ```bash
-git clone <this repo>
+git clone https://github.com/mertdurukan/mlx-quantization-calibration.git
 cd mlx-quantization-calibration
 make setup
 make reproduce   # make test -> python -m src.runner -> python -m src.analyze
@@ -466,6 +469,7 @@ differing/falsified cell lists) underlying §4's summaries.
 Internal: [`PREREG.md`](PREREG.md) (frozen design and hypotheses), [`SPEC.md`](SPEC.md)
 (implementation contract), [`README.md`](README.md) (repository front page),
 [`GECMIS.md`](GECMIS.md) (decision and incident log), `results/tables/verdicts.json` (full
-mechanical verdict trail). Sibling study: `imbalance-calibration`
-(`~/github-projects/imbalance-calibration`), the same "does the model know how honest it is"
+mechanical verdict trail). Sibling study:
+[`imbalance-calibration`](https://github.com/mertdurukan/imbalance-calibration), the same
+"does the model know how honest it is"
 question for class-imbalanced training rather than quantization.

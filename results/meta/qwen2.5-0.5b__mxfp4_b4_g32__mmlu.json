@@ -1,0 +1,16 @@
+{
+  "cell_id": "qwen2.5-0.5b__mxfp4_b4_g32__mmlu",
+  "model": "qwen2.5-0.5b",
+  "condition": "mxfp4_b4_g32",
+  "benchmark": "mmlu",
+  "mlx_version": "0.32.0",
+  "mlx_lm_version": "0.31.3",
+  "effective_bits": 4.252,
+  "size_mb": 274.068729,
+  "convert_seconds": 1.2973835419979878,
+  "n_items_scored": 1000,
+  "n_warmup_discarded": 20,
+  "n_failed_items": 0,
+  "wall_seconds": 211.27149504200497,
+  "status": "ok"
+}

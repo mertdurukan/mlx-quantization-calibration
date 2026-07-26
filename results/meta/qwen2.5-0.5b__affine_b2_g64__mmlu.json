@@ -1,0 +1,16 @@
+{
+  "cell_id": "qwen2.5-0.5b__affine_b2_g64__mmlu",
+  "model": "qwen2.5-0.5b",
+  "condition": "affine_b2_g64",
+  "benchmark": "mmlu",
+  "mlx_version": "0.32.0",
+  "mlx_lm_version": "0.31.3",
+  "effective_bits": 2.502,
+  "size_mb": 166.04493,
+  "convert_seconds": 0.7533091250006692,
+  "n_items_scored": 1000,
+  "n_warmup_discarded": 20,
+  "n_failed_items": 0,
+  "wall_seconds": 55.27346279199992,
+  "status": "ok"
+}

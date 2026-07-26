@@ -1,0 +1,16 @@
+{
+  "cell_id": "llama3.2-1b__bf16__mmlu",
+  "model": "llama3.2-1b",
+  "condition": "bf16",
+  "benchmark": "mmlu",
+  "mlx_version": "0.32.0",
+  "mlx_lm_version": "0.31.3",
+  "effective_bits": 16.0,
+  "size_mb": 2480.814925,
+  "convert_seconds": 0.0,
+  "n_items_scored": 1000,
+  "n_warmup_discarded": 20,
+  "n_failed_items": 0,
+  "wall_seconds": 87.72303283399378,
+  "status": "ok"
+}

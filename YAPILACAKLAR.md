@@ -294,11 +294,16 @@ confidence calibration — not just accuracy.") ve 9 topic (`mlx`, `quantization
 `calibration`, `confidence-calibration`, `apple-silicon`, `machine-learning`,
 `pre-registered-research`, `expected-calibration-error`) ayarlandı, `gh repo view` ile doğrulandı.
 Kullanıcıya adım-adım onay protokolü soruldu (kullanıcı "adım adım, her adımda onay" seçti).
-**Durduruldu:** repo hâlâ **private** (`gh repo view --json visibility` → `PRIVATE`). Release,
-Zenodo DOI ve arXiv/e-posta adımlarının hepsi public repo gerektiriyor — kullanıcıya soruldu,
-**şimdilik private kalmasını istedi**. Sonraki adımlar (public'e alma → release → Zenodo DOI →
-arXiv/e-posta) kullanıcı public'e almaya karar verdiğinde devam edecek. Bilime/sonuçlara etki
-yok, yalnızca dağıtım zamanlaması.
+
+**Devam (2026-07-26, aynı gün ilerleyen saatler):** kullanıcı onayıyla repo **public** yapıldı
+(`gh repo edit --visibility public`, secret ön-taraması temiz çıktıktan sonra). Kullanıcı
+Zenodo'da GitHub entegrasyon toggle'ını açtı (release yayınlanınca DOI otomatik). Release
+taslağı hazırken kullanıcı **uçtan uca denetim** istedi — 15 maddelik denetim yapıldı, 8 bulgu
+düzeltildi (Kural 8 trailer temizliği içerik-diff-boş kanıtıyla, README H1 eksik anlatımı,
+placeholder URL'ler, sibling gerçek URL, MIT LICENSE, CITATION.cff, cells+meta veri yayını,
+Tablo 4 caption netliği — detay: GECMIS.md "Görev 14 arası"). **Kalan:** `git push` + release
+v1.0.0 (taslak hazır, onay bekliyor) → Zenodo DOI → DOI rozeti README'ye → arXiv/e-posta
+(ayrı karar).
 
 ---
 

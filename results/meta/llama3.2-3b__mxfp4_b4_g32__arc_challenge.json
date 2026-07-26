@@ -1,0 +1,16 @@
+{
+  "cell_id": "llama3.2-3b__mxfp4_b4_g32__arc_challenge",
+  "model": "llama3.2-3b",
+  "condition": "mxfp4_b4_g32",
+  "benchmark": "arc_challenge",
+  "mlx_version": "0.32.0",
+  "mlx_lm_version": "0.31.3",
+  "effective_bits": 4.251,
+  "size_mb": 1724.343818,
+  "convert_seconds": 4.383267207995232,
+  "n_items_scored": 1000,
+  "n_warmup_discarded": 20,
+  "n_failed_items": 0,
+  "wall_seconds": 120.93443699999625,
+  "status": "ok"
+}
