@@ -10,14 +10,17 @@ doi: 10.5281/zenodo.21596523
 repository-code: "https://github.com/mertdurukan/mlx-quantization-calibration"
 license: MIT
 date-released: 2026-07-26
-version: "1.0.0"
+version: "1.1.0"
 abstract: >-
   A pre-registered study of how MLX post-training quantization
   (bf16 to 8/6/5/4/3/2-bit affine, mxfp4, and four mixed-bit recipes)
   affects LLM confidence calibration, as distinct from accuracy.
-  All four pre-registered hypotheses are falsified as stated; the
-  full mechanical verdict trail, per-item measurements, and analysis
-  code are included.
+  Three of the four pre-registered hypotheses are falsified as
+  stated and the fourth survives on a single cell; the full
+  mechanical verdict trail, per-item measurements, and analysis
+  code are included. The finished analysis was reviewed by
+  independent zero-context auditors, whose findings are recorded
+  in DEVIATIONS.md.
 keywords:
   - quantization
   - calibration

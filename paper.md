@@ -566,9 +566,11 @@ make reproduce   # make test -> python -m src.runner -> python -m src.analyze
 ```
 
 The exact snapshot these results were computed from is archived at
-[`10.5281/zenodo.21596523`](https://doi.org/10.5281/zenodo.21596523) (concept DOI, always
-resolving to the latest version; the `v1.0.0` release this paper reports is
-`10.5281/zenodo.21596524`). That archive includes `results/cells/` and `results/meta/` — the
+[`10.5281/zenodo.21596523`](https://doi.org/10.5281/zenodo.21596523) — a Zenodo *concept* DOI,
+which always resolves to the most recent release. It is cited deliberately in preference to any
+one version DOI: the first release of this repository carried an abstract that misreported H3 as
+falsified, and a version-pinned citation would have preserved that error permanently. The
+concept DOI resolves instead to the corrected release. That archive includes `results/cells/` and `results/meta/` — the
 per-item log-probabilities for all 114 cells — so every table and figure in this paper can be
 regenerated with `python -m src.analyze` alone, without re-running the measurement grid
 (6.95 h of per-cell measurement, 7.11 h including model conversion, summed from the per-cell
