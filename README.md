@@ -86,6 +86,21 @@ Full scope statement: [`PREREG.md`](PREREG.md) §6. Deviations from the frozen p
 are logged append-only in [`DEVIATIONS.md`](DEVIATIONS.md) — there are six, all found by an
 independent review (below) rather than by the authors, and paper §7 summarises them.
 
+## Reading the paper
+
+[`paper.md`](paper.md) renders on GitHub. For a typeset version, the **11-page PDF is attached to
+the [latest release](https://github.com/mertdurukan/mlx-quantization-calibration/releases/latest)** —
+no build required. To rebuild it yourself: `make paper` (needs pandoc and a LaTeX distribution;
+see [`ARXIV.md`](ARXIV.md)).
+
+This study is not on arXiv. That is a deliberate decision, not an omission: arXiv tightened its
+endorsement policy in January 2026 so that a first submission now requires both an
+academic-institution email address and prior arXiv authorship, and the only remaining route is a
+personal endorsement from an established author in the field. The work is archived and citable
+regardless — [`10.5281/zenodo.21596523`](https://doi.org/10.5281/zenodo.21596523) is a permanent,
+versioned DOI that includes the per-item measurements for all 114 cells. `ARXIV.md` records the
+prepared submission package in case that changes.
+
 ## Independent audit
 
 The finished analysis and write-up were reviewed by three **zero-context** reviewers, each given
@@ -108,14 +123,14 @@ design, in [`DEVIATIONS.md`](DEVIATIONS.md).
 
 | File/dir | What |
 |---|---|
-| [`paper.md`](paper.md) | the full write-up — abstract, related work, method, all five tables, three figures, limitations |
+| [`paper.md`](paper.md) | the full write-up — abstract, related work, method, all five tables, three figures, limitations. A typeset 11-page PDF is attached to the [latest release](https://github.com/mertdurukan/mlx-quantization-calibration/releases/latest) if you would rather read it that way |
 | `PREREG.md` | frozen pre-registration — hypotheses, design, analysis plan |
 | `SPEC.md` | implementation contract for the code in `src/` |
 | `DEVIATIONS.md` | append-only log of any departure from `PREREG.md` |
 | `src/` | quantize → measure → analyze pipeline |
 | `tests/` | known-answer + leakage/ordering tests (see `PROTOKOL.md` for the discipline behind them) |
 | `results/` | generated tables, figures, per-cell parquet — reproducible from `src/`, never edited by hand |
-| `ARXIV.md` | how the arXiv LaTeX package is built from `paper.md` (`make paper`) and what goes on the submission form |
+| `ARXIV.md` | how the typeset PDF is built from `paper.md` (`make paper`), and why this was not submitted to arXiv |
 
 Sibling study: [`imbalance-calibration`](https://github.com/mertdurukan/imbalance-calibration) looks at the
 same question — "does the model know how honest it is" — for class-imbalanced training rather
