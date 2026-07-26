@@ -48,6 +48,11 @@ istiyor:
 Gerekçe olarak arXiv "bilimsel olmayan gönderimlerde sürdürülemez bir artış"
 gösteriyor; kurumsal e-posta **tek başına** artık yeterli kabul edilmiyor.
 
+**Hesaptaki Default Category `cs.CL` olmalı** (§3'teki primary ile aynı). arXiv,
+gönderim başlattığında hesabın varsayılan kategorisine göre endorsement istiyor —
+yanlış bırakılırsa endorsement kodu hedeflediğinden başka bir kategori için çıkar
+ve forward edilen e-posta ile mektup çelişir.
+
 **Bunun pratik sonucu: e-posta adresi seçimi endorsement'ı değiştirmiyor.**
 Ne `mert@durukan.dev` (Google Workspace, kişisel alan adı) ne bir gmail adresi
 akademik kurum sayılır; üstelik önceden arXiv yazarlığı da olmadığı için ikinci
@@ -71,15 +76,30 @@ sağlam bir tercih.
 | **Title** | The Calibration Cost of the MLX Quantization Ladder |
 | **Authors** | Mert Durukan |
 | **Abstract** | `build/arxiv/abstract-for-arxiv-form.txt` içeriğini yapıştır |
-| **Primary category** | `cs.LG` (Machine Learning) |
-| **Cross-list** | `cs.CL` (Computation and Language) |
+| **Primary category** | `cs.CL` (Computation and Language) |
+| **Cross-list** | `cs.LG` (Machine Learning) |
 | **Comments** | 11 pages, 3 figures, 5 tables. Pre-registered study; design frozen before any calibration number was computed. Code and data: https://github.com/mertdurukan/mlx-quantization-calibration — archived at https://doi.org/10.5281/zenodo.21596523 |
 | **License** | CC BY 4.0 önerilir (kod zaten MIT; CC BY, Zenodo kaydıyla ve reprodüklenebilirlik iddiasıyla tutarlı) |
 | **DOI alanı** | boş bırak — Zenodo DOI'si kodun/verinin DOI'si, makalenin dergi DOI'si değil |
 | **Processor** | pdflatex (arXiv otomatik seçmeli; seçmezse pdflatex seç) |
 
-Primary neden `cs.LG`: çalışma bir ölçüm/kalibrasyon çalışması, dil-modeline
-özgü bir NLP görevi katkısı değil. `cs.CL` cross-list, konu LLM olduğu için.
+**Primary neden `cs.CL` (2026-07-26'da değiştirildi — önce `cs.LG` yazıyordu):**
+karar tahminle değil, makalenin kendi kaynakçasına bakılarak verildi. Atıf verilen
+LLM-kalibrasyon literatürünün tamamı cs.CL primary:
+
+| kaynak | primary |
+|---|---|
+| Proskurina vd. 2024, arXiv:2405.00632 — **en yakın önceki çalışma** | `cs.CL` (cross: cs.AI) |
+| K. Tian vd. 2023, arXiv:2305.14975 — verbalized vs. conditional güven | `cs.CL` |
+| Zhou vd. 2025, arXiv:2510.03136 — çok-dilli kalibrasyon | `cs.CL` |
+
+Bu çalışmanın tartışmaya girdiği yer orası: ölçüm dil kıyaslamaları üzerinde
+(ARC-Challenge, MMLU), harf-tabanlı çoktan seçmeli protokolle, ve konuştuğu üç
+kaynağın üçü de cs.CL'de. `cs.LG` cross-list, sıkıştırma/verimlilik tarafındaki
+okuyucuyu (Rajesh vd.'nin MLX çalışma-zamanı literatürü gibi) kaçırmamak için.
+
+Endorsement açısından fark yok: `cs` tek bir endorsement domain'i, yani hangi cs
+alt kategorisi için endorse edilirsen edil diğerlerine gönderebilirsin.
 
 ## 4. Adımlar
 

@@ -135,8 +135,15 @@ E-posta adresi seçimi bunu hiç değiştirmiyor (`durukan.dev` de gmail de akad
 Bu, gönderimin önündeki tek gerçek engel ve zaman alabilir — makaleden bağımsız olarak şimdiden
 başlatılmalı. Bkz. YAPILACAKLAR açık bulgusu + ARXIV.md §2.
 
-Yerel `backup-pre-trailer-clean` branch'i hâlâ duruyor — silinebilir (DOI arşivi başarıyla
-oluştu), kullanıcıya soruldu, cevap bekliyor. Ajan silmedi (geri alınamaz).
+`backup-pre-trailer-clean` branch'i **silindi** (2026-07-26, kullanıcı onayıyla). Silmeden önce
+gereksiz olduğu doğrulandı: backup tip'i ile main'deki karşılığının **ağaç hash'leri birebir
+aynı** (`0dff903…`), içerik diff'i boş, ve uzakta kopyası yoktu. Erişilemeyen 13 commit, trailer
+temizliği öncesi aynı içeriğin farklı SHA'larıydı — benzersiz hiçbir şey kaybolmadı.
+
+**arXiv primary kategorisi `cs.LG` → `cs.CL` olarak değiştirildi** (2026-07-26). Karar tahminle
+değil kaynakçayla verildi: atıf verilen LLM-kalibrasyon literatürünün üçü de (Proskurina 2024 —
+en yakın önceki çalışma, K. Tian 2023, Zhou 2025) cs.CL primary. `cs.LG` cross-list kaldı.
+Endorsement'a etkisi yok (`cs` tek domain). Detay ve kanıt tablosu: ARXIV.md §3.
 
 **Önceki durum (Görev 13 tamamlandı): `paper.md` yazıldı** (471 satır — abstract, giriş, related work, yöntem,
 sonuçlar, tartışma, sınırlar, sapmalar, reprodüksiyon, kaynakça). Related work için literatür
