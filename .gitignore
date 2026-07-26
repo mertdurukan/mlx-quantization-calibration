@@ -1,4 +1,11 @@
+# Ortam ve üretilmiş çıktı
 .venv/
-scratch/
 __pycache__/
+.pytest_cache/
 build/
+
+# Geliştirme sürecine ait, yayına değer katmayan dosyalar (yerelde kalır)
+scratch/
+CLAUDE.md
+DURUM.md
+FIZIBILITE.md

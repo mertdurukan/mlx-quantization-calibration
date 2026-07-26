@@ -1052,3 +1052,27 @@ değişikliği kaynağından doğrulanmış bilgi — ve bunların ikisi (`build
 sınırı kontrolü, pdflatex hedefi) kodda kalıcı koruma olarak yaşıyor. Dosyanın başlığı "yapılacak
 iş"ten "yapılmadı, gerekçesi ve hazır paket burada"ya çevrildi. Bir endorser çıkarsa gönderim tek
 oturumluk iş.
+
+### Karar: geliştirme sürecine ait dosyalar takipten çıkarıldı (2026-07-26)
+
+`CLAUDE.md`, `DURUM.md`, `FIZIBILITE.md` ve `scratch/` `.gitignore`'a alındı ve
+`git rm --cached` ile takipten düşürüldü. Dosyalar diskte duruyor; oturum protokolü
+bozulmadan çalışmaya devam ediyor. `scratch/` zaten `.gitignore`'daydı ama ignore
+kuralı eklenmeden önce commit'lendiği için takipli kalmıştı (SPEC §75 "throwaway;
+gitignored" diyor — tutarsızlık şimdi giderildi). `.pytest_cache/` de eklendi.
+
+**Neyin kaldığı, kararın asıl içeriği.** İlk istek "bize ait tüm süreç dosyaları"ydı;
+ancak `YAPILACAKLAR.md`, `GECMIS.md` ve `PROTOKOL.md` README ve `paper.md` içinden
+**kanıt olarak** anılıyor: paper §"Görev 9"/"Görev 10" anlatıları `GECMIS.md`'ye,
+bulgu kaydı iddiası `YAPILACAKLAR.md`'ye, "hücre atlanmadı" disiplini `PROTOKOL.md`
+Kural 11'e dayanıyor. Bunları gizlemek makalenin şeffaflık iddiasını doğrulanamaz
+hâle getirirdi — okunmayan bir kaydı göstermek, kaydı hiç tutmamakla aynı kapıya
+çıkar. Dolayısıyla ölçüt "süreç dosyası mı" değil, **"yayınlanmış metin buna atıf
+veriyor mu"** oldu. Çıkarılan üç dosyaya ve `scratch/`'e hiçbir yerden atıf yok
+(tarandı, doğrulandı).
+
+**Git geçmişine dokunulmadı** (kullanıcı kararı; kırmızı çizgi #9). Dosyalar eski
+commit'lerde GitHub'da görünür kalmaya devam ediyor — bu bir sızıntı değil, zaten
+kamuya açık bir depoydu; amaç bundan sonraki hâlin temiz olması. Geçmişi yeniden
+yazmak ayrıca Zenodo v1.0.0/v1.1.0 arşivlerindeki commit hash'lerini geçersiz
+kılardı.
