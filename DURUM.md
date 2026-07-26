@@ -19,6 +19,47 @@
 
 ## Şu an
 
+**Bağımsız denetim yapıldı ve bulguları düzeltildi (2026-07-26).** Kullanıcı "best in class
+olması için ne gerekiyorsa yapalım" dedi; yapılacak en değerli şey yeni bir özellik değil,
+**hiç uygulanmamış bir kuralı uygulamak** çıktı: PROTOKOL Kural 10 (denetim ayrımı). Üç sıfır
+bağlamlı alt-ajan, yalnızca dosyalar + sözleşme verilerek koşturuldu; hiçbirine bu bağlamın
+gerekçeleri verilmedi. Kural 9 korundu (ajanlar yalnızca inceledi, hiçbir dosyayı değiştirmedi);
+her bulgu bu bağlamda bağımsız yeniden doğrulandı (Kural 5) ve tüm düzeltmeler burada yazıldı.
+
+Denetim ~446 sayısal iddiayı **doğru** buldu (tüm tablo hücreleri CSV'lerle birebir, 16 değer
+parquet'ten bağımsız yeniden hesaplandı) — kusurlar aritmetikte değil, **karar kurallarında,
+düzyazıda ve testlerin kendisinde.** Üç kritik bulgu:
+
+1. **Abstract, çalışmanın kendi hüküm dosyasının reddettiği bir şey iddia ediyordu:** "dört
+   hipotezin dördü de çürütüldü", oysa `verdicts.json` H3 için `overall_pass: true`. Makalenin
+   §4.3'ü doğru yazıyordu. Düzeltildi → **4'te 3.**
+2. **H1'in karar kuralı ön-kayıttan iki ayrı şekilde zayıf uygulanmıştı.** PREREG "ordering
+   across {8,6,5,4,3,2}" diyor (tüm çiftler), kod komşu adımları sınıyordu. **Kullanıcı onayıyla
+   ön-kayıtlı kural uygulandı:** iki ek CI-doğrulanmış ihlal ortaya çıktı, manşet 6'da 2 → 6'da 3
+   ve "tek model" → iki model. `table1` CSV'si **birebir aynı** kaldı (sayılar değişmedi, yalnızca
+   hüküm) — bootstrap'ın gerçekten seed'li olduğunun da kanıtı. İkinci zayıflatma (marjinal
+   yerine eşleştirilmiş kontrast) ifşa edildi, düzeltilmedi.
+3. **Taban kontrolü modeli, dışarıda tutulduğu kuralı geçmişti** (ARC 0.518 ≥ 0.50, `eligible:
+   true`; onu çıkaran şey bir `role` alanı). Üstelik makale doğruluğunu "şans seviyesinde" diye
+   tanıtıyordu, oysa 28 hücrenin 23'ü 0.30 üstü. §4.5 yeniden yazıldı ve **bir iddia geri
+   çekildi.**
+
+Ayrıca: warmup item'ları aslında skorlanıyor (PREREG/SPEC/makale aksini söylüyordu), ana tablolar
+ön-kayıtlı estimand'ların bir kısmını göstermiyordu, beş abartılı nicelik ifadesi, ve **on koruma
+testi mutasyonla başarısız olamıyordu** — SPEC'in kardeş çalışmadan öğrenilmiş diye özellikle
+uyardığı `bootstrap_ci` kwargs hatasının testi dahil (eşiği config varsayılanının tam kendisiydi).
+7 yeni test + 2 boş testin düzeltilmesi, sonra 10 mutant bellekte kurulup hepsinin doğru sebeple
+öldüğü gösterildi. `pytest tests/` → **75 passed** (62'den).
+
+`DEVIATIONS.md` artık **altı kayıt** içeriyor (önce "no deviations yet" — boştu çünkü sapmalar
+fark edilmemişti, yok oldukları için değil). Eklenen kalıcı korumalar: `make verify-analysis`
+(tabloları commit'li hücrelerden yeniden türetip bayt bayt karşılaştırır — Kural 11'in makine
+kontrolü), `requirements.txt`'e `numpy`/`pandas`/`pyarrow` (doğrudan kullanılıyordu, dolaylı
+geliyordu), `build_paper.py`'de arXiv 1920-karakter abstract sınırı kontrolü, ve figürlerin
+basılı hâlde okunabilir hâle getirilmesi. Detay: GECMIS.md "Bağımsız denetim".
+
+**Açık bulgu sayısı: 0.**
+
 **Görev 14 sürüyor: arXiv paketi hazır, gönderim kullanıcıda.** (Aşağıdaki paragraflar
 kronolojik: vitrin → public → denetim → push/release → DOI → arXiv paketi.)
 Bu oturumda sırasıyla: (1) `gh repo edit` ile description + 9 topic; (2) kullanıcı onayıyla repo
@@ -46,8 +87,8 @@ ve MIT lisansı doğru alınmış. Concept-DOI rozeti README'ye, `doi:` alanı C
 **arXiv paketi hazır (2026-07-26, bu oturum).** `make paper` → `scripts/build_paper.py`,
 `paper.md`'yi (tek kaynak, elle ikinci bir sürüm tutulmuyor) pandoc ile LaTeX'e çevirip
 `build/arxiv/`'a şunları koyuyor: `arxiv-submission.tar.gz` (yüklenecek dosya — `main.tex` + 3
-figür, 408 KB), `main.pdf` (yalnızca okuma için, 9 sayfa), `abstract-for-arxiv-form.txt`
-(düz-ASCII, 233 kelime). Forma girilecek metadata + adım adım gönderim + artık riskler
+figür), `main.pdf` (yalnızca okuma için, 11 sayfa), `abstract-for-arxiv-form.txt`
+(düz-ASCII, 1916 karakter — arXiv'in 1920 sınırının altında, `build_paper.py` bunu kontrol ediyor). Forma girilecek metadata + adım adım gönderim + artık riskler
 **`ARXIV.md`**'de.
 
 Bu oturumda düzeltilen üç şey: (1) önceki oturumun "arXiv'e PDF gerekir" notu **yanlıştı** —
@@ -56,7 +97,7 @@ arXiv TeX'ten üretilmiş PDF'i kabul etmiyor, LaTeX kaynağı gönderilir ve ar
 vardı — tek başına duran bir PDF'te ölü bağlantı olacaklardı, mutlak URL'lere çevrildi ve DOI
 başlık bloğu + §8'e eklendi; (3) PDF gözle okunurken log'da görünmeyen üç kusur bulundu ve
 düzeltildi (çift figür numarası, boş sayfada yüzen Figure 2, abstract'te "ht tps://" diye kırılan
-URL) — sayfa 10'dan 9'a indi. Doğrulamalar: 237 tekil tablo sayısı + 6 arXiv künyesi PDF'te
+URL) — sayfa 10'dan 9'a indi (denetim düzeltmelerinden sonra 11). Doğrulamalar: 237 tekil tablo sayısı + 6 arXiv künyesi PDF'te
 eksiksiz (programatik sayım), tarball temiz dizinde tek başına derlendi (arXiv'in yapacağı
 işlem), `pytest tests/` → 62 passed, `git diff HEAD -- tests/` boş. Detay: GECMIS.md "Görev 14
 (devam) — arXiv paketi".
@@ -451,4 +492,5 @@ Disk: `convert → evaluate → delete`, HF cache ≈ 20 GB.
 | 2026-07-26 | Görev 14 (kısmen) — GitHub vitrini (`gh repo edit`: description + 9 topic) uygulandı ve doğrulandı; repo public'e alma, release, Zenodo DOI, arXiv/e-posta kullanıcı kararıyla ertelendi (repo private kalıyor) | (önceki oturum) |
 | 2026-07-26 | Görev 14 (devam) — uçtan uca denetim (8 bulgu düzeltildi), push + release v1.0.0, Zenodo DOI basıldı ve API'den doğrulandı, DOI rozeti README'ye | `da739b3`…`9a5491e` |
 | 2026-07-26 | Görev 14 (devam) — arXiv paketi: `scripts/build_paper.py` + `make paper` (paper.md tek kaynak, LaTeX türetilir), `ARXIV.md` (metadata + adımlar + artık riskler); `paper.md`'ye Zenodo DOI + mutlak URL'ler; PDF gözle denetlendi (3 kusur düzeltildi, 10→9 sayfa); tarball temiz dizinde tek başına derlendi; 237 tablo sayısı + 6 künye programatik doğrulandı; 62/62 test | (bu oturum) |
+| 2026-07-26 | **Bağımsız denetim (Kural 10, ilk kez)** — üç sıfır bağlamlı denetçi; ~446 sayı doğru çıktı, 10 bulgu (3 kritik): abstract H3'ü yanlış çürütülmüş sayıyordu, H1 kuralı ön-kayıttan zayıftı (düzeltildi → 6'da 3 hücre), taban kontrolü uygunluk kuralını geçmişti, warmup skorlanıyordu, 10 koruma testi başarısız olamıyordu. Hepsi düzeltildi/ifşa edildi; DEVIATIONS.md 6 kayıt; 75/75 test; 10/10 mutant öldü | `ad445df` |
 | | | |
