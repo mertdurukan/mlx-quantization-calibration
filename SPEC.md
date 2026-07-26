@@ -195,9 +195,20 @@ def run_cell(model_path: str, items: list[Item]) -> pd.DataFrame:
     """Score items with ONE model. Returns one row PER ITEM (schema in §4).
 
     - Loads the frozen template from config.PROMPT_FILE.
-    - The FIRST config.N_WARMUP items are run and DISCARDED (PREREG §4.4). They are not
-      scored, not returned, not counted. Warmup uses the same items each time so it is
-      deterministic.
+    - The FIRST config.N_WARMUP items are run once and their results DISCARDED, to prime
+      lazy weight loading and first-use Metal kernel compilation. The scoring pass that
+      follows then covers ALL items, including those N_WARMUP — so every scored item is
+      measured in the warmed steady state and the row count equals len(items).
+      Warmup uses the same items each time so it is deterministic.
+
+      NOTE (corrected 2026-07-26 after an independent audit): PREREG §4.4 words this rule
+      as the first 20 items being "discarded, not scored", which implies 980 scored items
+      per cell. The implementation scores all 1000. This paragraph previously repeated
+      PREREG's wording ("not scored, not returned, not counted") and was simply wrong
+      about the code. The behaviour is deliberate and arguably better than the literal
+      rule — see DEVIATIONS.md, entry 2026-07-26T00:00:03Z — but it IS a deviation, and
+      tests/test_no_leakage.py asserts the actual contract: len(df) == len(items) with no
+      duplicated item_id, i.e. warmup rows are never APPENDED as extra rows.
     - Confidence = softmax over the option-letter token log-probs at the final position.
       Letter tokens are encoded as " A", " B", ... (leading space).
     - Never raises on a single item: an item that fails is returned with status="failed"
@@ -466,3 +477,29 @@ After `make pilot`:
   implementation decision, not a science change — the wording it operationalizes was already
   frozen in PREREG. `requirements.txt`/`requirements.lock.txt` gain `matplotlib` (figures);
   no other new dependency. See GECMIS.md "Görev 10".
+- 2026-07-26 — Corrections from the first **independent zero-context audit** (PROTOKOL Kural 10;
+  three reviewers given only the files and this contract, not the authoring rationale). Contract
+  changes, all in the direction of matching `PREREG.md` more closely or refusing to answer where
+  there is no evidence:
+  - `_h1_ladder_verdict` now tests the ECE ordering over **all** bit-width pairs, not adjacent
+    steps only. PREREG H1 says "the ECE ordering across {8,6,5,4,3,2}", which constrains every
+    pair; the adjacent-only rule was strictly weaker and biased toward PASS. It also now returns
+    `monotone: None` for a ladder with fewer than two conditions (absence of evidence is not a
+    pass) and raises on non-finite inputs. `DEVIATIONS.md` 2026-07-26T00:00:00Z.
+  - `_intervals_overlap` **raises** on non-finite bounds instead of returning a bool. Every
+    `<=` against NaN is False, so a NaN bound previously read as "these intervals do not
+    overlap" — which H1/H3/H4 treat as positive evidence, turning an undefined metric into a
+    published verdict. `DEVIATIONS.md` documents the H1 path.
+  - `metrics.cal_slope` uses `add_constant(..., has_constant="add")` and returns NaN for
+    constant confidence. With the default `"skip"` a constant confidence vector got no intercept
+    column and `params[1]` raised IndexError.
+  - `metrics.ece` returns NaN on empty input rather than 0.0, which read as perfect calibration
+    and disagreed with `brier`/`overconfidence_rate`.
+  - §3 `src/measure.py`'s warm-up paragraph corrected: it described PREREG's literal rule, not
+    the implemented behaviour. `DEVIATIONS.md` 2026-07-26T00:00:03Z.
+  Also added: `scripts/verify_reproducibility.py` + `make verify-analysis` (re-derives
+  `results/tables/` from the committed cells and diffs byte-for-byte — the machine-checkable
+  form of PROTOKOL Kural 11), and `scripts/build_paper.py` + `make paper` (derives the arXiv
+  LaTeX package from `paper.md`; see ARXIV.md). `requirements.txt` now declares `numpy`,
+  `pandas`, `pyarrow`, which `src/` imports directly and which previously arrived only
+  transitively. No science change from those three.

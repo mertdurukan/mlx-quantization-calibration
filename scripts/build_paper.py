@@ -223,6 +223,8 @@ def main() -> int:
 
 # arXiv's abstract form field is a plain-text box; markdown markup and typographic
 # unicode both survive badly there.
+ARXIV_ABSTRACT_MAX = 1920
+
 ASCII_FOLD = {
     "—": "--", "–": "-", "×": "x", "·": "-", "§": "Section ",
     "≥": ">=", "≤": "<=", "Δ": "Delta ", "’": "'", "“": '"',
@@ -243,6 +245,15 @@ def write_form_abstract(outdir: Path, abstract: str) -> Path:
     leftover = sorted({c for c in t if ord(c) > 127})
     if leftover:
         raise SystemExit(f"non-ASCII left in form abstract: {leftover}")
+
+    # "abstracts longer than 1920 characters will not be accepted"
+    # (info.arxiv.org/help/prep, verified 2026-07-26). Fail here rather than at
+    # submission time, when the paper is otherwise ready to go.
+    if len(t) > ARXIV_ABSTRACT_MAX:
+        raise SystemExit(
+            f"form abstract is {len(t)} chars, over arXiv's {ARXIV_ABSTRACT_MAX} limit "
+            f"by {len(t) - ARXIV_ABSTRACT_MAX}; shorten the abstract in paper.md"
+        )
 
     p = outdir / "abstract-for-arxiv-form.txt"
     p.write_text(t + "\n")

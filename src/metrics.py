@@ -17,6 +17,10 @@ def ece(y_correct, y_conf):
     """15 equal-MASS bins via np.array_split on confidence-sorted order (SPEC §3)."""
     y_correct = np.asarray(y_correct, dtype=float)
     y_conf = np.asarray(y_conf, dtype=float)
+    if len(y_conf) == 0:
+        # 0.0 would read as perfect calibration; brier/overconfidence_rate both
+        # return NaN on empty input and ece must agree.
+        return float("nan")
     order = np.argsort(y_conf, kind="stable")
     correct_bins = np.array_split(y_correct[order], config.ECE_N_BINS)
     conf_bins = np.array_split(y_conf[order], config.ECE_N_BINS)
@@ -32,10 +36,20 @@ def ece(y_correct, y_conf):
 
 
 def cal_slope(y_correct, y_conf):
-    """Logistic regression of correctness on logit(confidence); slope coefficient."""
+    """Logistic regression of correctness on logit(confidence); slope coefficient.
+
+    `has_constant="add"` is required, not cosmetic: with the default ("skip")
+    a constant confidence vector gets no intercept column, so the design has one
+    column and `params[1]` raises IndexError instead of reporting an undefined
+    slope. Constant confidence carries no slope information, so it is reported as
+    NaN rather than as an exception or an accidental intercept.
+    """
     y_correct = np.asarray(y_correct, dtype=float)
     x = _logit(_clip_conf(y_conf))
-    model = sm.GLM(y_correct, sm.add_constant(x), family=sm.families.Binomial())
+    if len(x) == 0 or np.ptp(x) == 0:
+        return float("nan")
+    design = sm.add_constant(x, has_constant="add")
+    model = sm.GLM(y_correct, design, family=sm.families.Binomial())
     return model.fit().params[1]
 
 

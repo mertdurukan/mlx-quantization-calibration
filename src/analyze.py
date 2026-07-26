@@ -42,6 +42,17 @@ _QUANTIZED_CONDITIONS = [tag for tag, *_ in config.CONDITIONS if tag != "bf16"]
 # ---------------------------------------------------------------------------
 
 def _intervals_overlap(lo1, hi1, lo2, hi2) -> bool:
+    """Inclusive overlap test.
+
+    Raises on non-finite bounds rather than answering. Every `<=` against NaN is
+    False, so a NaN bound would silently read as "these intervals do not overlap"
+    -- which the H1/H3/H4 verdicts interpret as evidence, turning an undefined
+    metric into a verdict. An undefined interval is the absence of evidence and
+    has to reach the caller as an error, not as a boolean.
+    """
+    bounds = (lo1, hi1, lo2, hi2)
+    if not all(np.isfinite(b) for b in bounds):
+        raise ValueError(f"interval bounds must be finite, got {bounds}")
     return lo1 <= hi2 and lo2 <= hi1
 
 
@@ -72,10 +83,40 @@ def _paired_bootstrap_delta(base_correct, base_conf, other_correct, other_conf,
 
 
 def _h1_ladder_verdict(rows: list) -> dict:
+    """PREREG H1: is the ECE *ordering* across {8,6,5,4,3,2} monotone increasing?
+
+    An ordering over a set is a claim about every pair, not only about adjacent
+    steps: a reversal spread over several bit-widths (each adjacent step
+    individually CI-overlapping) still breaks the ordering. Testing adjacent
+    pairs only is strictly weaker than the pre-registered criterion and biased
+    toward PASS. `rows` arrives in descending bit order, so for i < j row i is
+    the higher bit-width and monotone-increasing-as-bits-fall means
+    point[j] >= point[i].
+
+    Fewer than two rows carries no evidence either way, so it cannot be a pass.
+    """
+    # Validate up front: a NaN point silently loses every `<` comparison, so an
+    # undefined cell would be skipped rather than flagged and the ladder would
+    # report itself monotone on data that has no verdict.
+    for row in rows:
+        bad = [k for k in ("point", "lo", "hi") if not np.isfinite(row[k])]
+        if bad:
+            raise ValueError(
+                f"ladder row bits={row.get('bits')} has non-finite {bad}; "
+                "an undefined metric has no monotonicity verdict"
+            )
+
+    if len(rows) < 2:
+        return {"monotone": None, "violations": []}
+
     violations = []
-    for a, b in zip(rows, rows[1:]):
-        if b["point"] < a["point"] and not _intervals_overlap(a["lo"], a["hi"], b["lo"], b["hi"]):
-            violations.append((a["bits"], b["bits"]))
+    for i in range(len(rows)):
+        for j in range(i + 1, len(rows)):
+            hi_bits, lo_bits = rows[i], rows[j]
+            if lo_bits["point"] < hi_bits["point"] and not _intervals_overlap(
+                hi_bits["lo"], hi_bits["hi"], lo_bits["lo"], lo_bits["hi"]
+            ):
+                violations.append((hi_bits["bits"], lo_bits["bits"]))
     return {"monotone": len(violations) == 0, "violations": violations}
 
 
@@ -212,12 +253,21 @@ def build_table1(cells: pd.DataFrame, meta: pd.DataFrame, models: list) -> tuple
                 per_cell_verdict[f"{model}__{benchmark}"] = _h1_ladder_verdict(ladder_ece_rows)
 
     df = pd.DataFrame(rows)
-    monotone_flags = [v["monotone"] for v in per_cell_verdict.values()]
-    overall_pass = bool(monotone_flags) and all(monotone_flags)
+    # monotone is None for a cell with too few ladder conditions to order; that is
+    # absence of evidence, so it neither passes nor falsifies -- it is disclosed
+    # separately instead of being folded into `all(...)` as a silent False.
+    decided = {k: v["monotone"] for k, v in per_cell_verdict.items()
+               if v["monotone"] is not None}
+    undecided = sorted(k for k, v in per_cell_verdict.items() if v["monotone"] is None)
+    overall_pass = bool(decided) and all(decided.values())
     verdict = {
         "hypothesis": "H1",
         "statement": "ECE increases monotonically as bit-width decreases from 8 to 2 bits.",
+        "criterion": "ordering over all bit-width pairs (PREREG H1), not adjacent steps only",
         "overall_pass": overall_pass,
+        "n_cells_decided": len(decided),
+        "n_cells_falsified": sum(1 for m in decided.values() if not m),
+        "undecided_cells": undecided,
         "per_model_benchmark": per_cell_verdict,
     }
     return df, verdict
@@ -406,34 +456,56 @@ def build_floor_control_table(cells: pd.DataFrame, meta: pd.DataFrame, floor_mod
 # Figures
 # ---------------------------------------------------------------------------
 
+# A 1xN panel row is ~3.3:1, so at \textwidth in the paper it is scaled to about
+# 0.54 of its authored size -- default 10pt labels land near 5pt and a 7pt legend
+# near 4pt, i.e. unreadable in print. These sizes are chosen so the rendered text
+# lands at roughly 7-8pt; verified by embedding the output at \textwidth and
+# reading the result, not by eye at full resolution.
+_PANEL_RC = {
+    "font.size": 13,
+    "axes.titlesize": 14,
+    "axes.labelsize": 13,
+    "xtick.labelsize": 11.5,
+    "ytick.labelsize": 11.5,
+    "legend.fontsize": 11.5,
+    "lines.linewidth": 1.8,
+    "lines.markersize": 4.5,
+}
+
 def make_figure1(cells: pd.DataFrame, models: list, out_path: Path) -> None:
     """Calibration curves (predicted confidence vs empirical accuracy per
     equal-mass bin), bf16 vs the full g64 bit ladder, one panel per model
     (arc_challenge only — the benchmark figures fix in advance to keep the
     grid readable, PREREG places no per-figure benchmark requirement)."""
-    fig, axes = plt.subplots(1, len(models), figsize=(5 * len(models), 4.5), squeeze=False)
-    for ax, model in zip(axes[0], models):
-        for condition in ["bf16"] + LADDER_ORDER:
-            sub = _sub(cells, model, condition, "arc_challenge")
-            if sub.empty:
-                continue
-            correct, conf = _sorted_arrays(sub)
-            order = np.argsort(conf, kind="stable")
-            correct_bins = np.array_split(correct[order], config.ECE_N_BINS)
-            conf_bins = np.array_split(conf[order], config.ECE_N_BINS)
-            xs = [float(np.mean(b)) for b in conf_bins if len(b)]
-            ys = [float(np.mean(b)) for b in correct_bins if len(b)]
-            ax.plot(xs, ys, marker="o", label=condition, alpha=0.8)
-        ax.plot([0, 1], [0, 1], linestyle="--", color="gray", linewidth=1)
-        ax.set_xlim(0, 1)
-        ax.set_ylim(0, 1)
-        ax.set_xlabel("mean predicted confidence (bin)")
-        ax.set_ylabel("empirical accuracy (bin)")
-        ax.set_title(f"{model} — arc_challenge")
-    axes[0][-1].legend(fontsize=7, loc="lower right")
-    fig.tight_layout()
-    fig.savefig(out_path, dpi=150)
-    plt.close(fig)
+    with plt.rc_context(_PANEL_RC):
+        fig, axes = plt.subplots(1, len(models), figsize=(4.0 * len(models), 4.1),
+                                 squeeze=False, sharey=True)
+        for ax, model in zip(axes[0], models):
+            for condition in ["bf16"] + LADDER_ORDER:
+                sub = _sub(cells, model, condition, "arc_challenge")
+                if sub.empty:
+                    continue
+                correct, conf = _sorted_arrays(sub)
+                order = np.argsort(conf, kind="stable")
+                correct_bins = np.array_split(correct[order], config.ECE_N_BINS)
+                conf_bins = np.array_split(conf[order], config.ECE_N_BINS)
+                xs = [float(np.mean(b)) for b in conf_bins if len(b)]
+                ys = [float(np.mean(b)) for b in correct_bins if len(b)]
+                ax.plot(xs, ys, marker="o", label=condition, alpha=0.8)
+            ax.plot([0, 1], [0, 1], linestyle="--", color="gray", linewidth=1)
+            ax.set_xlim(0, 1)
+            ax.set_ylim(0, 1)
+            ax.set_xlabel("mean predicted confidence (bin)")
+            ax.set_title(f"{model} — arc_challenge")
+        axes[0][0].set_ylabel("empirical accuracy (bin)")
+        handles, labels = axes[0][0].get_legend_handles_labels()
+        # Shared legend below the panels: an in-axes legend large enough to read
+        # after downscaling covers the qwen2.5-3b curves, which are the point.
+        fig.legend(handles, labels, loc="lower center", ncol=4,
+                   fontsize=_PANEL_RC["legend.fontsize"], frameon=False)
+        fig.tight_layout(rect=(0, 0.145, 1, 1))
+        fig.savefig(out_path, dpi=200)
+        plt.close(fig)
 
 
 def make_figure2(cells: pd.DataFrame, meta: pd.DataFrame, models: list, out_path: Path) -> None:
@@ -472,30 +544,35 @@ def make_figure3(cells: pd.DataFrame, models: list, out_path: Path) -> None:
     bf16 vs 4-bit (affine_b4_g64) vs 2-bit (affine_b2_g64), pooled across
     models (arc_challenge only, same rationale as Figure 1)."""
     conditions = ["bf16", "affine_b4_g64", "affine_b2_g64"]
-    fig, axes = plt.subplots(1, len(conditions), figsize=(5 * len(conditions), 4.5), squeeze=False)
-    for ax, condition in zip(axes[0], conditions):
-        correct_confs, incorrect_confs = [], []
-        for model in models:
-            sub = _sub(cells, model, condition, "arc_challenge")
-            if sub.empty:
-                continue
-            correct, conf = _sorted_arrays(sub)
-            correct_confs.append(conf[correct == 1])
-            incorrect_confs.append(conf[correct == 0])
-        correct_confs = np.concatenate(correct_confs) if correct_confs else np.array([])
-        incorrect_confs = np.concatenate(incorrect_confs) if incorrect_confs else np.array([])
-        bins = np.linspace(0, 1, 21)
-        ax.hist(correct_confs, bins=bins, alpha=0.6, label="correct", density=True)
-        ax.hist(incorrect_confs, bins=bins, alpha=0.6, label="incorrect", density=True)
-        ax.set_xlim(0, 1)
-        ax.set_xlabel("confidence")
-        ax.set_title(condition)
-    axes[0][0].set_ylabel("density")
-    axes[0][-1].legend(fontsize=8)
-    fig.suptitle("Confidence distribution: correct vs incorrect (pooled models, arc_challenge)")
-    fig.tight_layout()
-    fig.savefig(out_path, dpi=150)
-    plt.close(fig)
+    with plt.rc_context(_PANEL_RC):
+        fig, axes = plt.subplots(1, len(conditions), figsize=(4.0 * len(conditions), 4.1),
+                                 squeeze=False)
+        for ax, condition in zip(axes[0], conditions):
+            correct_confs, incorrect_confs = [], []
+            for model in models:
+                sub = _sub(cells, model, condition, "arc_challenge")
+                if sub.empty:
+                    continue
+                correct, conf = _sorted_arrays(sub)
+                correct_confs.append(conf[correct == 1])
+                incorrect_confs.append(conf[correct == 0])
+            correct_confs = np.concatenate(correct_confs) if correct_confs else np.array([])
+            incorrect_confs = np.concatenate(incorrect_confs) if incorrect_confs else np.array([])
+            bins = np.linspace(0, 1, 21)
+            ax.hist(correct_confs, bins=bins, alpha=0.6, label="correct", density=True)
+            ax.hist(incorrect_confs, bins=bins, alpha=0.6, label="incorrect", density=True)
+            ax.set_xlim(0, 1)
+            ax.set_xlabel("confidence")
+            ax.set_title(condition)
+        axes[0][0].set_ylabel("density")
+        handles, labels = axes[0][0].get_legend_handles_labels()
+        fig.legend(handles, labels, loc="lower center", ncol=2,
+                   fontsize=_PANEL_RC["legend.fontsize"], frameon=False)
+        fig.suptitle("Confidence distribution: correct vs incorrect "
+                     "(pooled models, arc_challenge)")
+        fig.tight_layout(rect=(0, 0.11, 1, 1))
+        fig.savefig(out_path, dpi=200)
+        plt.close(fig)
 
 
 # ---------------------------------------------------------------------------

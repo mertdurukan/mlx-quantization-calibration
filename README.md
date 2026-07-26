@@ -12,10 +12,12 @@ the pre-registered analysis found.
 ## Finding
 
 The ladder does not degrade calibration smoothly and uniformly. Across the three eligible main
-models (`qwen2.5-1.5b`, `qwen2.5-3b`, `llama3.2-3b`), ECE typically holds close to the bf16
-reference through 4-bit and then worsens sharply at 2–3 bits — but the exact shape is
-model-dependent, and one model (`qwen2.5-3b`) shows a statistically significant
-**non-monotonic** spike at 3-bit on *both* benchmarks — on ARC-Challenge, ECE 0.434
+models (`qwen2.5-1.5b`, `qwen2.5-3b`, `llama3.2-3b`), ECE holds close to the bf16 reference
+through 4-bit and worsens unambiguously at 2-bit; at 3-bit the picture is genuinely mixed rather
+than uniformly worse — of the six model×benchmark cells, four worsen significantly, one is
+indistinguishable from bf16, and one (`qwen2.5-1.5b`/MMLU) significantly **improves**
+(0.213 → 0.148). The exact shape is model-dependent, and `qwen2.5-3b` shows a statistically
+significant **non-monotonic** spike at 3-bit on *both* benchmarks — on ARC-Challenge, ECE 0.434
 (95% CI [0.404, 0.463]) is *worse* than its own 2-bit cell (ECE 0.254, CI [0.226, 0.281]);
 the same reversal holds on MMLU (0.422 [0.392, 0.450] at 3-bit vs. 0.292 [0.265, 0.321] at
 2-bit) — a real reversal in the data, not bootstrap noise,
@@ -80,8 +82,27 @@ Outputs: `results/tables/table{1,2,3,4}_*.csv` (one per hypothesis), `table5_flo
 - Post-hoc recalibration (temperature scaling etc.) is out of scope for this study.
 - English-language benchmarks only.
 
-Full scope statement: [`PREREG.md`](PREREG.md) §6. Deviations from the frozen pre-registration,
-if any, are logged append-only in [`DEVIATIONS.md`](DEVIATIONS.md).
+Full scope statement: [`PREREG.md`](PREREG.md) §6. Deviations from the frozen pre-registration
+are logged append-only in [`DEVIATIONS.md`](DEVIATIONS.md) — there are six, all found by an
+independent review (below) rather than by the authors, and paper §7 summarises them.
+
+## Independent audit
+
+The finished analysis and write-up were reviewed by three **zero-context** reviewers, each given
+only the files and the implementation contract, not the authors' reasoning (the discipline is
+in [`PROTOKOL.md`](PROTOKOL.md), Kural 10). They checked pre-registration compliance, every
+number against the primary per-item data, and the statistical code.
+
+They confirmed roughly 446 numeric claims as exact — every table cell against the CSVs, with a
+sample re-derived independently from the raw parquet files — and found no unregistered analysis
+smuggled into the main tables. They also found real defects, all since fixed or disclosed: H1's
+decision rule had been implemented more weakly than pre-registered (corrected; it changed a
+headline count), the floor-control model turned out to satisfy the eligibility rule it was
+excluded by, warm-up items were being scored despite documentation saying otherwise, several
+prose quantifiers overstated their own data, and — found by mutation testing — ten protection
+tests could not fail, including the one guarding the exact bug the sibling study had shipped.
+Every finding is recorded in [`YAPILACAKLAR.md`](YAPILACAKLAR.md) and, where it touched the
+design, in [`DEVIATIONS.md`](DEVIATIONS.md).
 
 ## Repository map
 

@@ -15,6 +15,7 @@ fixed. See GECMIS.md "Görev 2" entry for the reasoning behind each construction
 """
 import numpy as np
 import pytest
+import statsmodels.api as sm
 
 import src.config as config
 import src.metrics as metrics
@@ -242,19 +243,149 @@ def test_bootstrap_ci_bounds_and_point_is_full_sample_metric_not_bootstrap_mean(
 def test_bootstrap_ci_forwards_kwargs_to_metric_fn():
     # The sibling study's bootstrap_ci silently dropped kwargs and crashed
     # at analysis time calling it with a metric that takes threshold=.
+    #
+    # The threshold used here MUST differ from config.OVERCONF_THRESHOLD. With
+    # threshold == the default, an implementation that drops kwargs entirely
+    # returns exactly the same numbers and the test passes against it -- which is
+    # what this test did until 2026-07-26, when an independent mutation run
+    # showed the kwargs-dropping mutant surviving.
     rng = np.random.default_rng(22)
     n = 300
     conf = rng.uniform(0.05, 0.95, n)
     y = rng.binomial(1, conf).astype(float)
 
+    threshold = 0.6
+    assert threshold != config.OVERCONF_THRESHOLD, "threshold must not equal the default"
+
     lo, point, hi = metrics.bootstrap_ci(
-        y, conf, metrics.overconfidence_rate, threshold=0.9
+        y, conf, metrics.overconfidence_rate, threshold=threshold
     )
 
     assert lo <= point <= hi
     assert point == pytest.approx(
-        metrics.overconfidence_rate(y, conf, threshold=0.9), abs=1e-12
+        metrics.overconfidence_rate(y, conf, threshold=threshold), abs=1e-12
     )
+    # The whole point: the forwarded threshold changes the answer, so an
+    # implementation that silently used the default is distinguishable.
+    default_point = metrics.overconfidence_rate(y, conf)
+    assert abs(point - default_point) > 0.05
+    default_lo, _, default_hi = metrics.bootstrap_ci(
+        y, conf, metrics.overconfidence_rate
+    )
+    assert (lo, hi) != (default_lo, default_hi)
+
+
+def test_bootstrap_ci_is_seeded_and_reproducible():
+    # An unseeded rng still produces plausible intervals, so nothing else in the
+    # suite would notice. Reproducibility is a contract (SPEC §3), not a detail.
+    rng = np.random.default_rng(5)
+    conf = rng.uniform(0.05, 0.95, 200)
+    y = rng.binomial(1, conf).astype(float)
+
+    first = metrics.bootstrap_ci(y, conf, metrics.ece)
+    second = metrics.bootstrap_ci(y, conf, metrics.ece)
+    assert first == second
+
+    other_seed = metrics.bootstrap_ci(y, conf, metrics.ece, seed=config.SEED + 1)
+    assert (other_seed[0], other_seed[2]) != (first[0], first[2])
+
+
+def test_cal_intercept_holds_slope_at_one_rather_than_fitting_it():
+    # SPEC §3 requires the intercept to be estimated with the slope FROZEN at 1
+    # via offset=. On data whose free slope is far from 1 the two models give
+    # different intercepts, so a free-slope implementation is detectable. With
+    # near-perfectly-calibrated data they coincide and the constraint is
+    # invisible -- which is why the earlier tests missed it.
+    rng = np.random.default_rng(31)
+    n = 2000
+    conf = rng.uniform(0.05, 0.95, n)
+    # True log-odds only weakly related to stated confidence -> free slope << 1.
+    true_p = 1.0 / (1.0 + np.exp(-(0.3 * np.log(conf / (1 - conf)) + 0.4)))
+    y = rng.binomial(1, true_p).astype(float)
+
+    free_slope = metrics.cal_slope(y, conf)
+    assert free_slope < 0.6, "test data must have a free slope far from 1"
+
+    constrained = metrics.cal_intercept(y, conf)
+
+    # Independent reference: same GLM, slope frozen at 1 through the offset.
+    x = np.log(np.clip(conf, 1e-6, 1 - 1e-6) / (1 - np.clip(conf, 1e-6, 1 - 1e-6)))
+    reference = sm.GLM(y, np.ones_like(x), offset=x,
+                       family=sm.families.Binomial()).fit().params[0]
+    assert constrained == pytest.approx(reference, abs=1e-8)
+
+    # And it must NOT equal the intercept of the unconstrained two-parameter fit.
+    free_intercept = sm.GLM(
+        y, sm.add_constant(x, has_constant="add"), family=sm.families.Binomial()
+    ).fit().params[0]
+    assert abs(constrained - free_intercept) > 0.05
+
+
+def test_cal_slope_fits_an_intercept_alongside_the_slope():
+    # Dropping the intercept column forces the curve through logit=0 and biases
+    # the slope. Data with a large true intercept makes the difference visible.
+    rng = np.random.default_rng(77)
+    n = 3000
+    conf = rng.uniform(0.05, 0.95, n)
+    x = np.log(conf / (1 - conf))
+    true_p = 1.0 / (1.0 + np.exp(-(1.0 * x + 1.5)))
+    y = rng.binomial(1, true_p).astype(float)
+
+    with_intercept = sm.GLM(
+        y, sm.add_constant(x, has_constant="add"), family=sm.families.Binomial()
+    ).fit().params[1]
+    without_intercept = sm.GLM(
+        y, x[:, None], family=sm.families.Binomial()
+    ).fit().params[0]
+    assert abs(with_intercept - without_intercept) > 0.1, "design must distinguish"
+
+    assert metrics.cal_slope(y, conf) == pytest.approx(with_intercept, abs=1e-8)
+
+
+def test_cal_slope_is_nan_when_confidence_is_constant():
+    # Constant confidence carries no slope information. The default
+    # add_constant(has_constant="skip") drops the intercept column here and
+    # params[1] raises IndexError -- an undefined statistic must not surface as
+    # a crash (or, worse, as the intercept).
+    y = np.array([1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0])
+    conf = np.full(8, 0.7)
+    assert np.isnan(metrics.cal_slope(y, conf))
+
+
+def test_mean_conf_by_correctness_returns_incorrect_first():
+    # analyze._mean_conf_incorrect takes element 0 to build half of H2's
+    # criterion, so a swapped return order would invert H2 with no other test
+    # noticing. Asymmetric input pins the order.
+    y = np.array([1.0, 1.0, 1.0, 0.0, 0.0])
+    conf = np.array([0.9, 0.9, 0.9, 0.2, 0.2])
+
+    incorrect, correct = metrics.mean_conf_by_correctness(y, conf)
+    assert incorrect == pytest.approx(0.2)
+    assert correct == pytest.approx(0.9)
+
+
+def test_overconfidence_rate_threshold_is_strictly_above():
+    # "fraction of items with confidence ABOVE threshold that are wrong":
+    # an item sitting exactly at the threshold is not above it. Every item here
+    # is exactly at the threshold, so > gives an empty selection (NaN) while >=
+    # would give 1.0.
+    y = np.array([0.0, 0.0, 0.0, 0.0])
+    conf = np.full(4, config.OVERCONF_THRESHOLD)
+    assert np.isnan(metrics.overconfidence_rate(y, conf))
+
+    # One item strictly above, and it is correct -> rate 0.0, not diluted by the
+    # at-threshold items.
+    y2 = np.array([1.0, 0.0, 0.0])
+    conf2 = np.array([config.OVERCONF_THRESHOLD + 0.01,
+                      config.OVERCONF_THRESHOLD,
+                      config.OVERCONF_THRESHOLD])
+    assert metrics.overconfidence_rate(y2, conf2) == pytest.approx(0.0)
+
+
+def test_ece_is_nan_on_empty_input():
+    # 0.0 would read as perfect calibration; brier and overconfidence_rate both
+    # return NaN on empty input and ece has to agree.
+    assert np.isnan(metrics.ece(np.array([]), np.array([])))
 
 
 # --- clipping ------------------------------------------------------------

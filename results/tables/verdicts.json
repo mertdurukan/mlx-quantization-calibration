@@ -2,7 +2,11 @@
   "H1": {
     "hypothesis": "H1",
     "statement": "ECE increases monotonically as bit-width decreases from 8 to 2 bits.",
+    "criterion": "ordering over all bit-width pairs (PREREG H1), not adjacent steps only",
     "overall_pass": false,
+    "n_cells_decided": 6,
+    "n_cells_falsified": 3,
+    "undecided_cells": [],
     "per_model_benchmark": {
       "llama3.2-3b__arc_challenge": {
         "monotone": true,
@@ -17,8 +21,13 @@
         "violations": []
       },
       "qwen2.5-1.5b__mmlu": {
-        "monotone": true,
-        "violations": []
+        "monotone": false,
+        "violations": [
+          [
+            8,
+            3
+          ]
+        ]
       },
       "qwen2.5-3b__arc_challenge": {
         "monotone": false,
@@ -32,6 +41,10 @@
       "qwen2.5-3b__mmlu": {
         "monotone": false,
         "violations": [
+          [
+            8,
+            4
+          ],
           [
             3,
             2

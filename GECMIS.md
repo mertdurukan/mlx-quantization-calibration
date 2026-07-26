@@ -873,3 +873,127 @@ taşıyor), yani yazışma adresi arXiv PDF'inde **sessizce görünmeyecekti** �
 görünüp yayınlanan kopyada kaybolan bir fark. `author_line()` eklendi: adres başlık bloğundan
 okunup `\author{}` satırına mailto linkiyle taşınıyor. PDF'te doğrulandı (`pdftotext | grep` → 1
 eşleşme, sayfa 1 gözle kontrol edildi) ve tarball yeniden temiz dizinde derlendi.
+
+---
+
+## Bağımsız denetim — PROTOKOL Kural 10 ilk kez gerçekten işletildi (2026-07-26)
+
+Kullanıcı "best in class olması için ne gerekiyorsa yapalım" dedi. Yapılacak en değerli şeyin
+yeni bir özellik değil, **hiç uygulanmamış bir kuralı uygulamak** olduğu görüldü: Kural 10
+("kodu yazan bağlam o kodu onaylayamaz; inceleme sıfır bağlamlı yeni bir oturumda yapılır,
+incelemeciye yalnızca diff + spec verilir, yazarın gerekçeleri verilmez"). Şimdiye kadarki tüm
+denetimler — Görev 11'in veri-tarama kontrolü, Görev 14'ün 15 maddelik uçtan uca denetimi —
+kodu yazan bağlamın kendi içinde yapılmıştı. Yani proje, en pahalı kuralını hiç ödememişti.
+
+Üç sıfır bağlamlı alt-ajan paralel koşturuldu: (1) PREREG↔paper uyumu, (2) her sayının birincil
+veriye karşı denetimi, (3) istatistik kodunun doğruluğu + testlerin mutasyonla sınanması.
+Hiçbirine bu bağlamın gerekçeleri, kararları veya "şurası zaten doğru" bilgisi verilmedi.
+Kural 9 ("test yazımı ve koruma implementasyonu delege edilmez") korundu: ajanlar **yalnızca
+inceledi**, hiçbir repo dosyasını değiştirmedi; bulunan her şey bu bağlamda bağımsız olarak
+yeniden doğrulandı (Kural 5) ve tüm düzeltmeler burada yazıldı.
+
+### Denetimin doğruladığı şey (önce bu, çünkü bulgular bu zeminde okunur)
+
+~446 sayısal iddia **doğru** çıktı: makalenin beş tablosundaki her hücre CSV'lerle birebir,
+16 değer doğrudan `results/cells/*.parquet`'ten bağımsız yeniden hesaplanarak (kendi ECE /
+`cal_intercept` / bootstrap referans implementasyonlarıyla, `src/metrics.py` hiç import
+edilmeden). `src/metrics.py` ve `src/analyze.py`'nin **sayıları doğru**: `ece` bağımsız bir
+referansla 1e-16'ya kadar eşleşiyor, `cal_intercept`'in eğimi gerçekten 1'e sabit,
+`_paired_bootstrap_delta` gerçekten item içinde eşleştiriyor, `bootstrap_ci` dört sözleşme
+maddesinin hepsini karşılıyor, tablolar parquet'ten birebir yeniden türetiliyor. Ana tablolara
+**kayıt dışı hiçbir estimand sızmamış** (özellikle arandı). Yani kusurlar aritmetikte değil.
+
+### Kusurlar üç yerde: karar kuralları, düzyazı, ve testlerin kendisi
+
+**1. H1'in karar kuralı iki ayrı şekilde ön-kayıttan zayıf uygulanmıştı.** PREREG "ECE ordering
+across {8,6,5,4,3,2}" diyor — bir kümenin üzerindeki sıralama iddiası tüm çiftler hakkındadır.
+Kod `zip(rows, rows[1:])` ile yalnızca komşu adımları sınıyordu. Birkaç adıma yayılmış, her
+adımı tek tek CI-örtüşen bir tersine dönüş, sıralamayı bozmasına rağmen görünmez kalıyor.
+Kullanıcıya soruldu (üç seçenek sunuldu), **ön-kayıtlı kuralın uygulanması** seçildi. İkinci
+zayıflatma ifşa edildi ama düzeltilmedi: PREREG "paired within item" istiyor, H1 hükmü marjinal
+aralık örtüşmesi kullanıyor; sonuçlar görüldükten sonra H1'in tahmin edicisini değiştirmek
+ifşadan daha kötü bir çözüm olurdu. **Her iki sapmanın yönü de aynı: çürütmeyi az tespit etmek**
+— yani çalışmanın kendi hipotezini kurtarma yönünde.
+
+**2. Abstract, çalışmanın kendi hüküm dosyasının reddettiği bir şey iddia ediyordu.**
+`verdicts.json` H3 için `overall_pass: true`. Makalenin §4.3'ü doğru yazıyor ("Not falsified —
+but only just") ve §5'te "H3 survives only because one cell out of six carries it" diyor. Ama
+abstract, giriş ve §5'in açılışı "all four are falsified" diyordu. Doğrusu 4'te 3. "Dördü de
+çürütüldü" daha temiz ve daha yayınlanabilir bir iddia — makale, özetlediği bölümün tersini
+söylüyordu. Bu, yazarın kendi çerçevesine körlüğünün ders kitabı örneği ve tam olarak Kural
+10'un var olma sebebi.
+
+**3. Taban kontrolü modeli, dışarıda tutulduğu kuralı geçmişti.** `qwen2.5-0.5b` ön-kayıtlı
+1000-item örneklemde ARC'de 0.518 alıyor; kural ">= %50" diyor; `eligibility.json` `eligible:
+true` yazıyor. Ana ızgaradan çıkaran şey kural değil, bir `role` alanı. Üstelik makale bu
+modelin doğruluğunu "şans seviyesinde veya altında" diye tanıtıyordu — oysa aynı cümlenin
+parantezi 0.518 diyor ve 28 hücrenin 23'ü 0.30 üstü. PREREG'in kendi içinde çelişkisi var
+(kural "ön-kayıtlı örneklem" diyor, eleme gerekçesi 30 item'lık pilot); PREREG donmuş,
+dokunulmadı, çelişki DEVIATIONS'a yazıldı ve §4.5 yeniden yazıldı. **Bir iddia geri çekildi:**
+taban kontrolü "şans seviyesinde kalibrasyon ölçülemez"i kanıtlayamaz, çünkü şans seviyesinde
+değil.
+
+**4. Warmup item'ları aslında skorlanıyor.** PREREG "ilk 20 item atılır, skorlanmaz" diyor
+(980 skorlanmış item ima ediyor); kod ilk 20'yi bir kez koşup atıyor, sonra 1000'in tamamını
+(o 20 dahil) skorluyor. Her parquet 1000 satır ve 20 warmup item'ının 20/20'si çıktıda —
+doğrulandı. Uygulama PREREG'in *gerekçesini* daha iyi karşılıyor (her skorlanan item ısınmış
+durumda ölçülüyor), o yüzden kod korundu, **belgeler düzeltildi**: `SPEC.md` ve `paper.md`
+ikisi de kodun ne yaptığını yanlış tarif ediyordu.
+
+**5. Ana tablolar ön-kayıtlı estimand'ların bir kısmını göstermiyordu.** PREREG Tablo 1'i "ECE,
+slope, intercept, Brier, bf16'ya eşleştirilmiş" diye tanımlıyor; makale yalnızca ECE'yi ve
+eşleştirilmemiş ham değeri gösteriyordu. Tablo 2 için "mean confidence on correct" ve
+"overconfidence rate" ön-kayıtlı, makalede hiç yok. Hepsi hesaplanmış ve CSV'lerde yayınlanmış
+— yani gizleme değil, ama ifşa da edilmemişti. Görev 11 bunu kaçırdı çünkü yalnızca **fazlalık**
+arıyordu (kayıt dışı bir şey eklenmiş mi), **eksikliği** aramıyordu. Bu, kontrol listesi
+tasarımında gerçek bir ders.
+
+**6. On koruma testi başarısız olamıyordu — mutasyonla kanıtlandı.** En çarpıcı bulgu bu.
+`tests/test_metrics.py::test_bootstrap_ci_forwards_kwargs_to_metric_fn`, SPEC'in kardeş
+çalışmadan öğrenilmiş diye **özellikle uyardığı** hatayı (`bootstrap_ci`'ın kwargs'ı sessizce
+düşürmesi) korumak için yazılmıştı — ama eşiği `0.9` seçmişti, yani
+`config.OVERCONF_THRESHOLD`'un tam kendisi. Kwargs'ı hiç iletmeyen bir implementasyon birebir
+aynı sayıyı döndürüyor ve test geçiyor. Yani proje, en çok korkduğu hataya karşı hiçbir koruması
+olmadan yıllardır "mutasyonla kanıtlanmış" diyordu. Diğer hayatta kalanlar: `cal_intercept`'in
+SPEC-zorunlu offset kısıtı (test edilmemiş), `cal_slope`'un intercept terimi,
+`mean_conf_by_correctness`'in dönüş sırası (takas edilse H2'nin yarısı ters çevrilirdi ve hiçbir
+test fark etmezdi), `overconfidence_rate`'in `>` vs `>=` sınırı, `bootstrap_ci`'ın seed'i,
+`_paired_bootstrap_delta`'nın nokta tahmini (test verisi sabit +0.1 kaydırma kullandığı için
+bootstrap ortalaması tanımı gereği tam-örneklem farkına eşitti).
+
+**Düzeltme:** yedi yeni gerçek test yazıldı + iki boş test gerçekten ayırt edici hale getirildi,
+sonra **on mutant bellekte kurularak** (repo dosyalarına dokunulmadan, bir pytest eklentisiyle)
+her birinin öldüğü **kendi hedef testiyle ve doğru sebeple** gösterildi. Ek olarak
+`_intervals_overlap` artık sonlu olmayan sınırlarda **hata fırlatıyor**: NaN'a karşı her `<=`
+False olduğu için bir NaN sınır sessizce "bu aralıklar örtüşmüyor" diye okunuyordu — ki H1/H3/H4
+bunu **pozitif kanıt** sayıyor, yani tanımsız bir metrik yayınlanmış bir hükme dönüşebiliyordu.
+
+### Kendi düzeneğim iki kez bozuk çıktı (Kural 5 kendime de uygulandı)
+
+(a) İlk mutasyon koşumunda **on mutantın onu da "hayatta kaldı"** göründü. Sevinmek yerine
+şüphelenildi: bir mutantın, üstelik özellikle onu hedefleyen testi olan `h1_adjacent_only`'nin
+hayatta kalması imkânsızdı. Sebep: pytest eklentisinin hook parametresi `config_` adlandırılmıştı
+(çünkü `src.config` ile çakışmasın diye), pytest ise tam olarak `config` adını istiyor —
+eklenti hiç yüklenmiyordu ve benim döngüm bu hatayı "hayatta kaldı" diye raporluyordu. Düzeltme:
+eklentinin gerçekten kurulduğu her koşumda **açıkça doğrulanıyor**, kurulmadıysa "DÜZENEK
+HATASI" basılıyor. (b) Analiz koşumunu beklemek için yazdığım `ps | grep` döngüsü yanlış "bitti"
+sinyali verdi ve tabloların yeniden üretildiğini sanarak eski `verdicts.json`'a bakıp "eski
+görünüyor, çökmüş" diye yanlış teşhis koydum; süreç aslında koşuyordu. Düzeltme: `kill -0 <pid>`
+ile beklendi. **İkisi de "make verify yeşil → ortam bozuktu" hatasının aynısı**: yeşil/kırmızı
+sinyalin kendisi doğrulanmadan güvenilmez.
+
+### Bu oturumda eklenen kalıcı korumalar
+
+- `make verify-analysis` (`scripts/verify_reproducibility.py`): `results/tables/`'ı commit'li
+  hücrelerden yeniden türetip **bayt bayt** karşılaştırıyor. Kural 11'in ("üretilmiş çıktı elle
+  düzenlenmez") makine-kontrol edilebilir hâli, ve bootstrap'ın gerçekten seed'li olduğunun
+  kanıtı. ~10 dk, model indirmesi yok.
+- `requirements.txt` artık `numpy`, `pandas`, `pyarrow`'u **doğrudan** bildiriyor. `src/` üçünü
+  de doğrudan kullanıyordu; yalnızca `datasets`/`statsmodels` üzerinden dolaylı geliyorlardı,
+  yani `make setup && make reproduce` zinciri tesadüfe dayanıyordu. Ortama etkisi sıfır olduğu
+  doğrulandı (`pip --dry-run` hepsini "already satisfied" veriyor, yeni `pip freeze` lock ile
+  birebir aynı).
+- Figürler: 1×3 panel dizilimi metin genişliğine inince 0.43 ölçekleniyor, yani 7pt'lik lejant
+  efektif 3pt oluyordu — basılı hâlde okunamaz. Panel yazı boyutları, çıktı `\textwidth`'te
+  gömülüp **gerçekten okunarak** kalibre edildi; lejant panellerin dışına alındı (büyütülmüş
+  lejant `qwen2.5-3b` eğrilerini kapatıyordu, ki asıl bulgu onlar).

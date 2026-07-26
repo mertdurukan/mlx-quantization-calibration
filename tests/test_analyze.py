@@ -60,11 +60,17 @@ def _mean_metric(y_correct, y_conf):
 
 
 def test_paired_bootstrap_delta_point_is_full_sample_difference_not_bootstrap_mean():
+    # The delta must vary across resamples, otherwise the bootstrap mean equals
+    # the full-sample difference by construction and an implementation that
+    # reports the bootstrap mean passes anyway. An independent mutation run on
+    # 2026-07-26 showed exactly that: the earlier version of this test used a
+    # constant +0.1 shift and the bootstrap-mean mutant survived it.
     rng = np.random.default_rng(1)
-    base_conf = rng.uniform(0, 1, 200)
-    other_conf = base_conf + 0.1  # shift every item by exactly +0.1
-    base_correct = np.ones(200)
-    other_correct = np.ones(200)
+    n = 200
+    base_conf = rng.uniform(0, 1, n)
+    other_conf = np.clip(base_conf + rng.normal(0.1, 0.25, n), 0, 1)
+    base_correct = np.ones(n)
+    other_correct = np.ones(n)
 
     lo, point, hi = analyze._paired_bootstrap_delta(
         base_correct, base_conf, other_correct, other_conf, _mean_metric,
@@ -72,8 +78,20 @@ def test_paired_bootstrap_delta_point_is_full_sample_difference_not_bootstrap_me
     )
     expected_point = float(np.mean(other_conf)) - float(np.mean(base_conf))
     assert point == pytest.approx(expected_point, abs=1e-9)
-    assert point == pytest.approx(0.1, abs=1e-9)
     assert lo <= point <= hi
+
+    # Pin the distinction directly: recompute the bootstrap mean the same way
+    # the function does and require the reported point to differ from it.
+    boot_rng = np.random.default_rng(config.SEED)
+    deltas = []
+    for _ in range(500):
+        idx = boot_rng.integers(0, n, n)
+        deltas.append(_mean_metric(other_correct[idx], other_conf[idx])
+                      - _mean_metric(base_correct[idx], base_conf[idx]))
+    bootstrap_mean = float(np.mean(deltas))
+    assert abs(point - bootstrap_mean) > 1e-6, (
+        "point estimate is indistinguishable from the bootstrap mean on this data"
+    )
 
 
 def test_paired_bootstrap_delta_is_exactly_zero_when_arms_are_identical():
@@ -169,7 +187,12 @@ def test_h1_multiple_real_reversals_are_all_reported():
     ]
     verdict = analyze._h1_ladder_verdict(rows)
     assert verdict["monotone"] is False
-    assert verdict["violations"] == [(8, 6), (5, 4)]
+    # Expectation widened on 2026-07-26 when the verdict was corrected to the
+    # pre-registered criterion (ordering over ALL pairs, PREREG H1) instead of
+    # adjacent steps only. (8, 4) is a genuine CI-confirmed reversal — 0.30
+    # [0.27,0.33] vs 0.10 [0.08,0.12] — that the adjacent-only rule never looked
+    # at. This is a stricter expectation, not a relaxed one.
+    assert verdict["violations"] == [(8, 6), (8, 4), (5, 4)]
 
 
 # ---------------------------------------------------------------------------
@@ -289,3 +312,79 @@ def test_h4_recipe_range_is_order_independent_in_component_args():
     # comp_a/comp_b may be passed in either order (a isn't necessarily <= b).
     assert analyze._h4_recipe_verdict(0.13, 0.17, comp_a_point=0.20, comp_b_point=0.10) is True
     assert analyze._h4_recipe_verdict(0.01, 0.05, comp_a_point=0.20, comp_b_point=0.10) is False
+
+
+# --- H1: the pre-registered criterion is an ORDERING, not adjacent steps -----
+# PREREG H1: "the ECE ordering across {8, 6, 5, 4, 3, 2} is not monotone
+# increasing". An ordering over a set constrains every pair. An adjacent-only
+# implementation is strictly weaker and biased toward PASS; an independent audit
+# on 2026-07-26 found two real CI-confirmed reversals hidden by it.
+
+
+def _ladder(*triples):
+    """(bits, point, half_width) -> rows in descending bit order."""
+    return [{"bits": b, "point": p, "lo": p - w, "hi": p + w} for b, p, w in triples]
+
+
+def test_h1_flags_a_non_adjacent_reversal_that_adjacent_steps_miss():
+    # 8 -> 3 is a CI-confirmed reversal, but every adjacent step overlaps its
+    # neighbour, so an adjacent-only rule reports this ladder as monotone.
+    rows = _ladder((8, 0.30, 0.02), (6, 0.27, 0.02), (5, 0.24, 0.02),
+                   (4, 0.21, 0.02), (3, 0.18, 0.02), (2, 0.40, 0.02))
+    # Fixture requirement: the adjacent-only rule must find NOTHING here, so the
+    # test can only pass if the all-pairs criterion is what is implemented.
+    adjacent_violations = [
+        (a["bits"], b["bits"]) for a, b in zip(rows, rows[1:])
+        if b["point"] < a["point"]
+        and not analyze._intervals_overlap(a["lo"], a["hi"], b["lo"], b["hi"])
+    ]
+    assert adjacent_violations == [], "fixture must be invisible to an adjacent-only rule"
+
+    verdict = analyze._h1_ladder_verdict(rows)
+    assert verdict["monotone"] is False
+    assert (8, 3) in verdict["violations"]
+
+
+def test_h1_still_passes_a_genuinely_monotone_ladder():
+    rows = _ladder((8, 0.10, 0.01), (6, 0.12, 0.01), (5, 0.15, 0.01),
+                   (4, 0.20, 0.01), (3, 0.30, 0.01), (2, 0.45, 0.01))
+    verdict = analyze._h1_ladder_verdict(rows)
+    assert verdict["monotone"] is True
+    assert verdict["violations"] == []
+
+
+def test_h1_does_not_flag_a_reversal_whose_intervals_overlap():
+    # A dip that the intervals cannot separate is noise, per PREREG's
+    # "with 95% intervals excluding the reversal being noise".
+    rows = _ladder((8, 0.30, 0.05), (6, 0.28, 0.05), (5, 0.32, 0.05))
+    verdict = analyze._h1_ladder_verdict(rows)
+    assert verdict["monotone"] is True
+
+
+def test_h1_reports_no_verdict_when_there_is_nothing_to_order():
+    # One surviving ladder condition is absence of evidence. Returning True here
+    # would let a degenerate cell contribute a silent PASS to the aggregate.
+    assert analyze._h1_ladder_verdict([])["monotone"] is None
+    assert analyze._h1_ladder_verdict(_ladder((8, 0.1, 0.01)))["monotone"] is None
+
+
+# --- undefined intervals must not be answered as booleans -------------------
+
+
+def test_intervals_overlap_raises_on_non_finite_bounds():
+    # Every `<=` against NaN is False, so a NaN bound would read as "these
+    # intervals do not overlap" -- which H1/H3/H4 treat as positive evidence,
+    # turning an undefined metric into a verdict.
+    nan = float("nan")
+    for bounds in [(nan, nan, 0.1, 0.2), (0.1, 0.2, nan, nan),
+                   (0.1, nan, 0.1, 0.2), (float("inf"), 0.2, 0.1, 0.2)]:
+        with pytest.raises(ValueError):
+            analyze._intervals_overlap(*bounds)
+
+
+def test_h1_propagates_undefined_intervals_instead_of_passing():
+    nan = float("nan")
+    rows = [{"bits": 8, "point": 0.3, "lo": 0.28, "hi": 0.32},
+            {"bits": 6, "point": nan, "lo": nan, "hi": nan}]
+    with pytest.raises(ValueError):
+        analyze._h1_ladder_verdict(rows)

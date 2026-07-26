@@ -12,25 +12,25 @@ Reproduction instructions in §8.
 
 ## Abstract
 
-Post-training quantization is the default way compressed language models reach laptops and
-phones, and the MLX/quantization literature that evaluates it reports throughput, latency, and
-accuracy — never whether the compressed model's stated confidence still tracks its correctness.
-We pre-registered four falsifiable hypotheses about how MLX's affine, `mxfp4`, and mixed-bit
-quantization modes affect **probabilistic calibration** (ECE, calibration slope/intercept,
-Brier score) on three instruction-tuned models (Qwen2.5-1.5B, Qwen2.5-3B, Llama-3.2-3B) across
-14 quantization conditions and two letter-based multiple-choice benchmarks (ARC-Challenge,
-MMLU), 1000 items each, 114 cells total, every number carrying a paired-bootstrap 95%
-interval. All four hypotheses are **falsified as stated**, but not uniformly or uninterestingly
-so. Calibration error does not increase monotonically with compression: one model
-(Qwen2.5-3B) shows a real, statistically significant non-monotonic spike at 3-bit that
-reverses at 2-bit (H1). Quantization does not shift confidence toward wrong answers in a
-model-general way: Llama-3.2-3B mostly confirms the predicted direction, Qwen2.5-1.5B mostly
-contradicts it, and Qwen2.5-3B contradicts it in every evaluated cell (H2). At matched 4-bit /
-group-32, `affine` and `mxfp4` produce statistically indistinguishable calibration in five of
-six model×benchmark cells (H3). Mixed-bit recipes mostly interpolate between their component
-bit-widths' calibration, with one exception that beats both components (H4). The overall
-picture is that quantization's calibration cost is real, large at low bit-widths, and
-model-specific — not a single curve that generalizes across architectures.
+Post-training quantization is how compressed language models reach laptops and phones, and the
+MLX/quantization literature evaluating it reports throughput and accuracy — never whether the compressed model's stated confidence still tracks its correctness. We pre-registered
+four falsifiable hypotheses about how MLX's affine, `mxfp4`, and mixed-bit modes affect
+**probabilistic calibration** (ECE, calibration slope/intercept, Brier) on three
+instruction-tuned models (Qwen2.5-1.5B, Qwen2.5-3B, Llama-3.2-3B) across 14 quantization
+conditions and two multiple-choice benchmarks (ARC-Challenge, MMLU), 1000 items each, 114 cells
+across five models, every number carrying a paired-bootstrap 95% interval.
+**Three of the four hypotheses are falsified as stated; the fourth survives, barely.**
+Calibration error does not degrade monotonically: monotonicity breaks in three of six
+model-benchmark cells and in two distinct ways — a significant 3-bit spike in Qwen2.5-3B that
+reverses at 2-bit, and two cells where a much lower bit-width is significantly *better*
+calibrated than a higher one (H1). Quantization does not shift confidence toward wrong answers
+in a model-general way: Llama-3.2-3B mostly confirms the predicted direction while Qwen2.5-3B
+contradicts it in 18 of 26 quantized cells and confirms it in none (H2). At matched 4-bit /
+group-32, affine and `mxfp4` are indistinguishable in five of six cells, so H3 is not falsified —
+but it survives on one differing cell. Mixed-bit recipes usually land inside their components'
+range, though 9 of 24 point estimates fall outside and one does so with a disjoint interval,
+falsifying H4. Quantization's calibration cost is real, large at low bit-widths, and
+model-specific — not one curve that generalizes across architectures.
 
 ---
 
@@ -63,9 +63,10 @@ This paper reports a pre-registered, falsification-oriented study of that gap, s
 MLX on Apple Silicon — the one deployment target where CUDA-only quantization toolchains
 (GPTQ, AWQ, bitsandbytes) simply do not run, and where the accuracy-only evaluation habit of
 the MLX ecosystem is least likely to be corrected by borrowing results from elsewhere. Four
-hypotheses (RQ1–RQ4 in [`PREREG.md`](https://github.com/mertdurukan/mlx-quantization-calibration/blob/main/PREREG.md) §2) were frozen before any calibration number
-was computed. All four are falsified as literally stated; §5 argues that the *way* each one
-fails is itself the finding.
+hypotheses (H1–H4 in §3 of [`PREREG.md`](https://github.com/mertdurukan/mlx-quantization-calibration/blob/main/PREREG.md)) were frozen before any calibration number
+was computed. Three of the four are falsified as literally stated and the fourth survives on a
+single cell; §5 argues that the *way* each one fails, or barely fails to fail, is itself the
+finding.
 
 ---
 
@@ -162,8 +163,11 @@ model, to evidence that calibration is not meaningfully measurable near chance a
 `mixed_3_6`, `mixed_4_6`). All conditions are produced from a single bf16 source per model by
 this repository's own conversion pipeline, so no vendor-side variation between published
 checkpoints can act as a confound. Effective bits/weight is parsed from the conversion log for
-every cell, not assumed from the nominal label (nominal 4-bit costs 4.501–4.502 bits/weight in
-practice).
+every cell, not assumed from the nominal label — and "nominal 4-bit" is not one number:
+`affine_b4_g64` costs 4.501–4.502 bits/weight, `affine_b4_g128` and `mxfp4_b4_g32`
+4.251–4.252, and `affine_b4_g32` 5.001–5.002. The matched-group control for `mxfp4` is thus
+the most expensive nominally-4-bit condition in the grid, costing more per weight than
+nominal 5-bit at group 64.
 
 **Benchmarks.** ARC-Challenge and MMLU, 1000 items each, both scored as letter-based multiple
 choice under one frozen prompt template. Confidence is the softmax over the option-letter
@@ -197,8 +201,18 @@ whose tokenizer does not prepend BOS.
 ### 4.1 H1 — Monotone degradation
 
 *Falsifiable as stated: ECE increases monotonically as bit-width decreases from 8 to 2 bits,
-with 95%-interval-confirmed reversals counting as violations.* **Falsified for 2 of 6
-model×benchmark cells** (`qwen2.5-3b` on both benchmarks); holds for the other 4.
+with 95%-interval-confirmed reversals counting as violations.* **Falsified for 3 of 6
+model×benchmark cells** — `qwen2.5-3b` on both benchmarks and `qwen2.5-1.5b` on MMLU; holds for
+the other 3.
+
+PREREG states the criterion as the ECE *ordering across* {8, 6, 5, 4, 3, 2}, and an ordering
+over a set constrains every pair, not only adjacent steps: a reversal spread across several
+bit-widths, each individual step interval-overlapping, still breaks the ordering. The original
+implementation of this verdict compared adjacent steps only, which is strictly weaker than what
+was pre-registered and biased toward *not* falsifying. It was corrected, and the correction moved
+the result against this paper's earlier framing rather than for it (see §7 and `DEVIATIONS.md`).
+Every ECE value in the table below is unchanged by the correction — the file regenerates
+byte-identically — only the decision rule applied to them changed.
 
 | bits | qwen2.5-1.5b/arc | qwen2.5-1.5b/mmlu | qwen2.5-3b/arc | qwen2.5-3b/mmlu | llama3.2-3b/arc | llama3.2-3b/mmlu |
 |---|---|---|---|---|---|---|
@@ -211,16 +225,38 @@ model×benchmark cells** (`qwen2.5-3b` on both benchmarks); holds for the other 
 | 2 | 0.498 [0.469, 0.527] | 0.486 [0.456, 0.514] | 0.254 [0.226, 0.281] | 0.292 [0.265, 0.321] | 0.517 [0.488, 0.545] | 0.463 [0.435, 0.491] |
 
 *Table 1 — ECE (point [95% CI]) across the affine bit-width ladder, one column per eligible
-model×benchmark. Bold marks the confirmed non-monotone reversal.*
+model×benchmark. Bold marks `qwen2.5-3b`'s 3-bit cells, the one reversal that shows up against its immediate neighbours. The other two falsifying cells involve non-adjacent pairs (8→3 bits in `qwen2.5-1.5b`/MMLU, 8→4 in `qwen2.5-3b`/MMLU) and are described in the text rather than marked here, because a monotonicity violation is a property of a *pair* of cells, not of a single cell. **This table shows less than
+PREREG specifies for it:** the pre-registered Table 1 is ECE, calibration slope, intercept and
+Brier score, each paired against bf16 with 95% intervals. All of that was computed and is
+published — `results/tables/table1_h1_bit_ladder.csv` carries `slope`, `intercept`, `brier` and
+every `delta_*` column with bounds — but the full 6 bit-widths × 6 cells × 4 estimands ×
+(point, lo, hi) does not fit a single-column page legibly, so ECE (the estimand H1 is stated in
+terms of) is shown here and the rest left in the file. Logged as a deviation; see §7.*
 
-`qwen2.5-3b`'s 3-bit cell is a genuine, statistically significant spike — ECE nearly doubles
-relative to its own 4-bit neighbor and its own 2-bit neighbor on *both* benchmarks, with
-non-overlapping 95% intervals in both directions. This is not bootstrap noise: it is the same
-model, the same items, one bit-width worse in the middle of the ladder, and then *better*
-again one step further down. Every other reversal in the table (e.g. `llama3.2-3b`'s ECE
-dipping slightly at 6-bit relative to 8-bit) has overlapping intervals and is correctly not
-flagged as a violation by the pre-registered decision rule (PREREG §3 H1: "with 95% intervals
-excluding the reversal being noise").
+`qwen2.5-3b`'s 3-bit cell is a genuine, statistically significant spike — ECE rises sharply
+relative to its own 4-bit and 2-bit neighbors on *both* benchmarks, with non-overlapping 95%
+intervals in both directions (ARC: 3-bit ECE is 3.49× the 4-bit value and 1.71× the 2-bit value;
+MMLU: 2.19× and 1.45×). This is not bootstrap noise: it is the same model, the same items, one
+bit-width worse in the middle of the ladder, and then *better* again one step further down.
+
+Monotonicity fails in a **second, distinct way** that the adjacent-only rule could not see, and
+that is arguably the more surprising of the two: cells where a *lower* bit-width is
+significantly **better** calibrated than a higher one. `qwen2.5-1.5b`/MMLU at 3 bits reaches ECE
+0.148 [0.127, 0.180] against 0.211 [0.185, 0.240] at 8 bits, and `qwen2.5-3b`/MMLU at 4 bits
+reaches 0.192 [0.166, 0.220] against 0.249 [0.223, 0.277] at 8 bits — intervals disjoint in both
+cases. Each intervening step overlaps its neighbour, so the descent is invisible one step at a
+time and only shows up as a violation of the ordering. Compression is not merely a noisy
+degradation here; in these cells it *improves* calibration relative to a much higher bit-width,
+which no monotone model of the ladder can accommodate.
+
+The remaining reversals in the table (e.g. `llama3.2-3b`'s ECE dipping slightly at 6-bit relative
+to 8-bit) have overlapping intervals and are correctly not flagged, per PREREG §3 H1's "with 95%
+intervals excluding the reversal being noise". One caveat belongs here rather than in a footnote:
+that noise test compares two **marginal** bootstrap intervals, while PREREG elsewhere requires
+contrasts paired within item. Marginal-overlap is the more conservative test, so the count above
+is a lower bound — a paired re-test of the same data flags further reversals
+(`qwen2.5-1.5b`/MMLU 4→3, `qwen2.5-3b`/MMLU 5→4). H1's estimator was not switched after seeing
+results; the bias is disclosed instead (§7).
 
 ![Figure 1: calibration curves, bf16 vs. the bit ladder](results/figures/figure1_calibration_curves.png)
 
@@ -261,7 +297,11 @@ from H2's prediction, and by a large margin:
 paired-bootstrap deltas for all 13 non-bf16 conditions × 3 models × 2 benchmarks are in
 `results/tables/table2_h2_confidence_direction.csv`. H2 requires both columns to move
 significantly in the predicted direction (intercept down, conf-on-incorrect up) for a cell to
-confirm.*
+confirm. **Also less than PREREG specifies:** the pre-registered Table 2 is mean confidence on
+correct vs. incorrect plus the overconfidence rate per condition. The deltas shown here are what
+H2's falsification criterion is written in terms of; `mean_conf_correct`, `overconfidence_rate`
+and its interval are in the CSV and are not reproduced anywhere in this paper. Logged as a
+deviation; see §7.*
 
 `qwen2.5-3b`'s intercept moves sharply *positive* (better-calibrated intercept, if intercept
 were read alone) while its confidence-on-incorrect-answers moves down — the opposite pairing
@@ -332,33 +372,80 @@ a point estimate marginally outside the component range (e.g. `qwen2.5-3b`/mmlu/
 0.245 vs. a floor of 0.247) still reads `yes` when its 95% interval overlaps the range — only
 an interval-confirmed departure counts as falsified.*
 
-Mixed-bit recipes interpolate almost exactly as their design intends. The one exception is a
-recipe that is *better calibrated* than either uniform bit-width it mixes, on the same model
-where H1 also showed the largest single-model instability at 3-bit (§4.1) — consistent with
-that model's calibration surface being unusually non-smooth in the 3-to-6-bit region generally,
-rather than a mixed-recipe-specific effect.
+Mixed-bit recipes usually land inside the range spanned by their component bit-widths, but
+"interpolate almost exactly" would overstate how tightly. **9 of the 24 recipe ECE point
+estimates fall outside their component range**; 8 of those read `yes` only because the interval
+overlaps the range, which is what the pre-registered rule adjudicates on. The departures are not
+uniformly marginal either. One of the nine is the interval-confirmed falsification
+(`qwen2.5-1.5b`/ARC/`mixed_3_6`, 0.074 against a component range of [0.119, 0.149] — a gap of
+0.045, and the largest departure in the table). The other eight read `yes` on the strength of
+interval overlap alone, and their gaps span 0.001 to 0.022: the caption's example above
+(`qwen2.5-3b`/MMLU/`mixed_2_6`, 0.245 against a floor of 0.247) is near the bottom of that range
+at 0.002, while `qwen2.5-3b`/ARC/`mixed_3_6` overshoots its ceiling by 0.022 and
+`qwen2.5-1.5b`/MMLU/`mixed_3_6` undershoots its floor by 0.019 — an order of magnitude larger
+than the example a reader is shown. The honest summary is that recipes land near their component
+range with a scatter the interval test mostly absorbs, and that one cell escapes it.
+
+That one interval-confirmed exception is a recipe *better calibrated* than either uniform
+bit-width it mixes, on the same model where H1 showed the largest single-model instability at
+3-bit (§4.1) — consistent with that model's calibration surface being unusually non-smooth in the
+3-to-6-bit region generally, rather than a mixed-recipe-specific effect.
 
 ### 4.5 Floor control and confidence-distribution shift
 
-`Qwen2.5-0.5B`, excluded from the main grid at 33% pilot accuracy (near the 25%-chance floor
-for four-option MC), was run through the identical 14-condition ladder and is reported
-separately (PREREG §4.2). Accuracy stays near or below chance throughout the ladder
-(ARC-Challenge: 0.518 at bf16 down to 0.240 at 2-bit; ARC's `mixed_2_6` cell reaches 0.250,
-literal chance) and ECE is correspondingly close to uninformative — it moves within a
-0.163–0.503 band that does not track any legible ladder trend, which is exactly the outcome
-predicted qualitatively in PREREG §4.2: near chance accuracy, "ECE is dominated by the base
+`Qwen2.5-0.5B` was designated floor control in advance and run through the identical
+14-condition ladder, reported separately (PREREG §4.2). Two things about it have to be stated
+plainly, because an independent audit of this paper found the original draft wrong on both.
+
+**It passed the eligibility rule as written.** PREREG states the rule as bf16 reference accuracy
+≥50% on at least one benchmark, measured on the pre-registered sample. On that sample this model
+scores **0.518** on ARC-Challenge, so `results/eligibility.json` records it as
+`"eligible": true`; it is held out of the main grid by a `role` field, not by the rule. PREREG
+separately pre-commits to excluding this model by name, justified by 33% accuracy over 30 items
+during feasibility — so the exclusion is genuinely pre-registered, but the pre-registration
+contains two commitments that do not agree, and the 1000-item measurement sides with the one
+that would have admitted the model. `PREREG.md` is frozen and was not edited; the conflict is
+logged in `DEVIATIONS.md` (2026-07-26T00:00:02Z).
+
+**Its accuracy is not near chance for most of the ladder.** Chance is 0.25 for four-option MC
+(every item in the grid has exactly four options). Of this model's 28 cells, 23 score above 0.30
+and 16 above 0.40; mean accuracy is 0.416 on ARC-Challenge and 0.370 on MMLU, and bf16 ARC is
+0.518 — roughly double chance. Only four cells sit at or below 0.25 (ARC `affine_b2_g64` 0.240,
+ARC `mixed_2_6` 0.250, MMLU `mixed_2_6` 0.245, and MMLU `affine_b2_g64`). ECE does move within a
+wide 0.163–0.503 band without tracking any legible ladder trend, which is consistent with
+PREREG §4.2's qualitative expectation — but that expectation was conditioned on near-chance
+accuracy, and **this model is not near chance**, so it cannot serve as evidence that "calibration
+is not meaningfully measurable near chance accuracy." That claim is withdrawn: the study has no
+model low enough to test it. What the floor-control ladder does show is a compressed small model
+whose ECE is large and trend-free, which is a weaker and different statement. The original
+sentence here asserted the opposite while quoting 0.518 in its own parenthesis: near chance,
+"ECE is dominated by the base
 rate rather than by the quantization treatment." Full table:
 `results/tables/table5_floor_control.csv`.
 
-Separately, two of the extreme-compression cells in the *main* grid (`qwen2.5-3b`'s
-`affine_b2_g64` and `mixed_2_6`, on both benchmarks) produced an unregistered but real
-side-observation during analysis (`GECMIS.md`, "Görev 10"): no prediction in those cells
-exceeded the 90% overconfidence threshold at all (`overconfidence_rate` is undefined, 0/0, not
-zero) — the model became *underconfident* at that compression level, not overconfident. This is
-visible in Figure 3 as a rightward-collapsed confidence distribution rather than a
-leftward-shifted one, and is reported as a transparency column
-(`overconfidence_rate_n_qualifying`), not folded into any H1–H4 verdict, per PREREG §5's rule
-that anything outside the four pre-registered tables is exploratory.
+### 4.6 Exploratory — not pre-registered
+
+PREREG §5 requires anything outside the four pre-registered tables to be labelled exploratory
+**in a separate section**. Earlier drafts flagged the observation below as unregistered but left
+it inside §4.5, which satisfied the labelling half of that rule and not the structural half. It
+is separated here. Nothing in this subsection contributes to any H1–H4 verdict, and none of it
+was hypothesised in advance.
+
+Four of the extreme-compression cells in the *main* grid — `qwen2.5-3b`'s `affine_b2_g64` and
+`mixed_2_6`, on both benchmarks — produced a real side-observation during analysis
+(`GECMIS.md`, "Görev 10"): no prediction in those cells exceeded the 90% overconfidence
+threshold at all, so `overconfidence_rate` is undefined (0/0, not zero; the maximum confidence
+in `qwen2.5-3b`/`affine_b2_g64`/ARC is 0.838). The model became *underconfident* at that
+compression level, not overconfident. This is visible in Figure 3 as a rightward-collapsed
+confidence distribution rather than a leftward-shifted one, and is reported through a
+transparency column (`overconfidence_rate_n_qualifying`) that records how many items qualified,
+so an undefined rate is never displayed without its reason.
+
+It is worth stating why this is not a small technicality: the intuitive story about
+quantization — the one this study's H2 pre-registered — is that compression makes models
+overconfident. In the most compressed cells of the model that most strongly contradicted H2,
+the opposite happens strongly enough that the overconfidence metric has no data to compute on.
+That is a hypothesis for a future pre-registration, not a result of this one.
 
 ![Figure 3: confidence distribution on correct vs. incorrect answers, bf16 vs. 4-bit vs. 2-bit](results/figures/figure3_confidence_distribution.png)
 
@@ -366,18 +453,25 @@ that anything outside the four pre-registered tables is exploratory.
 
 ## 5. Discussion
 
-Every hypothesis in this pre-registration is falsified as literally stated, and the
-falsification pattern is the finding. H1's monotonicity fails in a way that is model-specific
-and localized (one model, the 3-to-2-bit boundary) rather than general — a practitioner reading
-"ECE roughly holds through 4-bit, then worsens" off `qwen2.5-1.5b` or `llama3.2-3b` alone would
-build a false mental model of `qwen2.5-3b`'s actual behavior. H2's directional claim fails even
-harder: not only is there no universal direction, the three models in the main grid split into
-"mostly confirms," "mostly contradicts," and "always contradicts, and by a wide margin"
-categories, with `qwen2.5-3b`'s intercept and confidence-on-incorrect components moving in
-*decoupled* directions relative to each other. H3 survives only because one cell out of six
-carries it, which is a thin margin for a claim about "mode." H4 is the closest thing to a clean
-result — recipes interpolate almost everywhere — and its one exception is favorable, not
-adverse.
+Three of the four hypotheses in this pre-registration are falsified as literally stated, the
+fourth survives on a single cell, and the pattern of failure is the finding. H1's monotonicity
+fails in three of six model×benchmark cells and in two different ways: a mid-ladder spike
+(`qwen2.5-3b` at 3 bits, worse than both its neighbours) and cells where a much lower bit-width
+is significantly *better* calibrated than a higher one (`qwen2.5-1.5b`/MMLU at 3 vs. 8 bits,
+`qwen2.5-3b`/MMLU at 4 vs. 8 bits). The failure is model- and benchmark-specific rather than
+general — a practitioner reading "ECE roughly holds through 4-bit, then worsens" off
+`llama3.2-3b` alone would build a false mental model of either Qwen — but it is not confined to
+one model, which the earlier, weaker version of this verdict had suggested. H2's directional
+claim fails even harder: not only is there no universal direction, the three models in the main
+grid split into "mostly confirms," "mostly contradicts," and "never confirms" categories, with
+`qwen2.5-3b`'s intercept and confidence-on-incorrect components moving in *decoupled* directions
+relative to each other. H3 is **not** falsified, but it survives on one differing cell out of
+six, which is a thin margin for a claim about "mode" and should be read as "mode mostly does not
+matter at matched bits/group" rather than as support for the hypothesis as stated. H4 is the
+closest thing to a clean result — recipes land inside their component range in 23 of 24 cells
+under the pre-registered interval rule — but "interpolate almost exactly" would overstate it:
+9 of 24 point estimates sit outside the component range, and only the interval test keeps them
+from counting. Its one interval-confirmed exception is favourable, not adverse.
 
 The practical reading for someone deciding whether to ship a quantized model: **do not
 transfer a calibration verdict from one model family to another, and do not assume a
@@ -419,13 +513,48 @@ Stated in advance in PREREG §6 and reproduced here for the paper itself:
 
 ## 7. Deviations from the pre-registration
 
-None. `DEVIATIONS.md` is empty at the time of this write-up — no design element (conditions,
-benchmarks, protocol, metrics, eligibility rule) was changed after `PREREG.md` was frozen. The
-one bug found and fixed mid-run (§3, Llama BOS-token misread) was a measurement-code
-correction, not a design deviation: it was caught, fixed, and re-run entirely before any
-affected cell's quantized results were observed, and it changed which model cleared the
-eligibility gate (`llama3.2-3b` moved from excluded to eligible) rather than any hypothesis's
-falsification criterion.
+An earlier version of this section said "None," on the grounds that `DEVIATIONS.md` was empty.
+That was true of the file and false of the study. `DEVIATIONS.md` was empty because the
+departures had not been *recognised*, not because there were none — a distinction worth stating
+because an empty deviations log is the strongest integrity signal a pre-registered paper can
+send, and it is exactly the signal that is worthless if nobody audited for departures. Six are
+now logged, all found by an independent zero-context review of the finished analysis and each
+independently re-verified before being recorded. Full entries, with the BEFORE/AFTER-results
+field that matters most, are in
+[`DEVIATIONS.md`](https://github.com/mertdurukan/mlx-quantization-calibration/blob/main/DEVIATIONS.md);
+in summary:
+
+1. **H1's ordering criterion was implemented over adjacent bit-widths only** (corrected).
+   PREREG states the criterion as the ECE *ordering across* {8,6,5,4,3,2}, which constrains
+   every pair; the code compared adjacent steps. The narrower rule was biased toward *not*
+   falsifying the study's own hypothesis, and correcting it surfaced two further CI-confirmed
+   reversals. §4.1 reports the corrected result.
+2. **H1 decides "is this reversal noise?" with unpaired marginal intervals** (disclosed, not
+   corrected). PREREG requires paired within-item contrasts, which the codebase implements and
+   uses for H2–H4. Overlap of marginal intervals is markedly more conservative; a paired re-test
+   finds still more significant reversals. Changing H1's estimator after seeing results would be
+   a worse remedy than disclosing the bias, so the direction is stated instead: the criterion
+   actually used **under-detects** falsification.
+3. **The floor-control model satisfied the eligibility rule as written** and is held out by a
+   `role` field (disclosed; §4.5).
+4. **Warm-up items are re-scored rather than discarded** (disclosed; §3). PREREG's wording
+   implies 980 scored items per cell; all 1000 are scored, with the first 20 run once beforehand
+   to warm the runtime. The 20 items are a fixed 2% of every cell and identical across all
+   conditions, so paired within-item contrasts are unaffected.
+5. **Two estimand definitions left open by PREREG were resolved in code** — the 90% threshold
+   for "high-confidence error" and point-estimate (rather than interval) bounds for H4's
+   component range. Both resolutions are the stricter reading; neither was logged at the time,
+   and no sensitivity analysis to the alternative reading was run.
+6. **Tables 1 and 2 print a subset of their pre-registered contents** (disclosed; §4.1, §4.2).
+   Everything pre-registered was computed and is published in the CSVs; the paper shows the
+   ECE and delta columns and left slope, intercept, Brier, mean confidence on correct, and the
+   overconfidence rate in the files.
+
+The one bug found and fixed mid-run (§3, Llama BOS-token misread) is not in that list, and
+remains a measurement-code correction rather than a design deviation: it was caught, fixed, and
+re-run entirely before any affected cell's quantized results were observed, and it changed which
+model cleared the eligibility gate (`llama3.2-3b` moved from excluded to eligible) rather than
+any hypothesis's falsification criterion.
 
 ## 8. Reproducibility
 
@@ -441,8 +570,9 @@ The exact snapshot these results were computed from is archived at
 resolving to the latest version; the `v1.0.0` release this paper reports is
 `10.5281/zenodo.21596524`). That archive includes `results/cells/` and `results/meta/` — the
 per-item log-probabilities for all 114 cells — so every table and figure in this paper can be
-regenerated with `python -m src.analyze` alone, without re-running the ~6.6-hour measurement
-grid.
+regenerated with `python -m src.analyze` alone, without re-running the measurement grid
+(6.95 h of per-cell measurement, 7.11 h including model conversion, summed from the per-cell
+`wall_seconds`/`convert_seconds` recorded in `results/meta/`).
 
 Requires Apple Silicon (MLX has no CUDA path). Environment: Python 3.14, `mlx-lm==0.31.3`,
 `mlx==0.32.0`, pinned in `requirements.lock.txt`; measured on an Apple M4 Pro, 24GB unified
