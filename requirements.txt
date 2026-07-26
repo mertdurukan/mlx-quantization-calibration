@@ -5,3 +5,4 @@ huggingface_hub==1.23.0
 pytest==9.1.1
 statsmodels==0.14.6
 scipy==1.18.0
+matplotlib==3.11.1

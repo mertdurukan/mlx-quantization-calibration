@@ -1,0 +1,320 @@
+{
+  "H1": {
+    "hypothesis": "H1",
+    "statement": "ECE increases monotonically as bit-width decreases from 8 to 2 bits.",
+    "overall_pass": false,
+    "per_model_benchmark": {
+      "llama3.2-3b__arc_challenge": {
+        "monotone": true,
+        "violations": []
+      },
+      "llama3.2-3b__mmlu": {
+        "monotone": true,
+        "violations": []
+      },
+      "qwen2.5-1.5b__arc_challenge": {
+        "monotone": true,
+        "violations": []
+      },
+      "qwen2.5-1.5b__mmlu": {
+        "monotone": true,
+        "violations": []
+      },
+      "qwen2.5-3b__arc_challenge": {
+        "monotone": false,
+        "violations": [
+          [
+            3,
+            2
+          ]
+        ]
+      },
+      "qwen2.5-3b__mmlu": {
+        "monotone": false,
+        "violations": [
+          [
+            3,
+            2
+          ]
+        ]
+      }
+    }
+  },
+  "H2": {
+    "hypothesis": "H2",
+    "statement": "Quantization moves confidence toward incorrect answers relative to bf16.",
+    "overall_pass": false,
+    "confirming_cells": [
+      [
+        "llama3.2-3b",
+        "arc_challenge",
+        "affine_b5_g64"
+      ],
+      [
+        "llama3.2-3b",
+        "arc_challenge",
+        "affine_b3_g64"
+      ],
+      [
+        "llama3.2-3b",
+        "arc_challenge",
+        "affine_b2_g64"
+      ],
+      [
+        "llama3.2-3b",
+        "arc_challenge",
+        "affine_b4_g32"
+      ],
+      [
+        "llama3.2-3b",
+        "arc_challenge",
+        "mxfp4_b4_g32"
+      ],
+      [
+        "llama3.2-3b",
+        "arc_challenge",
+        "mixed_2_6"
+      ],
+      [
+        "llama3.2-3b",
+        "arc_challenge",
+        "mixed_3_4"
+      ],
+      [
+        "llama3.2-3b",
+        "mmlu",
+        "affine_b2_g64"
+      ],
+      [
+        "llama3.2-3b",
+        "mmlu",
+        "mxfp4_b4_g32"
+      ],
+      [
+        "llama3.2-3b",
+        "mmlu",
+        "mixed_2_6"
+      ],
+      [
+        "qwen2.5-1.5b",
+        "mmlu",
+        "affine_b2_g64"
+      ],
+      [
+        "qwen2.5-1.5b",
+        "mmlu",
+        "mxfp4_b4_g32"
+      ],
+      [
+        "qwen2.5-1.5b",
+        "mmlu",
+        "mixed_2_6"
+      ]
+    ],
+    "contradicting_cells": [
+      [
+        "llama3.2-3b",
+        "arc_challenge",
+        "mixed_4_6"
+      ],
+      [
+        "llama3.2-3b",
+        "mmlu",
+        "mixed_4_6"
+      ],
+      [
+        "qwen2.5-1.5b",
+        "arc_challenge",
+        "affine_b6_g64"
+      ],
+      [
+        "qwen2.5-1.5b",
+        "arc_challenge",
+        "affine_b5_g64"
+      ],
+      [
+        "qwen2.5-1.5b",
+        "arc_challenge",
+        "affine_b4_g64"
+      ],
+      [
+        "qwen2.5-1.5b",
+        "arc_challenge",
+        "affine_b3_g64"
+      ],
+      [
+        "qwen2.5-1.5b",
+        "arc_challenge",
+        "affine_b2_g64"
+      ],
+      [
+        "qwen2.5-1.5b",
+        "arc_challenge",
+        "mixed_2_6"
+      ],
+      [
+        "qwen2.5-1.5b",
+        "arc_challenge",
+        "mixed_3_4"
+      ],
+      [
+        "qwen2.5-1.5b",
+        "arc_challenge",
+        "mixed_3_6"
+      ],
+      [
+        "qwen2.5-1.5b",
+        "arc_challenge",
+        "mixed_4_6"
+      ],
+      [
+        "qwen2.5-1.5b",
+        "mmlu",
+        "affine_b6_g64"
+      ],
+      [
+        "qwen2.5-1.5b",
+        "mmlu",
+        "affine_b5_g64"
+      ],
+      [
+        "qwen2.5-1.5b",
+        "mmlu",
+        "affine_b4_g64"
+      ],
+      [
+        "qwen2.5-1.5b",
+        "mmlu",
+        "affine_b3_g64"
+      ],
+      [
+        "qwen2.5-1.5b",
+        "mmlu",
+        "affine_b4_g128"
+      ],
+      [
+        "qwen2.5-1.5b",
+        "mmlu",
+        "mixed_3_4"
+      ],
+      [
+        "qwen2.5-1.5b",
+        "mmlu",
+        "mixed_3_6"
+      ],
+      [
+        "qwen2.5-3b",
+        "arc_challenge",
+        "affine_b4_g64"
+      ],
+      [
+        "qwen2.5-3b",
+        "arc_challenge",
+        "affine_b3_g64"
+      ],
+      [
+        "qwen2.5-3b",
+        "arc_challenge",
+        "affine_b2_g64"
+      ],
+      [
+        "qwen2.5-3b",
+        "arc_challenge",
+        "affine_b4_g128"
+      ],
+      [
+        "qwen2.5-3b",
+        "arc_challenge",
+        "mixed_2_6"
+      ],
+      [
+        "qwen2.5-3b",
+        "arc_challenge",
+        "mixed_3_4"
+      ],
+      [
+        "qwen2.5-3b",
+        "arc_challenge",
+        "mixed_3_6"
+      ],
+      [
+        "qwen2.5-3b",
+        "arc_challenge",
+        "mixed_4_6"
+      ],
+      [
+        "qwen2.5-3b",
+        "mmlu",
+        "affine_b5_g64"
+      ],
+      [
+        "qwen2.5-3b",
+        "mmlu",
+        "affine_b4_g64"
+      ],
+      [
+        "qwen2.5-3b",
+        "mmlu",
+        "affine_b3_g64"
+      ],
+      [
+        "qwen2.5-3b",
+        "mmlu",
+        "affine_b2_g64"
+      ],
+      [
+        "qwen2.5-3b",
+        "mmlu",
+        "affine_b4_g128"
+      ],
+      [
+        "qwen2.5-3b",
+        "mmlu",
+        "mxfp4_b4_g32"
+      ],
+      [
+        "qwen2.5-3b",
+        "mmlu",
+        "mixed_2_6"
+      ],
+      [
+        "qwen2.5-3b",
+        "mmlu",
+        "mixed_3_4"
+      ],
+      [
+        "qwen2.5-3b",
+        "mmlu",
+        "mixed_3_6"
+      ],
+      [
+        "qwen2.5-3b",
+        "mmlu",
+        "mixed_4_6"
+      ]
+    ]
+  },
+  "H3": {
+    "hypothesis": "H3",
+    "statement": "affine vs mxfp4 differ in ECE at matched 4-bit/group-32.",
+    "overall_pass": true,
+    "differing_cells": [
+      [
+        "qwen2.5-1.5b",
+        "mmlu"
+      ]
+    ]
+  },
+  "H4": {
+    "hypothesis": "H4",
+    "statement": "Each mixed_a_b recipe's ECE lies between the uniform a-bit and b-bit conditions.",
+    "overall_pass": false,
+    "falsified_cells": [
+      [
+        "qwen2.5-1.5b",
+        "arc_challenge",
+        "mixed_3_6"
+      ]
+    ]
+  }
+}

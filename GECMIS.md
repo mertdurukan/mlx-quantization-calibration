@@ -546,6 +546,83 @@ PROTOKOL.md'nin 11 kuralını doğurdu. Bu projede baştan uygulananlar:
 
 ---
 
+## Görev 10 — `src/analyze.py`, PREREG §5 tabloları + figürler (2026-07-26)
+
+### SPEC'e yeni sözleşme eklendi (Değişiklik değil, boşluk doldurma)
+`src/analyze.py`'nin SPEC §3'te hiç sözleşmesi yoktu — §1 dosya haritasında adı geçiyordu, §7
+madde 10 sadece "dört tablo, üç figür" diyordu, ama H1-H4'ün PREREG §3'teki düzyazı falsifikasyon
+kriterlerini ("differencing per item", "intervals overlap", "falls outside that range") tam
+olarak hangi algoritmanın uygulayacağı hiçbir yerde yazılı değildi. Bu oturumda SPEC §3'e altı
+saf fonksiyon eklendi (`_intervals_overlap`, `_paired_bootstrap_delta`, `_h1_ladder_verdict`,
+`_h2_direction_verdict`, `_h3_mode_verdict`, `_h4_recipe_verdict`) — PROTOKOL Kural 3 gereği
+**önce test, sonra onay, sonra implementasyon** sırasıyla, iki ayrı onay turunda (H2'nin verdict
+fonksiyonu ilk incelemeden sonra eksik olduğu fark edilip ayrıca onaylandı). `tests/test_analyze.py`
+27 bilinen-cevap testi içeriyor; hepsi önce imza iskeletine karşı `NotImplementedError` ile
+FAIL etti (kullanıcıya gösterildi), sonra implementasyona geçildi, 27/27 geçti.
+
+**Mutasyon kanıtı (Kural 4):** `_intervals_overlap`'in sınır dahil karşılaştırması (`<=`) kasten
+sıkı eşitsizliğe (`<`) çevrildi — yalnızca sınırda-değen-aralık testi (`test_intervals_overlap_true_when_touching_at_boundary`)
+doğru sebeple FAIL etti (diğer 26 test etkilenmedi), sonra dosya orijinaline döndürüldü.
+
+### Tasarım kararları (PREREG'in düzyazısını algoritmaya çeviren, bilim değiştirmeyen kararlar)
+- **Ana tablolar yalnızca uygun modelleri kapsıyor:** `results/eligibility.json`'dan
+  `eligible=True` ve `role != "floor_control"` olan modeller (şu an: `qwen2.5-1.5b`,
+  `qwen2.5-3b`, `llama3.2-3b`). `llama3.2-1b` (eligible=false) ve `qwen2.5-0.5b` (taban kontrolü)
+  Tablo 1-4'e hiç girmiyor — PREREG §4.2 "taban kontrolü ayrı raporlanır" kuralı, kendi dosyası
+  `table5_floor_control.csv`'de (dört ana tablodan biri değil, ayrı bir zorunlu ifşa).
+- **H1 monotonluk kararı:** bir adımda ECE noktası düşerse (bit azalırken beklenenin tersi),
+  bu yalnızca iki komşu koşulun %95 aralıkları **örtüşmüyorsa** gerçek bir ihlal sayılıyor;
+  örtüşen aralıklardaki düşüş gürültü kabul ediliyor (H1'in kendi falsifikasyon cümlesi:
+  "with 95% intervals excluding the reversal being noise").
+- **H2 yön kararı:** her koşul hücresi ("model x benchmark x quantized condition") bf16'ya karşı
+  eşleştirilmiş bootstrap delta'sıyla (`_paired_bootstrap_delta`, aynı item indeksleri her iki
+  kolda da yeniden örnekleniyor — PREREG §4.5 "differencing per item") değerlendiriliyor;
+  genel H2 yalnızca **hiçbir hücre ters yönde anlamlı değilse VE en az bir hücre yönü anlamlı
+  şekilde doğruluyorsa** PASS.
+- **H3 kararı:** falsifikasyon yalnızca **her** model×benchmark hücresi örtüşüyorsa geçerli;
+  tek bir hücrenin bile anlamlı farkı H3'ü ayakta tutuyor (PREREG'in "across all models and
+  benchmarks" ifadesi).
+- **H4 kararı:** bileşen aralığı ([a,b] bit-genişliğinin ECE **nokta tahminleri**, kendi
+  aralıkları değil) ile recipe'nin **kendi** %95 aralığının örtüşüp örtüşmediğine bakılıyor.
+
+### Açık bulgu (kod, bilim değil): `overconfidence_rate` sıfıra bölme
+Gerçek 114 hücrelik veride ilk koşuda `qwen2.5-3b`'nin `affine_b2_g64` ve `mixed_2_6`
+hücrelerinde (her iki benchmark'ta da bazıları) `numpy` "Mean of empty slice" uyarısı çıktı.
+Kök neden **kod hatası değil**: bu hücrelerde `conf_pred` hiçbir item'da `OVERCONF_THRESHOLD`
+(0.90)'ı aşmıyor (`max(conf_pred)=0.838`), yani `metrics.overconfidence_rate`'in payda kümesi
+boş — metrik o hücrede **tanımsız**, NaN. Bu, aşırı sıkıştırmada modelin hiç %90+ güvenli tahmin
+üretmediğini gösteren gerçek bir bulgu (aşırı-güven değil, tam tersi — belirsizlik). `metrics.py`
+(Kural 4 kanıtlı, dokunulmadı) değiştirilmedi; bunun yerine `analyze.build_table2`'ye
+`overconfidence_rate_n_qualifying` kolonu eklendi (eşiği aşan item sayısı) — NaN artık açıklamasız
+görünmüyor, 0 görülünce sebebi tabloda okunuyor. Analiz tekrar koşulunca (aynı koşullar, aynı
+sonuç) bu 4 satır dışında hiç NaN yok (`delta_*_lo/hi` sütunlarındaki 6'şar NaN ise bf16
+satırlarının kendi kendine deltasının tanımsız olması, kasıtlı — `None` olarak yazıldı).
+
+### Bağımlılık eklendi
+`matplotlib==3.11.1` — üç figür için gerekli, önceden yoktu. `requirements.txt` +
+`requirements.lock.txt` aynı commit'te güncellendi (SPEC §0 madde 8).
+
+### Fonksiyonel doğrulama (Kural 6) — gerçek 114 hücrelik veriyle iki tam koşu
+`python -m src.analyze` gerçek `results/` üzerinde iki kez koşuldu (~9.5 dk her biri, 2000
+bootstrap resample × 4 metrik × onlarca hücre). İlk koşu overconfidence_rate bulgusunu ortaya
+çıkardı, kod düzeltildi, ikinci koşu temiz çıktı (uyarı yok). Çıktılar elle incelendi:
+- Tablo 1-4 + `table5_floor_control.csv` + `verdicts.json` beklenen şekilde yazıldı, NaN'lar
+  yalnızca tasarım gereği (bf16'nın kendine deltası) açıklanabilir.
+- Üç figür (`figure1_calibration_curves.png`, `figure2_ece_vs_effective_bits.png`,
+  `figure3_confidence_distribution.png`) görsel olarak incelendi — Figür 2 beklenen şekli
+  gösteriyor (ECE ~4.5 efektif bite kadar düz, altında keskin sıçrama); Figür 1'de 2-bit eğrisi
+  diyagonalin belirgin altında (aşırı-güven); Figür 3'te bf16'nın yüksek-güven/doğru
+  yoğunlaşması düşük-bit'te dağılıyor. Hiçbiri anormal/hatalı görünmüyor.
+- **H1 gerçek veride bir gerçek ihlal yakaladı** (kurgusal test değil): `qwen2.5-3b` hem
+  arc_challenge hem mmlu'da 3-bit'te ECE'nin 4-bit ve 2-bit'ten **çok daha kötü** olduğu
+  (ör. arc: 3-bit ECE 0.434 [0.404,0.463] vs 2-bit 0.254 [0.226,0.281], aralıklar örtüşmüyor)
+  istatistiksel olarak anlamlı bir ters-U görüldü — `_h1_ladder_verdict` bunu doğru şekilde
+  ihlal olarak işaretledi, H1 bu iki model×benchmark hücresinde FAIL. Bu bir kod hatası değil,
+  raporlanacak gerçek bir bilimsel bulgu (Görev 13'e not).
+- `pytest tests/ -q` → **62 passed** (35 önceki + 27 yeni, regresyon yok).
+
+---
+
 ## Doğrulanmış teknik olgular (hepsi çalıştırılarak)
 
 - `affine` bits: **2, 3, 4, 5, 6, 8** — her biri farklı parmak izi

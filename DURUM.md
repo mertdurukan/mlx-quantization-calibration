@@ -13,13 +13,45 @@
 [x] FAZ 2 — Ön-kayıt donduruldu         TAMAMLANDI  (commit c5ea71c)
 [x] FAZ 3 — Implementasyon              TAMAMLANDI
 [x] FAZ 4 — Pilot + tam koşu            TAMAMLANDI
-[ ] FAZ 5 — Analiz (ön-kayıtlı tablolar) ← ŞU AN BURADAYIZ (sırada Görev 10)
+[ ] FAZ 5 — Analiz (ön-kayıtlı tablolar) ← ŞU AN BURADAYIZ (Görev 10 bitti, sırada Görev 11)
 [ ] FAZ 6 — Makale + dağıtım
 ```
 
 ## Şu an
 
-**FAZ 4 tamamlandı. Sırada Görev 10 (`src/analyze.py`) var.**
+**Görev 10 tamamlandı: `src/analyze.py` yazıldı, gerçek 114 hücrelik veri üzerinde koşuldu,
+Tablo 1-4 + taban-kontrol tablosu + `verdicts.json` + 3 figür üretildi ve elle incelendi. Sırada
+Görev 11 (`AÇIK BULGULAR` taraması + veri-tarama-yasağı kontrolü) var.**
+
+`src/analyze.py` SPEC §3'e altı yeni saf fonksiyon ekleyerek yazıldı (`_intervals_overlap`,
+`_paired_bootstrap_delta`, `_h1_ladder_verdict`, `_h2_direction_verdict`, `_h3_mode_verdict`,
+`_h4_recipe_verdict`) — PREREG §3'ün düzyazı falsifikasyon kriterlerini ("differencing per
+item", "intervals overlap", "falls outside that range") kesin algoritmaya çeviren, bilim
+değiştirmeyen implementasyon kararları. PROTOKOL Kural 3 gereği test-önce + kullanıcı onayı
+(iki turda — H2'nin verdict fonksiyonu ilk turda eksik kalmıştı, ayrıca onaylandı) + Kural 4
+mutasyon kanıtı (`_intervals_overlap`'in sınır karşılaştırması bozuldu, yalnızca ilgili test
+doğru sebeple FAIL etti). `tests/test_analyze.py` 27 test, `pytest tests/` → **62 passed**
+(regresyon yok).
+
+Gerçek 114 hücrelik veri üzerinde iki kez koşuldu (~9.5 dk/koşu, 2000 bootstrap resample × 4
+metrik × onlarca hücre). İlk koşu **açık bulgu** ortaya çıkardı: `metrics.overconfidence_rate`
+bazı aşırı-sıkıştırma hücrelerinde (`qwen2.5-3b`'nin 2-bit koşulları) tanımsız (0/0) — hiçbir
+tahmin %90 güveni aşmıyor. Kod hatası değil, gerçek bir bulgu (aşırı-güven değil aşırı-belirsizlik);
+`metrics.py`'ye dokunulmadı, `analyze.py`'ye şeffaflık kolonu (`overconfidence_rate_n_qualifying`)
+eklendi. İkinci koşu temiz çıktı. Ayrıca **H1 gerçek veride bir gerçek ihlal yakaladı** (kurgusal
+değil): `qwen2.5-3b`'nin 3-bit hücresinde ECE'nin 4-bit ve 2-bit'ten istatistiksel olarak anlamlı
+şekilde çok daha kötü olduğu bir ters-U — Görev 13'e (makale) not olarak taşınacak. `matplotlib
+==3.11.1` eklendi (`requirements.txt`/`requirements.lock.txt`, SPEC §0 madde 8).
+
+Üretilen dosyalar: `results/tables/table{1,2,3,4}_*.csv`, `results/tables/table5_floor_control.csv`
+(PREREG §4.2 zorunlu ayrı ifşa, dört ana tablodan biri değil), `results/tables/verdicts.json`
+(H1-H4 PASS/FAIL: H1 FAIL — qwen2.5-3b'de gerçek ihlal var; H2 FAIL — bazı hücreler ters yönde;
+H3 PASS — qwen2.5-1.5b/mmlu'da anlamlı fark var; H4 FAIL — bir recipe aralık dışında), üç figür.
+Hepsi elle incelendi, anormallik yok.
+
+**DUR noktası yok şu an** — Görev 11 kullanıcı onayı gerektirmeyen bir gözden geçirme adımı
+(analiz çıktısının ön-kayıtsız test içermediğini doğrulamak); Görev 10'un implementasyonu zaten
+bu ilkeye göre yazıldı (yalnızca dört tablo + üç figür + zorunlu taban-kontrol ifşası, fazlası yok).
 
 Görev 8 (`make pilot`) koştu, kritik açık bulgu (mkdtemp/convert path çakışması) bulundu ve
 çözüldü, sağlık kontrolü kullanıcıya gösterildi ve **onaylandı**: 2-bit hücresi bf16'dan belirgin
@@ -266,8 +298,9 @@ Fizibiliteden ön-kayda kadar tüm zincir tamamlandı:
 
 ## Kritik açık noktalar
 
-- Yok. Görev 8 ve Görev 9 kullanıcı onayıyla kapatıldı, Llama BOS hatası düzeltildi ve nihai
-  grid (114/114 hücre `status="ok"`) doğrulandı. Sırada Görev 10 — `src/analyze.py` yazılacak.
+- Yok. Görev 10 tamamlandı: `src/analyze.py` yazıldı, test-önce+onay+mutasyon kanıtıyla,
+  gerçek veride iki kez koşuldu, çıktılar elle incelendi. Sırada Görev 11 — açık bulgu taraması
+  + veri-tarama-yasağı kontrolü.
 
 ## Bütçe hatırlatması (gerçekleşen, referans için)
 
@@ -296,4 +329,5 @@ Disk: `convert → evaluate → delete`, HF cache ≈ 20 GB.
 | 2026-07-25 | Görev 7 — `src/runner.py::run_all` + `run_pilot`/CLI, `make pilot` açık bulgusu çözüldü | (bu oturum) |
 | 2026-07-25 | Görev 8 — `make pilot` koştu, mkdtemp/convert açık bulgusu çözüldü, sağlık kontrolü onaylandı | (önceki oturum) |
 | 2026-07-25→26 | Görev 9 — tam koşu (kesinti/devam testi geçti), Llama BOS token açık bulgusu bulundu ve çözüldü, düzeltme koşusu — nihai 114/114 `status="ok"` | (bu oturum) |
+| 2026-07-26 | Görev 10 — `src/analyze.py` (test-önce+onay+mutasyon kanıtı, 27 test), gerçek 114 hücrelik veride iki koşu, `overconfidence_rate` açık bulgusu çözüldü, Tablo 1-4+taban-kontrol+verdicts.json+3 figür üretildi | (bu oturum) |
 | | | |

@@ -224,6 +224,78 @@ Same family as the sibling ML study. Every function `(y_true, y_prob, **kw) -> f
 > The sibling study shipped a `bootstrap_ci` that silently dropped kwargs and would have
 > crashed at analysis time. That is why the forwarding requirement is written here.
 
+### `src/analyze.py`
+```python
+def _intervals_overlap(lo1: float, hi1: float, lo2: float, hi2: float) -> bool:
+    """True iff [lo1, hi1] and [lo2, hi2] share at least one point (inclusive)."""
+
+def _paired_bootstrap_delta(base_correct, base_conf, other_correct, other_conf,
+                             metric_fn, n=config.BOOTSTRAP_N, seed=config.SEED,
+                             **metric_kwargs) -> tuple[float, float, float]:
+    """Percentile bootstrap over ITEMS for other_metric - base_metric, resampling
+    the SAME item indices for both arms on every draw (PREREG §4.5: 'paired within
+    item ... differencing per item before summarising'). Point = other(full) -
+    base(full), not the bootstrap mean of the deltas. Requires base/other arrays
+    pre-aligned by item_id (same benchmark, same deterministic sample order)."""
+
+def _h1_ladder_verdict(rows: list[dict]) -> dict:
+    """rows: one dict per condition on the g64 ladder, DESCENDING bit order,
+    each {"bits": int, "point": float, "lo": float, "hi": float} (ECE).
+    A step (i -> i+1) is a violation only if the point estimate DECREASES
+    (ece[i+1] < ece[i]) AND the two conditions' CIs do not overlap — i.e. the
+    reversal cannot be attributed to bootstrap noise (PREREG §3 H1 wording).
+    Returns {"monotone": bool, "violations": [(bits_i, bits_i+1), ...]}."""
+
+def _h2_direction_verdict(rows: list[dict]) -> dict:
+    """rows: one dict per non-bf16 (model, benchmark, condition) cell, each
+    {"model", "benchmark", "condition", "delta_intercept_lo", "delta_intercept_hi",
+    "delta_conf_incorrect_lo", "delta_conf_incorrect_hi"} — paired-bootstrap
+    deltas (this condition minus its model's bf16) for calibration intercept
+    and mean confidence on incorrect predictions. A cell CONFIRMS H2's
+    direction iff delta_intercept_hi < 0 (intercept significantly moved
+    negative) AND delta_conf_incorrect_lo > 0 (confidence-on-wrong-answers
+    significantly rose) — both bounds, not just the point, so an
+    inconclusive (CI spanning 0) cell counts as neither. A cell CONTRADICTS
+    iff delta_intercept_lo > 0 OR delta_conf_incorrect_hi < 0 (either
+    component moved significantly the wrong way). PREREG §3 H2: 'falsified
+    if the intercept does not move ... or if confidence on incorrect answers
+    is statistically indistinguishable from bf16' — operationalized here as:
+    falsified (not confirmed) if there is any contradicting cell, or if
+    there are zero confirming cells (no evidence is not confirmation).
+    Returns {"direction_confirmed": bool, "confirming_cells": [(model,
+    benchmark, condition), ...], "contradicting_cells": [...]}."""
+
+def _h3_mode_verdict(rows: list[dict]) -> dict:
+    """rows: one dict per (model, benchmark) cell, each carrying a `differs`
+    bool (True iff that cell's affine vs mxfp4 ECE 95% CIs do NOT overlap).
+    H3 is falsified only if EVERY cell overlaps (PREREG §3: 'falsified if ...
+    overlap across all models and benchmarks'). Returns {"mode_matters": bool,
+    "differing_cells": [(model, benchmark), ...]}."""
+
+def _h4_recipe_verdict(recipe_lo: float, recipe_hi: float,
+                        comp_a_point: float, comp_b_point: float) -> bool:
+    """True (not falsified) iff the recipe's ECE 95% CI overlaps the closed
+    range spanning its two component uniform bit-widths' ECE POINT estimates
+    (PREREG §3 H4: 'falls outside that range with a 95% interval excluding
+    it'). The range endpoints are point estimates, not intervals — only the
+    recipe side carries uncertainty in this check."""
+
+def main(results_dir: str = "results") -> None:
+    """Reads every results/cells/*.parquet + results/meta/*.json, writes
+    EXACTLY the four PREREG §5 tables (results/tables/table{1,2,3,4}_*.csv),
+    the PREREG §4.2 floor-control report (results/tables/table5_floor_control.csv
+    — required disclosure, not one of the four hypothesis tables, kept in its
+    own file and never merged into table1-4), the three figures
+    (results/figures/figure{1,2,3}_*.png), and a verdicts summary
+    (results/tables/verdicts.json) with one PASS/FAIL entry per hypothesis
+    (H1-H4) plus the reasoning fields the corresponding _hN_*_verdict returned.
+    Floor control (qwen2.5-0.5b) and non-eligible models (llama3.2-1b) are
+    excluded from tables 1-4 (PREREG §4.2); llama3.2-1b contributes nothing
+    beyond its bf16 eligibility record, already in eligibility.json.
+    Anything not in PREREG §5 is written under a clearly separate
+    'exploratory' key/file and never influences the H1-H4 verdicts."""
+```
+
 ### `src/runner.py`
 ```python
 def cell_id(model_key: str, condition_tag: str, benchmark: str) -> str:
@@ -386,3 +458,11 @@ After `make pilot`:
   §3 defined. Discovered while implementing Görev 7; resolved same session — pure wiring
   (reuses `run_all`'s own phase-ordering building blocks), no quantization parameter chosen
   beyond the frozen `CONDITIONS` list. See GECMIS.md "Görev 7".
+- 2026-07-26 — §3 gains a `src/analyze.py` contract (SPEC originally had none — §1's layout
+  table names the file, §7 build order item 10 says only "the four pre-registered tables and
+  three figures", but neither specifies verdict logic). PREREG §3/§5 state each hypothesis's
+  falsification condition in prose ("differencing per item", "intervals overlap", "falls
+  outside that range") without a formula; this entry fixes the exact algorithm as an
+  implementation decision, not a science change — the wording it operationalizes was already
+  frozen in PREREG. `requirements.txt`/`requirements.lock.txt` gain `matplotlib` (figures);
+  no other new dependency. See GECMIS.md "Görev 10".
