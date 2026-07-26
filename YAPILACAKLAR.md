@@ -285,7 +285,7 @@ Kural 5 — iddiaya değil koda bak, kendi taslağıma bile). 5 tablo + 3 figür
 gerçekten var, embed edilen path'ler doğrulandı) makaleye gömüldü. Kabul kriteri komutu tanımlı
 değildi (yalnızca içerik gereksinimi); kanıt: dosya var, `git diff HEAD -- tests/` boş.
 
-### [ ] Görev 14 — Dağıtım
+### [x] Görev 14 — Dağıtım — TAMAMLANDI 2026-07-26
 GitHub vitrini (description, topics), release + Zenodo DOI, sonra arXiv / doğrudan e-posta.
 
 **Kısmi ilerleme (2026-07-26):** GitHub vitrini tamamlandı — `gh repo edit` ile description
@@ -327,10 +327,24 @@ sadakati programatik sayıldı (237 tekil tablo sayısı + 6 arXiv künyesi, eks
 bir dizinde tek başına derlendi** (arXiv'in yapacağı işlem, birebir aynı çıktı).
 `pytest tests/` → 62 passed, `git diff HEAD -- tests/` boş.
 
-**Kalan (kullanıcıda, delege edilemez):** arXiv gönderimi. Ajan kullanıcının arXiv hesabına
-girmedi — gönderim geri alınamaz bir dış eylem (duyurulduktan sonra kaldırılamaz, yalnızca v2).
-Sıra: endorsement → form → tarball → arXiv'in derlediği PDF'i yerel `main.pdf` ile karşılaştır →
-onayla. Bkz. `ARXIV.md`.
+**Kapanış (2026-07-26, kullanıcı kararı): arXiv gönderiminden vazgeçildi, Görev 14 kapatıldı.**
+Sebep teknik değil: arXiv 21 Ocak 2026'da otomatik endorsement'ı kaldırdı (akademik e-posta **ve**
+önceden arXiv yazarlığı, ikisi birden gerekiyor), ve tek yol cs alanında yayını olan bir insandan
+kişisel endorsement almak — bu, çalışmanın kalitesinden bağımsız, tamamen sosyal bir engel.
+Hesap açıldı, gönderim başlatıldı, endorsement kodu alındı (cs.AI için), e-posta taslağı ve
+doğrulanmış endorser adayı (Proskurina vd., `Irina.Proskurina@univ-lyon2.fr`) hazırlandı — sonra
+kullanıcı bu yolu bırakmaya karar verdi.
+
+**Dağıtım yine de tamamlandı, arXiv'siz:** repo public, 9 topic'li vitrin, MIT lisansı,
+CITATION.cff, v1.1.0 release'i, Zenodo concept DOI `10.5281/zenodo.21596523` (sürüm DOI
+`…21603791`), 114 hücrenin ham ölçümleri dahil, ve **dizgili PDF release'e eklendi**
+(`calibration-cost-of-the-mlx-quantization-ladder.pdf`, 11 sayfa) — makale artık tek tıkla
+okunabiliyor, derleme gerektirmiyor. Çalışma yayınlanmış, arşivlenmiş ve atıf verilebilir
+durumda; arXiv görünürlük katardı, meşruiyet değil.
+
+`ARXIV.md` **silinmedi**: paket `make paper` ile üretilmeye devam ediyor, arXiv'in kuralları
+kaynağından doğrulanmış hâlde kayıtlı, ve ileride bir endorser bulunursa gönderim tek oturumluk
+iş. Görev metninin "doğrudan e-posta" seçeneği hâlâ açık ve endorsement gerektirmiyor.
 
 ---
 

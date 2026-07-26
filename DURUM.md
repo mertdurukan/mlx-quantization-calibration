@@ -14,10 +14,35 @@
 [x] FAZ 3 — Implementasyon              TAMAMLANDI
 [x] FAZ 4 — Pilot + tam koşu            TAMAMLANDI
 [x] FAZ 5 — Analiz (ön-kayıtlı tablolar) TAMAMLANDI
-[ ] FAZ 6 — Makale + dağıtım             ← ŞU AN BURADAYIZ (Görev 14: vitrin+public+release+DOI+arXiv paketi tamam; kalan tek adım kullanıcının arXiv gönderimi)
+[x] FAZ 6 — Makale + dağıtım             TAMAMLANDI (arXiv bilinçli olarak yapılmadı — bkz. "Şu an")
 ```
 
 ## Şu an
+
+# ÇALIŞMA TAMAMLANDI (2026-07-26)
+
+Altı fazın hepsi bitti, işaretlenmemiş görev yok, açık bulgu yok. `PROTOKOL.md`'nin
+"Definition of Done" listesinin beşi de karşılanıyor: tek komutla çalışan repo
+(`make reproduce`), her sayı güven aralıklı, hipotezleri **çürüten** bulgular raporlanmış
+(dördün üçü çürütüldü), sınırlar açıkça yazılmış, başarısız hücre yok (114/114 `ok`).
+
+**arXiv gönderiminden bilinçli olarak vazgeçildi (kullanıcı kararı).** Sebep teknik değil:
+arXiv 21 Ocak 2026'da otomatik endorsement'ı kaldırdı ve tek yol cs alanında yayını olan bir
+insandan kişisel endorsement almak — çalışmanın kalitesinden bağımsız, sosyal bir engel. Hesap
+açıldı, kod alındı, endorser adayı ve e-posta taslağı hazırlandı, sonra bu yol bırakıldı.
+`ARXIV.md` silinmedi: paket `make paper` ile üretilmeye devam ediyor ve ileride bir endorser
+bulunursa gönderim tek oturumluk iş.
+
+**Dağıtım arXiv'siz tamamlandı:** repo public + 9 topic, MIT, CITATION.cff, v1.1.0 release'i,
+Zenodo concept DOI `10.5281/zenodo.21596523` (sürüm `…21603791`) — 114 hücrenin ham per-item
+ölçümleri dahil, yani analiz 7 saatlik ızgarayı koşmadan reprodüklenebilir. **Dizgili PDF
+release'e eklendi** (11 sayfa), makale tek tıkla okunabiliyor.
+
+**Yapılmayı bekleyen, kimseden izin gerektirmeyen tek iş dağıtımın kendisi:** MLX topluluğu
+(mlx-lm Discussions, r/LocalLLaMA, Hugging Face) ve atıf verilen yazarlara doğrudan e-posta.
+Bu çalışmanın gerçek okuyucusu orada ve arXiv'e bakmıyor.
+
+---
 
 **Bağımsız denetim yapıldı ve bulguları düzeltildi (2026-07-26).** Kullanıcı "best in class
 olması için ne gerekiyorsa yapalım" dedi; yapılacak en değerli şey yeni bir özellik değil,

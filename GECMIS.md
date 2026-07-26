@@ -1024,3 +1024,31 @@ Doğrulandı (Zenodo API, varsayılmadı): v1.1.0 sürüm DOI'si `10.5281/zenodo
 DOI `10.5281/zenodo.21596523` artık bu kayda çözülüyor, ve arşivin kendi metadata'sındaki
 abstract düzeltilmiş hâli ("Three of the four...") taşıyor — yani hata dış bibliyografik
 kayıttan da temizlendi.
+
+### Karar: arXiv gönderiminden vazgeçildi (2026-07-26)
+
+Hesap açıldı, gönderim akışı başlatıldı, endorsement kodu alındı (`YPZK6I`, cs.AI için),
+nitelikli endorser adayı kaynağından doğrulandı (Proskurina vd., arXiv:2405.00632 — bu çalışmanın
+en yakın önceki işi; e-posta adresi makalenin kendi yazar bloğundan: `Irina.Proskurina@univ-lyon2.fr`)
+ve gerekçeli bir istek mektubu hazırlandı. Kullanıcı bu noktada yolu bırakmaya karar verdi.
+
+**Engel teknik değildi, sosyaldi.** arXiv 21 Ocak 2026'da otomatik endorsement'ı fiilen kaldırdı:
+artık akademik e-posta **ve** önceden arXiv yazarlığı, ikisi birden gerekiyor. Kurumsuz bir
+araştırmacı için tek yol, cs alanında yayını olan bir insandan kişisel endorsement almak — yani
+çalışmanın kalitesinden tamamen bağımsız bir kapı.
+
+**Bu bir başarısızlık değil, çünkü çalışma zaten yayınlanmıştı.** Zenodo concept DOI'si
+(`10.5281/zenodo.21596523`) kalıcı, arşivlenmiş, sürümlenmiş ve atıf verilebilir bir kayıt; ham
+per-item ölçümlerin tamamını içeriyor. arXiv de hakemli değil — vereceği şey görünürlüktü,
+meşruiyet değil. Kararın maliyeti erişim, ve o maliyet başka kanallarla kapatılabilir.
+
+**Kararın ardından yapılan telafi:** dizgili PDF (`make paper` çıktısı, 11 sayfa) v1.1.0
+release'ine varlık olarak eklendi. Öncesinde makaleyi düzgün okumanın tek yolu repoyu klonlayıp
+pandoc + LaTeX kurmaktı; artık tek tık. arXiv yoksa, okunabilirlik yükü repoya geçer.
+
+`ARXIV.md` **silinmedi.** İçindeki hiçbir şey boşa gitmedi: arXiv'in TeX-kaynağı zorunluluğu,
+desteklenen motorlar, 1920 karakterlik abstract sınırı ve endorsement politikasının Ocak 2026
+değişikliği kaynağından doğrulanmış bilgi — ve bunların ikisi (`build_paper.py`'deki abstract
+sınırı kontrolü, pdflatex hedefi) kodda kalıcı koruma olarak yaşıyor. Dosyanın başlığı "yapılacak
+iş"ten "yapılmadı, gerekçesi ve hazır paket burada"ya çevrildi. Bir endorser çıkarsa gönderim tek
+oturumluk iş.

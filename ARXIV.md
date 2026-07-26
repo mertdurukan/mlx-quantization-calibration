@@ -1,6 +1,19 @@
-# arXiv gönderimi — hazır paket ve adımlar
+# arXiv gönderimi — **yapılmadı** (bilinçli karar, 2026-07-26)
 
-> Bu dosya, `paper.md`'nin arXiv'e gönderilebilir hale getirilmesini kaydeder.
+> **Durum: arXiv gönderiminden vazgeçildi.** Sebep teknik değil: arXiv 21 Ocak
+> 2026'da endorsement politikasını sıkılaştırdı (§2), ve tek yol cs alanında
+> yayını olan bir insandan kişisel endorsement almak. Çalışma zaten
+> [DOI `10.5281/zenodo.21596523`](https://doi.org/10.5281/zenodo.21596523) ile
+> yayınlanmış, arşivlenmiş ve atıf verilebilir durumda — arXiv görünürlük
+> katardı, meşruiyet değil.
+>
+> **Bu dosya silinmedi çünkü içindeki hiçbir şey boşa gitmedi:** paket hâlâ
+> `make paper` ile üretiliyor ve dizgili PDF v1.1.0 release'ine ekli, arXiv'in
+> kuralları kaynağından doğrulanmış hâlde burada duruyor, ve ileride bir
+> endorser bulunursa gönderim tek oturumluk iş. Aşağısı o gün için hazır bekliyor.
+
+---
+
 > Paket **hazır ve yerel olarak derlendiği doğrulanmış**. Gönderme adımı senin
 > hesabınla yapılır — ajan senin adına arXiv'e giriş yapamaz ve yapmamalı.
 
