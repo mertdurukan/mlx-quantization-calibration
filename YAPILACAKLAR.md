@@ -227,10 +227,22 @@ GECMIS.md "Görev 10". `matplotlib==3.11.1` eklendi (`requirements.txt`/`require
 
 ---
 
-### [ ] Görev 11 — Veri tarama yasağı kontrolü
+### [x] Görev 11 — Veri tarama yasağı kontrolü — TAMAMLANDI 2026-07-26
 **Ön koşul:** Görev 10
 **Yap:** Analiz çıktısını gözden geçir: ön-kayıtta olmayan hiçbir test yapılmamış mı?
 Yapıldıysa "Exploratory" etiketi var mı? Yoksa kaldır veya etiketle.
+
+**Sonuç:** `src/analyze.py`, `results/tables/*.csv`, `results/figures/*.png` ve
+`tests/test_analyze.py` elle incelendi. Tablo 1-4 PREREG §5/§4.5'teki metriklerle 1:1
+örtüşüyor (H1: ECE/slope/intercept/Brier; H2: ortalama güven + aşırı-güven oranı; H3/H4:
+yalnızca ECE). `table5_floor_control.csv` PREREG §4.2'nin **zorunlu ayrı ifşası** —
+`verdicts.json`'a girmiyor, beşinci bir hipotez tablosu değil; içindeki `accuracy` kolonu
+§4.5'in "reported but not the estimand" listesinde açıkça izinli. `overconfidence_rate_n_qualifying`
+(Görev 10'da eklenen) yeni bir istatistik değil, var olan bir metriğin NaN'ını açıklayan
+şeffaflık kolonu. Üç figür PREREG §5'teki tanımlarla birebir. `tests/test_analyze.py`'deki
+27 test yalnızca H1-H4'ün altı verdict fonksiyonunu sınıyor, kayıt dışı hiçbir karşılaştırma
+yok. Kodun hiçbir yerinde "Exploratory" bölümü yok — çünkü hesaplanmış kayıt-dışı hiçbir şey
+yok, dolayısıyla etiketlenecek/kaldırılacak bir şey bulunmadı. **Değişiklik yapılmadı.**
 
 ---
 
@@ -288,3 +300,4 @@ GitHub vitrini (description, topics), release + Zenodo DOI, sonra arXiv / doğru
 - [x] **2026-07-25** Görev 8 — `make pilot` koştu; kritik açık bulgu (mkdtemp/convert path çakışması) bulundu ve çözüldü (`mkdtemp` + hemen `os.rmdir`); 3/3 hücre `status="ok"` (bf16 16.0 bit, affine_b4_g64 4.501 bit, affine_b2_g64 2.501 bit); sağlık kontrolü kullanıcıya gösterildi ve **onaylandı**: bf16 acc=0.765/ECE=0.130, b4 acc=0.737/ECE=0.136, b2 acc=0.244/ECE=0.498 — 2-bit belirgin kötü, kuantizasyon gerçekten uygulanıyor; süre bütçesi (~199s/hücre × 140 ≈ 7.75 saat, en hızlı modelle) kullanıcıya bildirildi ve tam koşuya onay alındı; `pytest tests/` → 33 passed
 - [x] **2026-07-26** Görev 9 — `caffeinate -i make reproduce`, kesinti/devam testi geçti; ilk koşu 88/88 hücre `status="ok"` verdi (llama modelleri o an bozuk ölçümden `eligible=false` çıktığı için 140 değil). Koşu sürerken kritik bir açık bulgu bulundu (Llama-3.2 tokenizer'ı `encode()`'a otomatik BOS ekliyor, `measure.py` yanlış token okuyordu — bkz. GECMIS.md), test-önce + mutasyon kanıtıyla kullanıcı onayında düzeltildi (`tests/test_measure.py`, `pytest tests/` → 35 passed). Düzeltmeden sonra 4 eski llama bf16 hücresi silinip yeniden koşuldu: Qwen cache'ten atlandı, llama yeniden ölçüldü. **Nihai: 114/114 hücre `status="ok"`, hiç `failed` yok.** `llama3.2-3b` düzeltilmiş ölçümle eşiği geçti (eligible=true, önceki bozuk veride tamamen elenmiş olacaktı) ve tam merdiveni işlendi; `llama3.2-1b` eşiğin altında kaldı (yalnızca bf16, 2 hücre)
 - [x] **2026-07-26** Görev 10 — `src/analyze.py`: SPEC'e altı saf verdict fonksiyonu eklendi (test-önce + iki turda kullanıcı onayı + mutasyon kanıtı), `tests/test_analyze.py` 27 test, `pytest tests/` → 62 passed. Gerçek 114 hücrelik veride iki kez koşuldu; ilk koşu `overconfidence_rate`'in bazı aşırı-sıkıştırma hücrelerinde tanımsız olduğunu buldu (kod hatası değil, `overconfidence_rate_n_qualifying` kolonuyla şeffaflaştırıldı), ikinci koşu temiz. Tablo 1-4 + taban-kontrol tablosu + `verdicts.json` + 3 figür üretildi ve elle incelendi; `qwen2.5-3b`'nin 3-bit hücresinde gerçek, istatistiksel olarak anlamlı bir H1 ihlali (ters-U) bulundu — Görev 13'e not. `matplotlib` eklendi.
+- [x] **2026-07-26** Görev 11 — Veri tarama yasağı kontrolü: `src/analyze.py` + çıktılar + `tests/test_analyze.py` elle incelendi, tablolar/figürler PREREG §5/§4.5'e 1:1 örtüşüyor, kayıt-dışı hiçbir test yok, "Exploratory" bölümüne gerek yok — değişiklik yapılmadı.

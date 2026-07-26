@@ -13,15 +13,33 @@
 [x] FAZ 2 — Ön-kayıt donduruldu         TAMAMLANDI  (commit c5ea71c)
 [x] FAZ 3 — Implementasyon              TAMAMLANDI
 [x] FAZ 4 — Pilot + tam koşu            TAMAMLANDI
-[ ] FAZ 5 — Analiz (ön-kayıtlı tablolar) ← ŞU AN BURADAYIZ (Görev 10 bitti, sırada Görev 11)
+[x] FAZ 5 — Analiz (ön-kayıtlı tablolar) TAMAMLANDI ← ŞU AN BURADAYIZ (Görev 11 bitti, sırada Görev 12)
 [ ] FAZ 6 — Makale + dağıtım
 ```
 
 ## Şu an
 
-**Görev 10 tamamlandı: `src/analyze.py` yazıldı, gerçek 114 hücrelik veri üzerinde koşuldu,
-Tablo 1-4 + taban-kontrol tablosu + `verdicts.json` + 3 figür üretildi ve elle incelendi. Sırada
-Görev 11 (`AÇIK BULGULAR` taraması + veri-tarama-yasağı kontrolü) var.**
+**Görev 11 tamamlandı: veri-tarama-yasağı kontrolü yapıldı, `src/analyze.py` + çıktılar +
+`tests/test_analyze.py` elle incelendi, kayıt-dışı hiçbir test bulunamadı — değişiklik
+gerekmedi. FAZ 5 (Analiz) tamamen bitti. Sırada Görev 12 (`README.md`, FAZ 6 başlangıcı) var.**
+
+Görev 11'in incelemesi şunu doğruladı: Tablo 1-4 PREREG §5/§4.5'teki metriklerle 1:1 örtüşüyor
+(H1: ECE/slope/intercept/Brier; H2: ortalama güven + aşırı-güven oranı; H3/H4: yalnızca ECE).
+`table5_floor_control.csv` PREREG §4.2'nin zorunlu ayrı ifşası, `verdicts.json`'a girmiyor —
+beşinci bir hipotez tablosu değil. İçindeki `accuracy` kolonu §4.5'in "reported but not the
+estimand" listesinde açıkça izinli. `overconfidence_rate_n_qualifying` (Görev 10) yeni bir
+istatistik değil, var olan bir metriğin NaN'ını açıklayan şeffaflık kolonu. Üç figür PREREG
+§5'teki tanımlarla birebir. `tests/test_analyze.py`'deki 27 test yalnızca H1-H4'ün altı verdict
+fonksiyonunu sınıyor. Kodun hiçbir yerinde "Exploratory" bölümü yok, çünkü etiketlenecek
+kayıt-dışı bir şey bulunmadı.
+
+**DUR noktası yok şu an** — Görev 11 kullanıcı onayı gerektirmeyen bir gözden geçirme adımıydı,
+kritik koruma testi değildi. Görev 12 (`README.md`) da onay gerektirmiyor — repo ön yüzü,
+üretilmiş veriye dokunmuyor.
+
+**Önceki durum (Görev 10 tamamlandı):** `src/analyze.py` yazıldı, gerçek 114 hücrelik veri
+üzerinde koşuldu, Tablo 1-4 + taban-kontrol tablosu + `verdicts.json` + 3 figür üretildi ve elle
+incelendi.
 
 `src/analyze.py` SPEC §3'e altı yeni saf fonksiyon ekleyerek yazıldı (`_intervals_overlap`,
 `_paired_bootstrap_delta`, `_h1_ladder_verdict`, `_h2_direction_verdict`, `_h3_mode_verdict`,
@@ -298,9 +316,8 @@ Fizibiliteden ön-kayda kadar tüm zincir tamamlandı:
 
 ## Kritik açık noktalar
 
-- Yok. Görev 10 tamamlandı: `src/analyze.py` yazıldı, test-önce+onay+mutasyon kanıtıyla,
-  gerçek veride iki kez koşuldu, çıktılar elle incelendi. Sırada Görev 11 — açık bulgu taraması
-  + veri-tarama-yasağı kontrolü.
+- Yok. Görev 11 tamamlandı: veri-tarama-yasağı kontrolü yapıldı, kayıt-dışı hiçbir test
+  bulunamadı. FAZ 5 (Analiz) tamamen bitti. Sırada Görev 12 (`README.md`, FAZ 6).
 
 ## Bütçe hatırlatması (gerçekleşen, referans için)
 
@@ -329,5 +346,6 @@ Disk: `convert → evaluate → delete`, HF cache ≈ 20 GB.
 | 2026-07-25 | Görev 7 — `src/runner.py::run_all` + `run_pilot`/CLI, `make pilot` açık bulgusu çözüldü | (bu oturum) |
 | 2026-07-25 | Görev 8 — `make pilot` koştu, mkdtemp/convert açık bulgusu çözüldü, sağlık kontrolü onaylandı | (önceki oturum) |
 | 2026-07-25→26 | Görev 9 — tam koşu (kesinti/devam testi geçti), Llama BOS token açık bulgusu bulundu ve çözüldü, düzeltme koşusu — nihai 114/114 `status="ok"` | (bu oturum) |
-| 2026-07-26 | Görev 10 — `src/analyze.py` (test-önce+onay+mutasyon kanıtı, 27 test), gerçek 114 hücrelik veride iki koşu, `overconfidence_rate` açık bulgusu çözüldü, Tablo 1-4+taban-kontrol+verdicts.json+3 figür üretildi | (bu oturum) |
+| 2026-07-26 | Görev 10 — `src/analyze.py` (test-önce+onay+mutasyon kanıtı, 27 test), gerçek 114 hücrelik veride iki koşu, `overconfidence_rate` açık bulgusu çözüldü, Tablo 1-4+taban-kontrol+verdicts.json+3 figür üretildi | (önceki oturum) |
+| 2026-07-26 | Görev 11 — veri-tarama-yasağı kontrolü: analiz çıktısı elle incelendi, kayıt-dışı test yok, değişiklik yapılmadı. FAZ 5 tamamlandı | (bu oturum) |
 | | | |
