@@ -5,6 +5,7 @@ authors:
   - family-names: "Durukan"
     given-names: "Mert"
 type: software
+doi: 10.5281/zenodo.21596523
 repository-code: "https://github.com/mertdurukan/mlx-quantization-calibration"
 license: MIT
 date-released: 2026-07-26

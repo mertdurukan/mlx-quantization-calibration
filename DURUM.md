@@ -38,9 +38,13 @@ force gerekmedi — trailer temizliği yalnızca push edilmemiş commit'lerdeydi
 https://github.com/mertdurukan/mlx-quantization-calibration/releases/tag/v1.0.0
 Zenodo toggle'ı açık olduğu için DOI otomatik basılacak (birkaç dakika).
 
-**Sıradaki adım:** Zenodo DOI'yi kontrol et → DOI rozetini README'ye ekle → commit+push.
-Sonrası (ayrı karar, kullanıcıyla): arXiv / doğrudan e-posta. Yerel `backup-pre-trailer-clean`
-branch'i (trailer temizliği öncesi yedek) hâlâ duruyor — DOI doğrulandıktan sonra silinebilir.
+**Zenodo DOI basıldı (2026-07-26):** sürüm DOI `10.5281/zenodo.21596524` (v1.0.0), concept DOI
+`10.5281/zenodo.21596523` (her zaman en son sürüme yönlenir). API'den doğrulandı: başlık, sürüm
+ve MIT lisansı doğru alınmış. Concept-DOI rozeti README'ye, `doi:` alanı CITATION.cff'e eklendi.
+
+**Görev 14'te kalan tek şey (ayrı karar, kullanıcıyla):** arXiv / doğrudan e-posta. Yerel
+`backup-pre-trailer-clean` branch'i (trailer temizliği öncesi yedek) hâlâ duruyor — artık
+silinebilir (DOI arşivi başarıyla oluştu).
 
 **Önceki durum (Görev 13 tamamlandı): `paper.md` yazıldı** (471 satır — abstract, giriş, related work, yöntem,
 sonuçlar, tartışma, sınırlar, sapmalar, reprodüksiyon, kaynakça). Related work için literatür

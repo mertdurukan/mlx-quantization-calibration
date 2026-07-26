@@ -1,5 +1,7 @@
 # The Calibration Cost of the MLX Quantization Ladder
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21596523.svg)](https://doi.org/10.5281/zenodo.21596523)
+
 A pre-registered study of how MLX post-training quantization (bf16 → 8/6/5/4/3/2-bit affine,
 `mxfp4`, and four mixed-bit recipes) affects **probabilistic calibration** — whether a model's
 stated confidence still matches how often it is actually right — as distinct from accuracy,
