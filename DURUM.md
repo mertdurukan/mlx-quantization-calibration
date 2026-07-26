@@ -60,6 +60,18 @@ basılı hâlde okunabilir hâle getirilmesi. Detay: GECMIS.md "Bağımsız dene
 
 **Açık bulgu sayısı: 0.**
 
+**Push + v1.1.0 release yapıldı (2026-07-26).** Denetim düzeltmeleri public repo'ya gönderildi
+(`b2f7ecf`), çünkü GitHub'daki sürüm o ana kadar abstract'inde **yanlış** bir iddia taşıyordu
+("dört hipotezin dördü de çürütüldü"). Aynı hata `CITATION.cff`'in abstract'inde de vardı —
+Zenodo metadata'sını oradan okuduğu için **arşivlenmiş v1.0.0 kaydına da geçmişti**; düzeltildi.
+`paper.md` §8 artık **yalnızca concept DOI'ye** atıf veriyor, sürüm DOI'sine değil, ve gerekçesi
+makalede açık yazılı: sürüme sabitlenmiş bir atıf v1.0.0'ın hatasını kalıcılaştırırdı.
+`v1.1.0` release'i yayınlandı (denetim bulgularını madde madde anlatan notlarla) — Zenodo
+concept DOI `10.5281/zenodo.21596523` artık düzeltilmiş sürüme yönleniyor; v1.1.0'ın sürüm DOI'si
+`10.5281/zenodo.21603791`. API'den doğrulandı: sürüm `v1.1.0`, MIT lisansı, ve arşiv metadata'sı
+artık düzeltilmiş abstract'i ("Three of the four...") taşıyor.
+**v1.0.0 arşivi atıf için kullanılmamalı.**
+
 **Görev 14 sürüyor: arXiv paketi hazır, gönderim kullanıcıda.** (Aşağıdaki paragraflar
 kronolojik: vitrin → public → denetim → push/release → DOI → arXiv paketi.)
 Bu oturumda sırasıyla: (1) `gh repo edit` ile description + 9 topic; (2) kullanıcı onayıyla repo

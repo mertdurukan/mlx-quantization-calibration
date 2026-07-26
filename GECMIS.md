@@ -997,3 +997,30 @@ sinyalin kendisi doğrulanmadan güvenilmez.
   efektif 3pt oluyordu — basılı hâlde okunamaz. Panel yazı boyutları, çıktı `\textwidth`'te
   gömülüp **gerçekten okunarak** kalibre edildi; lejant panellerin dışına alındı (büyütülmüş
   lejant `qwen2.5-3b` eğrilerini kapatıyordu, ki asıl bulgu onlar).
+
+### Karar: v1.1.0 release'i — bir DOI arşivi yanlış bilimi kalıcılaştıramaz (2026-07-26)
+
+Denetim düzeltmeleri commit edildikten sonra ortada bir sorun kaldı: `v1.0.0` release'i ve onun
+sürüm DOI'si (`10.5281/zenodo.21596524`), abstract'inde "dört hipotezin dördü de çürütüldü" yazan
+makaleyi **kalıcı olarak** arşivliyordu. Zenodo concept DOI'si en son sürüme yönlendiği için, o
+an concept DOI'yi izleyen biri de hatalı makaleyi alıyordu. Yani düzeltmeler yapılmış ama
+**yayınlanmış kayıt hâlâ yanlıştı.**
+
+Ayrıca `CITATION.cff`'in abstract'inde de aynı cümle vardı ve Zenodo metadata'sını buradan
+okuduğu için hata **arşiv kaydının kendi metadata'sına** geçmişti — yani yalnızca repo içindeki
+bir dosyayı değil, dış bir bibliyografik kaydı da düzeltmek gerekiyordu.
+
+Yapılan: `CITATION.cff` düzeltildi (+ bağımsız denetime atıf, version 1.1.0), `v1.1.0` release'i
+denetim bulgularını madde madde anlatan notlarla yayınlandı, ve **`paper.md` sürüm DOI'sinden
+ayrıldı**: §8 artık yalnızca concept DOI'ye atıf veriyor ve *neden* öyle yaptığını açıkça
+yazıyor. Bu son nokta bir tasarım kararı: sürüme sabitlenmiş bir atıf, düzeltilebilir bir hatayı
+düzeltilemez hâle getirir. Concept DOI tam bu iş için var.
+
+**v1.0.0 arşivi silinmedi** — Kural 8'in ruhu (denetim izi artefakttır) burada da geçerli, ve
+Zenodo sürümleri zaten silinemez. Release notlarında ve DURUM.md'de atıf için kullanılmaması
+gerektiği açıkça yazıldı.
+
+Doğrulandı (Zenodo API, varsayılmadı): v1.1.0 sürüm DOI'si `10.5281/zenodo.21603791`, concept
+DOI `10.5281/zenodo.21596523` artık bu kayda çözülüyor, ve arşivin kendi metadata'sındaki
+abstract düzeltilmiş hâli ("Three of the four...") taşıyor — yani hata dış bibliyografik
+kayıttan da temizlendi.
