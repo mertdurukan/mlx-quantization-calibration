@@ -288,6 +288,18 @@ değildi (yalnızca içerik gereksinimi); kanıt: dosya var, `git diff HEAD -- t
 ### [ ] Görev 14 — Dağıtım
 GitHub vitrini (description, topics), release + Zenodo DOI, sonra arXiv / doğrudan e-posta.
 
+**Kısmi ilerleme (2026-07-26):** GitHub vitrini tamamlandı — `gh repo edit` ile description
+("Pre-registered study of how MLX quantization (bf16 → 2-bit, mxfp4, mixed recipes) breaks LLM
+confidence calibration — not just accuracy.") ve 9 topic (`mlx`, `quantization`, `llm`,
+`calibration`, `confidence-calibration`, `apple-silicon`, `machine-learning`,
+`pre-registered-research`, `expected-calibration-error`) ayarlandı, `gh repo view` ile doğrulandı.
+Kullanıcıya adım-adım onay protokolü soruldu (kullanıcı "adım adım, her adımda onay" seçti).
+**Durduruldu:** repo hâlâ **private** (`gh repo view --json visibility` → `PRIVATE`). Release,
+Zenodo DOI ve arXiv/e-posta adımlarının hepsi public repo gerektiriyor — kullanıcıya soruldu,
+**şimdilik private kalmasını istedi**. Sonraki adımlar (public'e alma → release → Zenodo DOI →
+arXiv/e-posta) kullanıcı public'e almaya karar verdiğinde devam edecek. Bilime/sonuçlara etki
+yok, yalnızca dağıtım zamanlaması.
+
 ---
 
 ## 🔍 AÇIK BULGULAR

@@ -14,12 +14,23 @@
 [x] FAZ 3 — Implementasyon              TAMAMLANDI
 [x] FAZ 4 — Pilot + tam koşu            TAMAMLANDI
 [x] FAZ 5 — Analiz (ön-kayıtlı tablolar) TAMAMLANDI
-[ ] FAZ 6 — Makale + dağıtım             ← ŞU AN BURADAYIZ (Görev 13 bitti, sırada Görev 14)
+[ ] FAZ 6 — Makale + dağıtım             ← ŞU AN BURADAYIZ (Görev 14 kısmen bitti — vitrin tamam, gerisi repo public olana kadar durdu)
 ```
 
 ## Şu an
 
-**Görev 13 tamamlandı: `paper.md` yazıldı** (471 satır — abstract, giriş, related work, yöntem,
+**Görev 14 sürüyor: GitHub vitrini tamamlandı, gerisi kullanıcı kararına göre duraklatıldı.**
+`gh repo edit` ile description + 9 topic ayarlandı, `gh repo view` ile doğrulandı. Kullanıcıya
+Görev 14'ün geri kalanının (release, Zenodo DOI, arXiv/e-posta) hepsinin repo'yu **public**
+yapmayı gerektirdiği söylendi; kullanıcı şimdilik **private kalmasını** istedi. Bu yüzden
+release/DOI/arXiv adımları bu oturumda yapılmadı — kod/sonuç tarafında hiçbir değişiklik yok,
+yalnızca dağıtım zamanlaması kullanıcı kararına bağlı bekliyor. Detay: YAPILACAKLAR Görev 14.
+
+**DUR noktası:** Görev 14'ün devamı için kullanıcının repo'yu ne zaman public yapmak istediğine
+karar vermesi gerekiyor. O karar verilene kadar sıradaki adım yok — bir sonraki oturumda önce
+kullanıcıya bu sorulmalı.
+
+**Önceki durum (Görev 13 tamamlandı): `paper.md` yazıldı** (471 satır — abstract, giriş, related work, yöntem,
 sonuçlar, tartışma, sınırlar, sapmalar, reprodüksiyon, kaynakça). Related work için literatür
 taraması gerçekten yapıldı: `WebSearch` ile 6 aday kaynak bulundu (RLHF aşırı-güveni, verbalize
 güven/kalibrasyon farkı, LLM-hakem aşırı-güveni, çok-dilli kalibrasyon boşluğu, en yakın önceki
@@ -381,5 +392,6 @@ Disk: `convert → evaluate → delete`, HF cache ≈ 20 GB.
 | 2026-07-26 | Görev 10 — `src/analyze.py` (test-önce+onay+mutasyon kanıtı, 27 test), gerçek 114 hücrelik veride iki koşu, `overconfidence_rate` açık bulgusu çözüldü, Tablo 1-4+taban-kontrol+verdicts.json+3 figür üretildi | (önceki oturum) |
 | 2026-07-26 | Görev 11 — veri-tarama-yasağı kontrolü: analiz çıktısı elle incelendi, kayıt-dışı test yok, değişiklik yapılmadı. FAZ 5 tamamlandı | (önceki oturum) |
 | 2026-07-26 | Görev 12 — `README.md` yazıldı (bulgu paragrafı, manşet sayılar, `make reproduce`, kapsam sınırları), gerçek verilerle doğrulandı. FAZ 6 başladı | (önceki oturum) |
-| 2026-07-26 | Görev 13 — `paper.md` yazıldı (8 bölüm, 5 tablo + 3 figür gömülü); related work 6 gerçek kaynakla (WebSearch+WebFetch, tam metin, ≤15 kelime alıntı, programatik doğrulama) yazıldı; en yakın önceki çalışma (Proskurina vd. 2024) bulunup açık bulgu olarak kaydedildi; ilk taslaktaki yazar-adı tahminleri ve bir elle-sayma hatası (H2 hücre sayıları) kod/kaynağa karşı kontrol edilip düzeltildi | (bu oturum) |
+| 2026-07-26 | Görev 13 — `paper.md` yazıldı (8 bölüm, 5 tablo + 3 figür gömülü); related work 6 gerçek kaynakla (WebSearch+WebFetch, tam metin, ≤15 kelime alıntı, programatik doğrulama) yazıldı; en yakın önceki çalışma (Proskurina vd. 2024) bulunup açık bulgu olarak kaydedildi; ilk taslaktaki yazar-adı tahminleri ve bir elle-sayma hatası (H2 hücre sayıları) kod/kaynağa karşı kontrol edilip düzeltildi | (önceki oturum) |
+| 2026-07-26 | Görev 14 (kısmen) — GitHub vitrini (`gh repo edit`: description + 9 topic) uygulandı ve doğrulandı; repo public'e alma, release, Zenodo DOI, arXiv/e-posta kullanıcı kararıyla ertelendi (repo private kalıyor) | (bu oturum) |
 | | | |
