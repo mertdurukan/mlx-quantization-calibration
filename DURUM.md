@@ -13,15 +13,31 @@
 [x] FAZ 2 — Ön-kayıt donduruldu         TAMAMLANDI  (commit c5ea71c)
 [x] FAZ 3 — Implementasyon              TAMAMLANDI
 [x] FAZ 4 — Pilot + tam koşu            TAMAMLANDI
-[x] FAZ 5 — Analiz (ön-kayıtlı tablolar) TAMAMLANDI ← ŞU AN BURADAYIZ (Görev 11 bitti, sırada Görev 12)
-[ ] FAZ 6 — Makale + dağıtım
+[x] FAZ 5 — Analiz (ön-kayıtlı tablolar) TAMAMLANDI
+[ ] FAZ 6 — Makale + dağıtım             ← ŞU AN BURADAYIZ (Görev 12 bitti, sırada Görev 13)
 ```
 
 ## Şu an
 
-**Görev 11 tamamlandı: veri-tarama-yasağı kontrolü yapıldı, `src/analyze.py` + çıktılar +
-`tests/test_analyze.py` elle incelendi, kayıt-dışı hiçbir test bulunamadı — değişiklik
-gerekmedi. FAZ 5 (Analiz) tamamen bitti. Sırada Görev 12 (`README.md`, FAZ 6 başlangıcı) var.**
+**Görev 12 tamamlandı: `README.md` yazıldı.** Tek paragraf bulgu (H1'in qwen2.5-3b/arc'ta
+gerçek monoton-olmayan ihlali — 3-bit ECE 0.434, 2-bit'ten daha kötü, CI'lar örtüşmüyor; H2'nin
+model başına yön tutarsızlığı — llama3.2-3b onaylıyor, qwen2.5-1.5b arc'ta çoğunlukla çelişiyor;
+H3'ün 6 hücreden yalnızca 1'inde fark göstermesi), manşet sayı tablosu, `make reproduce`
+talimatı, PREREG §6 kapsam sınırları, repo haritası. Manşet tablosundaki her sayı
+`results/tables/*.csv` + `eligibility.json`'dan okunarak, 2-bit doğruluk yüzdeleri gerçek
+parquet'lerden (`is_correct.mean()`) hesaplanarak dolduruldu — ilk taslakta bunlar tahmindi,
+yazarken fark edilip düzeltildi (bkz. GECMIS.md "Görev 12"). Ayrıca ilk taslakta "kardeş çalışma"
+için uydurma bir GitHub URL'i yazılmıştı, commit'ten önce yerel dizin yoluna düzeltildi.
+Görevin YAPILACAKLAR'da açık bir kabul kriteri komutu yoktu (yalnızca içerik gereksinimi);
+kanıt olarak dosyanın varlığı ve `git diff HEAD -- tests/`'in boş kaldığı gösterildi.
+
+FAZ 6 başladı. Sırada **Görev 13 — `paper.md`** var (abstract, giriş, related work — kaynaklar
+tam metin okunacak, ≤15 kelime alıntı —, yöntem, sonuçlar, tartışma, sınırlar, reprodüksiyon).
+Görev 10'da not edilen qwen2.5-3b'nin 3-bit ters-U bulgusu Görev 13'te işlenecek.
+
+**Önceki durum (Görev 11 tamamlandı):** veri-tarama-yasağı kontrolü yapıldı, `src/analyze.py` +
+çıktılar + `tests/test_analyze.py` elle incelendi, kayıt-dışı hiçbir test bulunamadı — değişiklik
+gerekmedi. FAZ 5 (Analiz) tamamen bitti.
 
 Görev 11'in incelemesi şunu doğruladı: Tablo 1-4 PREREG §5/§4.5'teki metriklerle 1:1 örtüşüyor
 (H1: ECE/slope/intercept/Brier; H2: ortalama güven + aşırı-güven oranı; H3/H4: yalnızca ECE).
@@ -316,8 +332,7 @@ Fizibiliteden ön-kayda kadar tüm zincir tamamlandı:
 
 ## Kritik açık noktalar
 
-- Yok. Görev 11 tamamlandı: veri-tarama-yasağı kontrolü yapıldı, kayıt-dışı hiçbir test
-  bulunamadı. FAZ 5 (Analiz) tamamen bitti. Sırada Görev 12 (`README.md`, FAZ 6).
+- Yok. Görev 12 tamamlandı: `README.md` yazıldı, FAZ 6 başladı. Sırada Görev 13 (`paper.md`).
 
 ## Bütçe hatırlatması (gerçekleşen, referans için)
 
@@ -347,5 +362,6 @@ Disk: `convert → evaluate → delete`, HF cache ≈ 20 GB.
 | 2026-07-25 | Görev 8 — `make pilot` koştu, mkdtemp/convert açık bulgusu çözüldü, sağlık kontrolü onaylandı | (önceki oturum) |
 | 2026-07-25→26 | Görev 9 — tam koşu (kesinti/devam testi geçti), Llama BOS token açık bulgusu bulundu ve çözüldü, düzeltme koşusu — nihai 114/114 `status="ok"` | (bu oturum) |
 | 2026-07-26 | Görev 10 — `src/analyze.py` (test-önce+onay+mutasyon kanıtı, 27 test), gerçek 114 hücrelik veride iki koşu, `overconfidence_rate` açık bulgusu çözüldü, Tablo 1-4+taban-kontrol+verdicts.json+3 figür üretildi | (önceki oturum) |
-| 2026-07-26 | Görev 11 — veri-tarama-yasağı kontrolü: analiz çıktısı elle incelendi, kayıt-dışı test yok, değişiklik yapılmadı. FAZ 5 tamamlandı | (bu oturum) |
+| 2026-07-26 | Görev 11 — veri-tarama-yasağı kontrolü: analiz çıktısı elle incelendi, kayıt-dışı test yok, değişiklik yapılmadı. FAZ 5 tamamlandı | (önceki oturum) |
+| 2026-07-26 | Görev 12 — `README.md` yazıldı (bulgu paragrafı, manşet sayılar, `make reproduce`, kapsam sınırları), gerçek verilerle doğrulandı. FAZ 6 başladı | (bu oturum) |
 | | | |

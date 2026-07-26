@@ -639,3 +639,18 @@ bootstrap resample × 4 metrik × onlarca hücre). İlk koşu overconfidence_rat
 - Benchmark boyutları: ARC-Easy 2376 · ARC-Challenge 1172 · MMLU 14042
 - HellaSwag/PIQA: farklı protokol (devam skorlama) → elendi
 - PIQA ayrıca `datasets 5.0.0`'da loading-script desteği kalktığı için yüklenmiyor
+
+---
+
+## Görev 12 — `README.md` (2026-07-26)
+
+`README.md` yazılırken içindeki her manşet sayı `results/tables/*.csv` + `eligibility.json`'dan
+birebir okunarak/hesaplanarak dolduruldu (bootstrap CI'lı ECE değerleri `table1_h1_bit_ladder.csv`'den,
+2-bit doğruluk yüzdeleri gerçek parquet'ten `is_correct.mean()` ile — ilk taslakta bu üçü tahmindi,
+fark edilip gerçek hesapla değiştirildi).
+
+**Yakalanan hata:** İlk taslakta "kardeş çalışma" referansı için uydurma bir `https://github.com`
+URL'i yazılmıştı — CLAUDE.md'nin sistem talimatı programlamayla ilgisiz URL uydurmayı yasaklıyor.
+Yazarken fark edilip yerel dizin yoluna (`~/github-projects/imbalance-calibration`) düzeltildi,
+commit edilmeden önce. Kayıt altına alınıyor çünkü PROTOKOL Kural 5'in ("iddiaya değil koda bak")
+bir uzantısı: kendi çıktımı da aynı şüphecilikle kontrol etmem gerekiyor.

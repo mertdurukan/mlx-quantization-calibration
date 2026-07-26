@@ -248,8 +248,20 @@ yok, dolayısıyla etiketlenecek/kaldırılacak bir şey bulunmadı. **Değişik
 
 ## FAZ 6 — Yazı + dağıtım
 
-### [ ] Görev 12 — `README.md`
+### [x] Görev 12 — `README.md` — TAMAMLANDI 2026-07-26
 Repo ön yüzü: tek paragraf bulgu, manşet sayılar, `make reproduce`, sınırlar, abartı yok.
+
+**Sonuç:** `README.md` yazıldı (95 satır). Tek paragraf bulgu: H1'in monoton olmayan gerçek
+ihlali (qwen2.5-3b/arc, 3-bit ECE 0.434 > 2-bit ECE 0.254, CI'lar örtüşmüyor) + H2'nin model
+başına yön tutarsızlığı (llama3.2-3b onaylıyor, qwen2.5-1.5b çoğunlukla çelişiyor) + H3'ün
+6 hücreden yalnızca 1'inde fark göstermesi — hepsi `verdicts.json`/`table1`/`table3`'ten
+**birebir okunarak** yazıldı, hesaplama uydurulmadı. Manşet tablosundaki 2-bit doğruluk
+sayıları (0.244/0.268/0.224) ilk taslakta tahmindi, gerçek parquet'lerden
+(`df['is_correct'].mean()`) hesaplanarak düzeltildi. Sızıntı/kapsam: "sibling study" için
+uydurma bir GitHub URL'i yazılmıştı (kural: URL uydurma yasak) — fark edilip yerel yola
+(`~/github-projects/imbalance-calibration`) düzeltildi. Kabul kriteri komutu tanımlı değildi
+(görev metni yalnızca içerik gereksinimi listeliyor); kanıt: dosya var (95 satır),
+`git diff HEAD -- tests/` boş.
 
 ### [ ] Görev 13 — `paper.md`
 Abstract, giriş, related work (**kaynaklar tam metin okunacak**, ≤15 kelime alıntı), yöntem,
@@ -301,3 +313,4 @@ GitHub vitrini (description, topics), release + Zenodo DOI, sonra arXiv / doğru
 - [x] **2026-07-26** Görev 9 — `caffeinate -i make reproduce`, kesinti/devam testi geçti; ilk koşu 88/88 hücre `status="ok"` verdi (llama modelleri o an bozuk ölçümden `eligible=false` çıktığı için 140 değil). Koşu sürerken kritik bir açık bulgu bulundu (Llama-3.2 tokenizer'ı `encode()`'a otomatik BOS ekliyor, `measure.py` yanlış token okuyordu — bkz. GECMIS.md), test-önce + mutasyon kanıtıyla kullanıcı onayında düzeltildi (`tests/test_measure.py`, `pytest tests/` → 35 passed). Düzeltmeden sonra 4 eski llama bf16 hücresi silinip yeniden koşuldu: Qwen cache'ten atlandı, llama yeniden ölçüldü. **Nihai: 114/114 hücre `status="ok"`, hiç `failed` yok.** `llama3.2-3b` düzeltilmiş ölçümle eşiği geçti (eligible=true, önceki bozuk veride tamamen elenmiş olacaktı) ve tam merdiveni işlendi; `llama3.2-1b` eşiğin altında kaldı (yalnızca bf16, 2 hücre)
 - [x] **2026-07-26** Görev 10 — `src/analyze.py`: SPEC'e altı saf verdict fonksiyonu eklendi (test-önce + iki turda kullanıcı onayı + mutasyon kanıtı), `tests/test_analyze.py` 27 test, `pytest tests/` → 62 passed. Gerçek 114 hücrelik veride iki kez koşuldu; ilk koşu `overconfidence_rate`'in bazı aşırı-sıkıştırma hücrelerinde tanımsız olduğunu buldu (kod hatası değil, `overconfidence_rate_n_qualifying` kolonuyla şeffaflaştırıldı), ikinci koşu temiz. Tablo 1-4 + taban-kontrol tablosu + `verdicts.json` + 3 figür üretildi ve elle incelendi; `qwen2.5-3b`'nin 3-bit hücresinde gerçek, istatistiksel olarak anlamlı bir H1 ihlali (ters-U) bulundu — Görev 13'e not. `matplotlib` eklendi.
 - [x] **2026-07-26** Görev 11 — Veri tarama yasağı kontrolü: `src/analyze.py` + çıktılar + `tests/test_analyze.py` elle incelendi, tablolar/figürler PREREG §5/§4.5'e 1:1 örtüşüyor, kayıt-dışı hiçbir test yok, "Exploratory" bölümüne gerek yok — değişiklik yapılmadı.
+- [x] **2026-07-26** Görev 12 — `README.md` yazıldı: tek paragraf bulgu (H1 monoton-olmayan gerçek ihlal + H2 model-başına yön tutarsızlığı + H3'ün 6 hücreden 1'inde fark), manşet sayı tablosu (gerçek verilerden doğrulanarak), `make reproduce`, kapsam sınırları. FAZ 6 başladı.
